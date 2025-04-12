@@ -254,6 +254,13 @@
             background-color: white;
             border-color: var(--primary-color);
         }
+        
+        /* Export/Import controls */
+        .export-import-controls {
+            display: flex;
+            gap: 10px;
+            margin-left: auto;
+        }
 
         .add-card i {
             font-size: 30px;
@@ -557,7 +564,7 @@
 <body>
     <div class="header">
         <div class="header-left">
-            <img src="/api/placeholder/40/40" alt="Logo" />
+            <img src="https://via.placeholder.com/40" alt="Logo" />
             <div class="title">Mein Taskcard-Manager</div>
         </div>
         <div class="header-right">
@@ -572,6 +579,17 @@
                 <i class="fas fa-share-alt"></i>
                 Teilen
             </button>
+            <div class="export-import-controls editor-only">
+                <button class="btn btn-outline" id="exportBtn">
+                    <i class="fas fa-download"></i>
+                    Exportieren
+                </button>
+                <label class="btn btn-outline" for="importFile">
+                    <i class="fas fa-upload"></i>
+                    Importieren
+                </label>
+                <input type="file" id="importFile" style="display: none;" accept=".json">
+            </div>
             <button class="btn btn-outline editor-only" id="layoutBtn">
                 <i class="fas fa-columns"></i>
                 Layout
@@ -602,102 +620,8 @@
     </div>
 
     <div class="board" id="cardBoard">
-        <!-- Text Card -->
-        <div class="card card-blue">
-            <div class="card-content">
-                <div class="card-header">
-                    <div class="card-title">Notizen</div>
-                    <div class="card-menu">
-                        <i class="fas fa-ellipsis-v"></i>
-                        <div class="card-menu-dropdown">
-                            <div class="card-menu-item edit-card">
-                                <i class="fas fa-edit"></i>
-                                Bearbeiten
-                            </div>
-                            <div class="card-menu-item duplicate-card">
-                                <i class="fas fa-copy"></i>
-                                Duplizieren
-                            </div>
-                            <div class="card-menu-item delete-card">
-                                <i class="fas fa-trash"></i>
-                                Löschen
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="card-text">
-                    Hier ist ein Beispiel für eine Textnotiz. Du kannst hier wichtige Informationen, Aufgaben oder Hinweise festhalten.
-                </div>
-            </div>
-        </div>
-
-        <!-- YouTube Card -->
-        <div class="card card-red">
-            <div class="card-content">
-                <div class="card-header">
-                    <div class="card-title">YouTube Video</div>
-                    <div class="card-menu">
-                        <i class="fas fa-ellipsis-v"></i>
-                        <div class="card-menu-dropdown">
-                            <div class="card-menu-item edit-card">
-                                <i class="fas fa-edit"></i>
-                                Bearbeiten
-                            </div>
-                            <div class="card-menu-item duplicate-card">
-                                <i class="fas fa-copy"></i>
-                                Duplizieren
-                            </div>
-                            <div class="card-menu-item delete-card">
-                                <i class="fas fa-trash"></i>
-                                Löschen
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="card-text">
-                    Ein Beispiel für ein eingebettetes YouTube-Video mit Thumbnail.
-                </div>
-                <div class="card-youtube" data-youtube-id="dQw4w9WgXcQ">
-                    <img src="https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg" alt="YouTube Thumbnail">
-                    <div class="play-button">
-                        <i class="fas fa-play"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Image Card -->
-        <div class="card card-green">
-            <div class="card-content">
-                <div class="card-header">
-                    <div class="card-title">Bild</div>
-                    <div class="card-menu">
-                        <i class="fas fa-ellipsis-v"></i>
-                        <div class="card-menu-dropdown">
-                            <div class="card-menu-item edit-card">
-                                <i class="fas fa-edit"></i>
-                                Bearbeiten
-                            </div>
-                            <div class="card-menu-item duplicate-card">
-                                <i class="fas fa-copy"></i>
-                                Duplizieren
-                            </div>
-                            <div class="card-menu-item delete-card">
-                                <i class="fas fa-trash"></i>
-                                Löschen
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="card-text">
-                    Eine Beispielkarte mit einem Bild.
-                </div>
-                <div class="card-image">
-                    <img src="/api/placeholder/400/300" alt="Beispielbild">
-                </div>
-            </div>
-        </div>
-
+        <!-- Karten werden dynamisch hinzugefügt -->
+        
         <!-- Add Card Button -->
         <div class="add-card" id="addCardButton">
             <i class="fas fa-plus"></i>
@@ -820,6 +744,8 @@
         const shareLinkInput = document.getElementById('shareLink');
         const copyLinkBtn = document.getElementById('copyLinkBtn');
         const editorOnlyElements = document.querySelectorAll('.editor-only');
+        const exportBtn = document.getElementById('exportBtn');
+        const importFile = document.getElementById('importFile');
 
         // Card Type Fields
         const youtubeField = document.querySelector('.youtube-field');
@@ -834,12 +760,16 @@
         const linkUrlInput = document.getElementById('linkUrl');
         const columnWidthInput = document.getElementById('columnWidth');
 
-        // Modal State
+        // Card State
         let currentCardId = null;
         let isEditMode = false;
         let selectedType = 'text';
         let selectedColor = 'blue';
         let cardCounter = 1;
+        let boardData = {
+            cards: [],
+            layout: 3
+        };
 
         // YouTube Thumbnail Click Event
         document.addEventListener('click', function(e) {
@@ -866,10 +796,19 @@
         document.addEventListener('click', function(e) {
             const menuIcon = e.target.closest('.card-menu i');
             if (menuIcon) {
+                // Close any open dropdowns first
+                document.querySelectorAll('.card-menu-dropdown.show').forEach(dropdown => {
+                    if (dropdown !== menuIcon.nextElementSibling) {
+                        dropdown.classList.remove('show');
+                    }
+                });
+                
+                // Toggle this dropdown
                 const dropdown = menuIcon.nextElementSibling;
                 dropdown.classList.toggle('show');
                 e.stopPropagation();
             } else {
+                // Close all dropdowns when clicking elsewhere
                 document.querySelectorAll('.card-menu-dropdown.show').forEach(dropdown => {
                     dropdown.classList.remove('show');
                 });
@@ -1014,16 +953,77 @@
                 return;
             }
             
+            const cardId = isEditMode ? currentCardId : `card-${Date.now()}`;
+            
+            // Create card data object for storage
+            const cardData = {
+                id: cardId,
+                title: title,
+                content: content,
+                type: selectedType,
+                color: selectedColor,
+                columnWidth: columnWidth
+            };
+            
+            // Add type-specific data
+            if (selectedType === 'youtube') {
+                const youtubeUrl = youtubeUrlInput.value.trim();
+                const youtubeId = getYoutubeId(youtubeUrl);
+                if (youtubeId) {
+                    cardData.youtubeId = youtubeId;
+                }
+            } else if (selectedType === 'image') {
+                const imageUrl = imageUrlInput.value.trim();
+                if (imageUrl) {
+                    cardData.imageUrl = imageUrl;
+                }
+            } else if (selectedType === 'link') {
+                const linkUrl = linkUrlInput.value.trim();
+                if (linkUrl) {
+                    cardData.linkUrl = linkUrl;
+                }
+            }
+            
             // Create card element
+            const card = createCardElement(cardData);
+            
+            if (isEditMode) {
+                // Update card in storage
+                const cardIndex = boardData.cards.findIndex(c => c.id === cardId);
+                if (cardIndex !== -1) {
+                    boardData.cards[cardIndex] = cardData;
+                }
+                
+                // Replace existing card
+                const existingCard = document.querySelector(`[data-card-id="${currentCardId}"]`);
+                if (existingCard) {
+                    cardBoard.replaceChild(card, existingCard);
+                }
+            } else {
+                // Add new card to storage
+                boardData.cards.push(cardData);
+                
+                // Add new card before the add button
+                cardBoard.insertBefore(card, addCardButton);
+            }
+            
+            // Save to localStorage
+            saveToLocalStorage();
+            
+            closeCardModal();
+        }
+        
+        // Create card DOM element from data
+        function createCardElement(cardData) {
             const card = document.createElement('div');
-            card.className = `card card-${selectedColor}`;
-            card.dataset.cardId = isEditMode ? currentCardId : `card-${Date.now()}`;
-            card.dataset.columnWidth = columnWidth;
+            card.className = `card card-${cardData.color}`;
+            card.dataset.cardId = cardData.id;
+            card.dataset.columnWidth = cardData.columnWidth;
             
             // Apply column width
-            if (columnWidth === '2') {
+            if (cardData.columnWidth === '2') {
                 card.style.gridColumn = 'span 2';
-            } else if (columnWidth === '3') {
+            } else if (cardData.columnWidth === '3') {
                 card.style.gridColumn = 'span 3';
             }
             
@@ -1035,7 +1035,7 @@
             const cardHeader = document.createElement('div');
             cardHeader.className = 'card-header';
             cardHeader.innerHTML = `
-                <div class="card-title">${title}</div>
+                <div class="card-title">${cardData.title}</div>
                 <div class="card-menu">
                     <i class="fas fa-ellipsis-v"></i>
                     <div class="card-menu-dropdown">
@@ -1059,88 +1059,151 @@
             cardContent.appendChild(cardHeader);
             
             // Add text content if available
-            if (content) {
+            if (cardData.content) {
                 const cardText = document.createElement('div');
                 cardText.className = 'card-text';
-                cardText.textContent = content;
+                cardText.textContent = cardData.content;
                 cardContent.appendChild(cardText);
             }
             
             // Add type-specific content
-            if (selectedType === 'youtube') {
-                const youtubeUrl = youtubeUrlInput.value.trim();
-                const youtubeId = getYoutubeId(youtubeUrl);
-                
-                if (youtubeId) {
-                    const youtubeContainer = document.createElement('div');
-                    youtubeContainer.className = 'card-youtube';
-                    youtubeContainer.dataset.youtubeId = youtubeId;
-                    youtubeContainer.innerHTML = `
-                        <img src="https://img.youtube.com/vi/${youtubeId}/maxresdefault.jpg" alt="YouTube Thumbnail">
-                        <div class="play-button">
-                            <i class="fas fa-play"></i>
-                        </div>
-                    `;
-                    cardContent.appendChild(youtubeContainer);
-                }
-            } else if (selectedType === 'image') {
-                const imageUrl = imageUrlInput.value.trim();
-                
-                if (imageUrl) {
-                    const imageContainer = document.createElement('div');
-                    imageContainer.className = 'card-image';
-                    imageContainer.innerHTML = `<img src="${imageUrl}" alt="Bild">`;
-                    cardContent.appendChild(imageContainer);
-                }
-            } else if (selectedType === 'link') {
-                const linkUrl = linkUrlInput.value.trim();
-                
-                if (linkUrl) {
-                    const linkContainer = document.createElement('div');
-                    linkContainer.className = 'card-link';
-                    linkContainer.innerHTML = `
-                        <a href="${linkUrl}" target="_blank" class="btn btn-outline w-100">
-                            <i class="fas fa-external-link-alt"></i>
-                            Link öffnen
-                        </a>
-                    `;
-                    cardContent.appendChild(linkContainer);
-                }
+            if (cardData.type === 'youtube' && cardData.youtubeId) {
+                const youtubeContainer = document.createElement('div');
+                youtubeContainer.className = 'card-youtube';
+                youtubeContainer.dataset.youtubeId = cardData.youtubeId;
+                youtubeContainer.innerHTML = `
+                    <img src="https://img.youtube.com/vi/${cardData.youtubeId}/maxresdefault.jpg" alt="YouTube Thumbnail">
+                    <div class="play-button">
+                        <i class="fas fa-play"></i>
+                    </div>
+                `;
+                cardContent.appendChild(youtubeContainer);
+            } else if (cardData.type === 'image' && cardData.imageUrl) {
+                const imageContainer = document.createElement('div');
+                imageContainer.className = 'card-image';
+                imageContainer.innerHTML = `<img src="${cardData.imageUrl}" alt="Bild">`;
+                cardContent.appendChild(imageContainer);
+            } else if (cardData.type === 'link' && cardData.linkUrl) {
+                const linkContainer = document.createElement('div');
+                linkContainer.className = 'card-link';
+                linkContainer.innerHTML = `
+                    <a href="${cardData.linkUrl}" target="_blank" class="btn btn-outline w-100">
+                        <i class="fas fa-external-link-alt"></i>
+                        Link öffnen
+                    </a>
+                `;
+                cardContent.appendChild(linkContainer);
             }
             
             card.appendChild(cardContent);
-            
-            if (isEditMode) {
-                // Replace existing card
-                const existingCard = document.querySelector(`[data-card-id="${currentCardId}"]`);
-                if (existingCard) {
-                    cardBoard.replaceChild(card, existingCard);
-                }
-            } else {
-                // Add new card before the add button
-                cardBoard.insertBefore(card, addCardButton);
-            }
-            
-            closeCardModal();
+            return card;
         }
 
         // Open Edit Card Modal
         function openEditCardModal(card) {
-            openCardModal(true, card);
+            const cardId = card.dataset.cardId;
+            const cardData = boardData.cards.find(c => c.id === cardId);
+            
+            if (cardData) {
+                // Pre-fill form with card data
+                cardTitleInput.value = cardData.title || '';
+                cardContentInput.value = cardData.content || '';
+                
+                if (cardData.type === 'youtube') {
+                    youtubeUrlInput.value = cardData.youtubeId ? `https://www.youtube.com/watch?v=${cardData.youtubeId}` : '';
+                } else if (cardData.type === 'image') {
+                    imageUrlInput.value = cardData.imageUrl || '';
+                } else if (cardData.type === 'link') {
+                    linkUrlInput.value = cardData.linkUrl || '';
+                }
+                
+                columnWidthInput.value = cardData.columnWidth || '1';
+                
+                // Set current values
+                selectedType = cardData.type || 'text';
+                selectedColor = cardData.color || 'blue';
+                
+                // Update UI
+                updateCardTypeSelection(selectedType);
+                updateColorSelection(selectedColor);
+                
+                // Open modal in edit mode
+                isEditMode = true;
+                currentCardId = cardId;
+                modalTitle.textContent = 'Karte bearbeiten';
+                cardModal.style.display = 'flex';
+            } else {
+                openCardModal(true, card);
+            }
         }
 
         // Duplicate Card
         function duplicateCard(card) {
-            const newCard = card.cloneNode(true);
-            newCard.dataset.cardId = `card-${Date.now()}`;
-            cardBoard.insertBefore(newCard, addCardButton);
+            const cardId = card.dataset.cardId;
+            const originalCard = boardData.cards.find(c => c.id === cardId);
+            
+            if (originalCard) {
+                // Create a deep copy
+                const newCardData = JSON.parse(JSON.stringify(originalCard));
+                newCardData.id = `card-${Date.now()}`;
+                
+                // Add to storage
+                boardData.cards.push(newCardData);
+                saveToLocalStorage();
+                
+                // Create and add to DOM
+                const newCard = createCardElement(newCardData);
+                cardBoard.insertBefore(newCard, addCardButton);
+            }
         }
 
         // Delete Card
         function deleteCard(card) {
             if (confirm('Bist du sicher, dass du diese Karte löschen möchtest?')) {
+                const cardId = card.dataset.cardId;
+                
+                // Remove from storage
+                const cardIndex = boardData.cards.findIndex(c => c.id === cardId);
+                if (cardIndex !== -1) {
+                    boardData.cards.splice(cardIndex, 1);
+                    saveToLocalStorage();
+                }
+                
+                // Remove from DOM
                 card.remove();
             }
+        }
+        
+        // Save board data to localStorage
+        function saveToLocalStorage() {
+            localStorage.setItem('taskcard-board', JSON.stringify(boardData));
+        }
+        
+        // Load board data from localStorage
+        function loadFromLocalStorage() {
+            const savedData = localStorage.getItem('taskcard-board');
+            if (savedData) {
+                try {
+                    boardData = JSON.parse(savedData);
+                    return true;
+                } catch (e) {
+                    console.error('Error loading data from localStorage:', e);
+                }
+            }
+            return false;
+        }
+        
+        // Render all cards from boardData
+        function renderCards() {
+            // Clear existing cards
+            const existingCards = document.querySelectorAll('.card:not(.add-card)');
+            existingCards.forEach(card => card.remove());
+            
+            // Render each card
+            boardData.cards.forEach(cardData => {
+                const card = createCardElement(cardData);
+                cardBoard.insertBefore(card, addCardButton);
+            });
         }
 
         // Search Cards
@@ -1171,6 +1234,10 @@
                     btn.classList.remove('active');
                 }
             });
+            
+            // Save layout preference
+            boardData.layout = columns;
+            saveToLocalStorage();
         }
 
         // Toggle View Mode (Lehrer/Schüler Modus)
@@ -1203,8 +1270,13 @@
             
             // Update share link
             updateShareLink();
+            
+            // Save mode preference in localStorage (not in URL to prevent always loading in student mode)
+            if (!url.searchParams.get('mode')) {
+                localStorage.setItem('taskcard-viewmode', isStudentMode ? 'student' : 'teacher');
+            }
         }
-        
+
         // Check URL for mode parameter on load
         function checkModeFromUrl() {
             const urlParams = new URLSearchParams(window.location.search);
@@ -1213,6 +1285,13 @@
             if (mode === 'student') {
                 viewModeToggle.checked = true;
                 toggleViewMode();
+            } else {
+                // Check localStorage preference if no URL parameter
+                const savedMode = localStorage.getItem('taskcard-viewmode');
+                if (savedMode === 'student') {
+                    viewModeToggle.checked = true;
+                    toggleViewMode();
+                }
             }
         }
         
@@ -1245,6 +1324,58 @@
                 copyLinkBtn.innerHTML = '<i class="fas fa-copy"></i>';
             }, 2000);
         }
+        
+        // Export board data to JSON file
+        function exportBoardData() {
+            const dataStr = JSON.stringify(boardData, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            
+            // Create download link
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `taskcard-board-${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            
+            // Cleanup
+            setTimeout(() => {
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }, 100);
+        }
+        
+        // Import board data from JSON file
+        function importBoardData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const importedData = JSON.parse(e.target.result);
+                    
+                    // Validate imported data
+                    if (importedData && Array.isArray(importedData.cards)) {
+                        if (confirm('Möchtest du die aktuelle Board-Konfiguration mit der importierten ersetzen?')) {
+                            boardData = importedData;
+                            saveToLocalStorage();
+                            renderCards();
+                            changeBoardLayout(boardData.layout || 3);
+                        }
+                    } else {
+                        alert('Die importierte Datei enthält keine gültigen Taskcard-Daten.');
+                    }
+                } catch (error) {
+                    console.error('Error importing data:', error);
+                    alert('Fehler beim Importieren der Daten.');
+                }
+            };
+            reader.readAsText(file);
+            
+            // Reset input to allow reimporting the same file
+            event.target.value = '';
+        }
 
         // Event Listeners
         addCardButton.addEventListener('click', () => openCardModal());
@@ -1257,6 +1388,8 @@
         shareBtn.addEventListener('click', openShareModal);
         closeShareModal.addEventListener('click', closeShareModal);
         copyLinkBtn.addEventListener('click', copyShareLink);
+        exportBtn.addEventListener('click', exportBoardData);
+        importFile.addEventListener('change', importBoardData);
 
         // Card Type Selection
         cardTypeOptions.forEach(option => {
@@ -1284,20 +1417,36 @@
         usePlaceholder.addEventListener('click', () => {
             const width = 400;
             const height = 300;
-            imageUrlInput.value = `/api/placeholder/${width}/${height}`;
+            imageUrlInput.value = `https://via.placeholder.com/${width}x${height}`;
         });
 
         // Close modal when clicking outside
         window.addEventListener('click', (e) => {
             if (e.target === cardModal) {
                 closeCardModal();
+            } else if (e.target === shareModal) {
+                closeShareModal();
             }
         });
 
-        // Initialize tooltips
+        // Initialize
         document.addEventListener('DOMContentLoaded', function() {
-            // Initialize with default 3-column layout
-            changeBoardLayout(3);
+            // Load data from localStorage
+            if (loadFromLocalStorage()) {
+                renderCards();
+                
+                // Apply saved layout
+                changeBoardLayout(boardData.layout || 3);
+            } else {
+                // Initialize with default 3-column layout
+                changeBoardLayout(3);
+            }
+            
+            // Check for student mode in URL
+            checkModeFromUrl();
+            
+            // Initialize share link
+            updateShareLink();
         });
     </script>
 </body>
