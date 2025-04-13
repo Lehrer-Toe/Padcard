@@ -109,6 +109,18 @@
                         </button>
                     </div>
                 </div>
+                
+                <!-- Unterordner Sektion (neu) -->
+                <div class="section-container" id="subfolderSection">
+                    <div class="section-header">
+                        <h3><i class="fas fa-folder-open"></i> Unterordner</h3>
+                    </div>
+                    <div class="folder-container" id="subfolderContainer">
+                        <!-- Unterordner werden dynamisch hinzugefügt -->
+                    </div>
+                </div>
+                
+                <!-- Pinnwände in diesem Ordner -->
                 <div class="board-container" id="folderBoardContainer">
                     <!-- Pinnwände werden dynamisch hinzugefügt -->
                 </div>
@@ -194,6 +206,16 @@
                     <div class="form-group">
                         <label for="folderTitle">Titel</label>
                         <input type="text" class="form-control" id="folderTitle" placeholder="Ordner-Titel">
+                    </div>
+                    <div class="form-group">
+                        <label for="folderParentSelect">Übergeordneter Ordner</label>
+                        <select class="form-control" id="folderParentSelect">
+                            <option value="">Kein übergeordneter Ordner</option>
+                            <!-- Ordner werden dynamisch hinzugefügt -->
+                        </select>
+                        <p class="info-text mt-2">
+                            Wähle einen übergeordneten Ordner aus, wenn dieser Ordner ein Unterordner sein soll.
+                        </p>
                     </div>
                     <div class="form-group">
                         <label>Farbe</label>
@@ -282,8 +304,12 @@
                                 <i class="fas fa-upload"></i> Bild hochladen
                             </label>
                             <input type="file" id="imageUpload" style="display: none;" accept="image/*">
+                            <button id="placeholderBtn" class="btn">
+                                <i class="fas fa-image"></i> Platzhalter verwenden
+                            </button>
                         </div>
                         <div id="imagePreview" class="image-preview"></div>
+                        <input type="hidden" id="cardPlaceholder" value="">
                     </div>
 
                     <div class="form-group link-fields" style="display: none;">
@@ -348,8 +374,16 @@
                                 </div>
                             </div>
 
-                            <div class="card-color-pickers">
-                                <!-- Color pickers werden dynamisch hinzugefügt -->
+                            <div class="material-colors card-color-pickers">
+                                <!-- Material colors werden dynamisch hinzugefügt -->
+                            </div>
+                            
+                            <div class="pastel-colors card-color-pickers" style="display: none;">
+                                <!-- Pastel colors werden dynamisch hinzugefügt -->
+                            </div>
+                            
+                            <div class="custom-colors card-color-pickers" style="display: none;">
+                                <!-- Custom colors werden dynamisch hinzugefügt -->
                             </div>
 
                             <div class="custom-color">
@@ -509,6 +543,42 @@
                 <div class="modal-footer">
                     <button class="btn" id="cancelConfirmBtn">Abbrechen</button>
                     <button class="btn btn-danger" id="confirmBtn">Bestätigen</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Thumbnail Modal (neu) -->
+        <div class="modal-overlay" id="thumbnailModal">
+            <div class="modal">
+                <div class="modal-header">
+                    <div class="modal-title" id="thumbnailModalTitle">Vorschaubild festlegen</div>
+                    <button class="modal-close" id="closeThumbnailModal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="thumbnailUrl">Bild URL</label>
+                        <input type="text" class="form-control" id="thumbnailUrl" placeholder="https://example.com/image.jpg">
+                    </div>
+                    <div class="form-group">
+                        <label for="thumbnailUpload">Bild hochladen</label>
+                        <div class="file-upload-container">
+                            <label for="thumbnailUpload" class="btn">
+                                <i class="fas fa-upload"></i> Durchsuchen...
+                            </label>
+                            <input type="file" id="thumbnailUpload" style="display: none;" accept="image/*">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="checkbox-container">
+                            <input type="checkbox" id="usePlaceholder">
+                            <label for="usePlaceholder">Platzhalter verwenden</label>
+                        </div>
+                    </div>
+                    <div id="thumbnailPreview" class="image-preview mt-3"></div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn" id="cancelThumbnailBtn">Abbrechen</button>
+                    <button class="btn btn-primary" id="saveThumbnailBtn">Speichern</button>
                 </div>
             </div>
         </div>

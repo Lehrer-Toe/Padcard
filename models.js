@@ -40,10 +40,12 @@ const DefaultColors = {
 
 // Data Models
 class Folder {
-    constructor(id, name, color) {
+    constructor(id, name, color, parentId) {
         this.id = id || `folder-${Date.now()}`;
         this.name = name || 'Neuer Ordner';
         this.color = color || '#2196F3';
+        this.parentId = parentId || null; // Parent folder ID for nesting
+        this.thumbnail = null; // Thumbnail/preview image
         this.created = new Date().toISOString();
         this.updated = this.created;
     }
@@ -60,6 +62,7 @@ class Board {
         this.layout = 3;
         this.view = 'grid';
         this.background = null;
+        this.thumbnail = null; // Thumbnail/preview image
         this.created = new Date().toISOString();
         this.updated = this.created;
     }
@@ -78,6 +81,7 @@ class Card {
         this.category = options.category || '';
         this.position = options.position || null;
         this.size = options.size || null;
+        this.thumbnail = options.thumbnail || null; // Thumbnail/preview image
         this.created = new Date().toISOString();
         this.updated = this.created;
         
@@ -163,10 +167,21 @@ const StorageService = {
             new Folder('folder-2', 'Projekte', '#2196F3')
         ];
         
+        // Create child folders
+        AppData.folders.push(new Folder('folder-3', 'Deutsch', '#f44336', 'folder-1'));
+        AppData.folders.push(new Folder('folder-4', 'Mathematik', '#4CAF50', 'folder-1'));
+        
+        // Create sub-child folders (new feature)
+        AppData.folders.push(new Folder('folder-5', 'Klasse 9', '#00bcd4', 'folder-3'));
+        AppData.folders.push(new Folder('folder-6', 'Klasse 10', '#FFEB3B', 'folder-3'));
+        
+        // Create third-level folders (deep nesting)
+        AppData.folders.push(new Folder('folder-7', 'Thema Argumentation', '#FF9800', 'folder-5'));
+        
         // Create default boards
         AppData.boards = [
-            new Board('board-1', 'Deutsch', '#f44336', 'folder-1'),
-            new Board('board-2', 'Mathematik', '#4CAF50', 'folder-1'),
+            new Board('board-1', 'Grammatik', '#f44336', 'folder-3'),
+            new Board('board-2', 'Literatur', '#4CAF50', 'folder-3'),
             new Board('board-3', 'Projektplanung', '#FF9800', 'folder-2'),
             new Board('board-4', 'Notizen', '#2196F3')
         ];
@@ -239,13 +254,51 @@ const FolderDAO = {
     },
     
     /**
+     * Get folders by parent ID
+     * @param {string|null} parentId - Parent folder ID or null for root folders
+     * @returns {Array} Array of child folder objects
+     */
+    getByParentId: function(parentId) {
+        return AppData.folders.filter(folder => folder.parentId === parentId);
+    },
+    
+    /**
+     * Get parent folder of a folder
+     * @param {string} id - Folder ID
+     * @returns {Object|null} Parent folder object or null if no parent
+     */
+    getParent: function(id) {
+        const folder = this.getById(id);
+        if (!folder || !folder.parentId) return null;
+        return this.getById(folder.parentId);
+    },
+    
+    /**
+     * Get the path array from root to the given folder
+     * @param {string} id - Folder ID
+     * @returns {Array} Array of folder objects from root to current folder
+     */
+    getPath: function(id) {
+        const path = [];
+        let currentFolder = this.getById(id);
+        
+        while (currentFolder) {
+            path.unshift(currentFolder);
+            currentFolder = this.getParent(currentFolder.id);
+        }
+        
+        return path;
+    },
+    
+    /**
      * Create new folder
      * @param {string} name - Folder name
      * @param {string} color - Folder color
+     * @param {string|null} parentId - Parent folder ID or null for root
      * @returns {Object} Created folder object
      */
-    create: function(name, color) {
-        const folder = new Folder(null, name, color);
+    create: function(name, color, parentId) {
+        const folder = new Folder(null, name, color, parentId);
         AppData.folders.push(folder);
         StorageService.saveAppData();
         return folder;
@@ -277,18 +330,61 @@ const FolderDAO = {
         const index = AppData.folders.findIndex(folder => folder.id === id);
         if (index === -1) return false;
         
-        // Remove folder
-        AppData.folders.splice(index, 1);
+        // Get all subfolders recursively
+        const allSubfolderIds = this.getAllSubfolderIds(id);
         
-        // Update boards that were in this folder (set folderId to null)
+        // Remove folder and all subfolders
+        AppData.folders = AppData.folders.filter(folder => 
+            folder.id !== id && !allSubfolderIds.includes(folder.id)
+        );
+        
+        // Update boards that were in this folder or any subfolders (set folderId to null)
         AppData.boards.forEach(board => {
-            if (board.folderId === id) {
+            if (board.folderId === id || allSubfolderIds.includes(board.folderId)) {
                 board.folderId = null;
             }
         });
         
         StorageService.saveAppData();
         return true;
+    },
+    
+    /**
+     * Get all subfolder IDs recursively
+     * @param {string} folderId - Parent folder ID
+     * @returns {Array} Array of subfolder IDs
+     */
+    getAllSubfolderIds: function(folderId) {
+        const result = [];
+        
+        // Get direct children
+        const children = this.getByParentId(folderId);
+        
+        children.forEach(child => {
+            result.push(child.id);
+            // Get grandchildren recursively
+            const grandchildren = this.getAllSubfolderIds(child.id);
+            result.push(...grandchildren);
+        });
+        
+        return result;
+    },
+    
+    /**
+     * Set folder thumbnail
+     * @param {string} id - Folder ID
+     * @param {string} thumbnailData - Base64 thumbnail data or URL
+     * @returns {Object|null} Updated folder or null if not found
+     */
+    setThumbnail: function(id, thumbnailData) {
+        const folder = this.getById(id);
+        if (!folder) return null;
+        
+        folder.thumbnail = thumbnailData;
+        folder.updated = new Date().toISOString();
+        
+        StorageService.saveAppData();
+        return folder;
     }
 };
 
@@ -541,6 +637,23 @@ const BoardDAO = {
         
         StorageService.saveAppData();
         return true;
+    },
+    
+    /**
+     * Set board thumbnail
+     * @param {string} id - Board ID
+     * @param {string} thumbnailData - Base64 thumbnail data or URL
+     * @returns {Object|null} Updated board or null if not found
+     */
+    setThumbnail: function(id, thumbnailData) {
+        const board = this.getById(id);
+        if (!board) return null;
+        
+        board.thumbnail = thumbnailData;
+        board.updated = new Date().toISOString();
+        
+        StorageService.saveAppData();
+        return board;
     }
 };
 
@@ -660,5 +773,16 @@ const Utils = {
         
         // Convert back to hex
         return `rgb(${r}, ${g}, ${b})`;
+    },
+    
+    /**
+     * Get placeholder image URL
+     * @param {string} text - Text to display on placeholder
+     * @param {string} bgcolor - Background color (hex without #)
+     * @param {string} textcolor - Text color (hex without #)
+     * @returns {string} Placeholder image URL
+     */
+    getPlaceholderImage: function(text = 'Platzhalter', bgcolor = 'e3f2fd', textcolor = '2196F3') {
+        return `https://placehold.co/600x400/${bgcolor}/${textcolor}?text=${encodeURIComponent(text)}`;
     }
 };

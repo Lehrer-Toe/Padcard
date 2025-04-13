@@ -37,6 +37,30 @@ const Controllers = {
         $('#saveCardBtn').on('click', () => this.saveCard());
         $('#cancelCardBtn, #closeCardModal').on('click', () => $('#cardModal').hide());
         
+        // Thumbnail modal actions
+        $('#closeThumbnailModal, #cancelThumbnailBtn').on('click', () => $('#thumbnailModal').hide());
+        $('#thumbnailUpload').on('change', function() {
+            const file = this.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    $('#thumbnailPreview').show().html(`<img src="${e.target.result}" alt="Preview" style="max-width: 100%; max-height: 200px;">`);
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+        $('#usePlaceholder').on('change', function() {
+            if ($(this).prop('checked')) {
+                $('#thumbnailPreview').show().html(`<img src="placeholder.png" alt="Placeholder" style="max-width: 100%; max-height: 200px;">`);
+                $('#thumbnailUrl').prop('disabled', true);
+                $('#thumbnailUpload').prop('disabled', true);
+            } else {
+                $('#thumbnailPreview').hide();
+                $('#thumbnailUrl').prop('disabled', false);
+                $('#thumbnailUpload').prop('disabled', false);
+            }
+        });
+        
         // Card type selection
         $('.card-type-option').on('click', function() {
             const type = $(this).data('type');
@@ -165,8 +189,9 @@ const Controllers = {
         
         // Placeholder for image cards
         $('#placeholderBtn').on('click', () => {
-            $('#imageUrl').val('https://placehold.co/600x400/e3f2fd/2196F3?text=Bildinhalt');
-            $('#imagePreview').show().html(`<img src="https://placehold.co/600x400/e3f2fd/2196F3?text=Bildinhalt" alt="Preview">`);
+            $('#imageUrl').val('');
+            $('#imagePreview').show().html(`<img src="placeholder.png" alt="Platzhalter">`);
+            $('#cardPlaceholder').val('placeholder.png');
         });
         
         // Student mode toggle
@@ -241,9 +266,40 @@ const Controllers = {
         $('#folderModalTitle').text('Neuer Ordner');
         $('#folderTitle').val('');
         
+        // Reset parent folder selection
+        Views.updateParentFolderSelect();
+        $('#folderParentSelect').val('');
+        
         // Reset color selection
         $('#folderColorPicker .color-option').removeClass('active');
         $('#folderColorPicker .color-option').first().addClass('active');
+        
+        // Remove folder ID data
+        $('#folderModal').removeData('id');
+        
+        // Show modal
+        $('#folderModal').show();
+    },
+    
+    /**
+     * Create a new subfolder
+     * @param {string} parentId - Parent folder ID
+     */
+    createSubfolder: function(parentId) {
+        // Reset form
+        $('#folderModalTitle').text('Neuer Unterordner');
+        $('#folderTitle').val('');
+        
+        // Set parent folder
+        Views.updateParentFolderSelect();
+        $('#folderParentSelect').val(parentId);
+        
+        // Reset color selection
+        $('#folderColorPicker .color-option').removeClass('active');
+        $('#folderColorPicker .color-option').first().addClass('active');
+        
+        // Remove folder ID data
+        $('#folderModal').removeData('id');
         
         // Show modal
         $('#folderModal').show();
@@ -260,6 +316,10 @@ const Controllers = {
         // Set form values
         $('#folderModalTitle').text('Ordner bearbeiten');
         $('#folderTitle').val(folder.name);
+        
+        // Set parent folder
+        Views.updateParentFolderSelect();
+        $('#folderParentSelect').val(folder.parentId || '');
         
         // Set color
         $('#folderColorPicker .color-option').removeClass('active');
@@ -297,22 +357,45 @@ const Controllers = {
         }
         
         const color = $('#folderColorPicker .color-option.active').data('color') || '#2196F3';
+        const parentId = $('#folderParentSelect').val() || null;
         const folderId = $('#folderModal').data('id');
         
         if (folderId) {
             // Update existing folder
-            FolderDAO.update(folderId, { name: title, color: color });
+            FolderDAO.update(folderId, { 
+                name: title, 
+                color: color,
+                parentId: parentId
+            });
             
             // Update view
-            if (AppData.view === 'folder' && AppData.currentFolder && AppData.currentFolder.id === folderId) {
-                Views.renderFolderView(folderId);
+            if (AppData.view === 'folder') {
+                if (AppData.currentFolder && AppData.currentFolder.id === folderId) {
+                    // If we're updating the current folder
+                    Views.renderFolderView(folderId);
+                } else if (AppData.currentFolder && AppData.currentFolder.id === parentId) {
+                    // If we've moved the folder to be a child of the current folder
+                    Views.renderFolderView(AppData.currentFolder.id);
+                } else if (!parentId) {
+                    // If we've moved the folder to the root and were in a different folder
+                    Views.renderHomeView();
+                }
             } else {
-                Views.renderFolders();
+                // If we're in home view, refresh it
+                Views.renderHomeView();
             }
         } else {
             // Create new folder
-            const folder = FolderDAO.create(title, color);
-            Views.renderFolders();
+            const folder = FolderDAO.create(title, color, parentId);
+            
+            // Update view
+            if (AppData.view === 'folder' && AppData.currentFolder && AppData.currentFolder.id === parentId) {
+                // If we're in the parent folder view, refresh it
+                Views.renderFolderView(parentId);
+            } else if (parentId === null) {
+                // If we've created a root folder, refresh home view
+                Views.renderHomeView();
+            }
         }
         
         // Hide modal
@@ -328,20 +411,69 @@ const Controllers = {
         const folder = FolderDAO.getById(folderId);
         if (!folder) return;
         
+        // Get all subfolders
+        const subFolders = FolderDAO.getByParentId(folderId);
+        
+        let message = `Möchtest du den Ordner "${folder.name}" wirklich löschen?`;
+        if (subFolders.length > 0) {
+            message += ` Dieser Ordner enthält ${subFolders.length} Unterordner, die ebenfalls gelöscht werden!`;
+        }
+        message += ' Die Pinnwände werden nicht gelöscht, sondern nur aus dem Ordner entfernt.';
+        
         Views.showConfirmModal(
             'Ordner löschen',
-            `Möchtest du den Ordner "${folder.name}" wirklich löschen? Die Pinnwände bleiben erhalten.`,
+            message,
             () => {
                 FolderDAO.delete(folderId);
                 
-                // If we're in the deleted folder, go back to home
-                if (AppData.view === 'folder' && AppData.currentFolder && AppData.currentFolder.id === folderId) {
-                    Views.renderHomeView();
+                // If we're in the deleted folder or any of its descendants, go back to home
+                if (AppData.view === 'folder') {
+                    const currentFolderId = AppData.currentFolder?.id;
+                    if (currentFolderId === folderId || FolderDAO.getAllSubfolderIds(folderId).includes(currentFolderId)) {
+                        Views.renderHomeView();
+                    } else if (folder.parentId && AppData.currentFolder && AppData.currentFolder.id === folder.parentId) {
+                        // If we're in the parent folder, refresh it
+                        Views.renderFolderView(folder.parentId);
+                    } else {
+                        // Otherwise stay in current folder
+                        Views.renderFolderView(AppData.currentFolder.id);
+                    }
                 } else {
-                    Views.renderFolders();
+                    Views.renderHomeView();
                 }
             }
         );
+    },
+    
+    /**
+     * Set folder thumbnail
+     * @param {string} folderId - Folder ID
+     */
+    setFolderThumbnail: function(folderId) {
+        const folder = FolderDAO.getById(folderId);
+        if (!folder) return;
+        
+        Views.showThumbnailModal(`Vorschaubild für "${folder.name}"`, (thumbnailData) => {
+            if (thumbnailData === 'placeholder') {
+                thumbnailData = 'placeholder.png';
+            }
+            
+            FolderDAO.setThumbnail(folderId, thumbnailData);
+            
+            // Refresh view
+            if (AppData.view === 'folder') {
+                if (AppData.currentFolder.id === folderId) {
+                    // Current folder - refresh folder view
+                    Views.renderFolderView(folderId);
+                } else if (AppData.currentFolder.id === folder.parentId) {
+                    // Parent folder - refresh subfolders
+                    Views.renderFolders(folder.parentId);
+                }
+            } else {
+                // Home view - refresh folders
+                Views.renderFolders(null);
+            }
+        });
     },
     
     /**
@@ -365,6 +497,9 @@ const Controllers = {
         } else {
             $('#boardFolderSelect').val('');
         }
+        
+        // Remove board ID data
+        $('#boardModal').removeData('id');
         
         // Show modal
         $('#boardModal').show();
@@ -446,6 +581,11 @@ const Controllers = {
             if (AppData.view === 'board' && AppData.currentBoard && AppData.currentBoard.id === boardId) {
                 // Update board title
                 $('#boardTitle').text(title);
+                
+                // If folder changed, may need to refresh entire view
+                if (AppData.currentBoard.folderId !== folderId) {
+                    Views.renderBoardView(boardId);
+                }
             } else if (AppData.view === 'folder' && AppData.currentFolder) {
                 // Refresh folder view
                 Views.renderBoardsInFolder(AppData.currentFolder.id);
@@ -458,9 +598,9 @@ const Controllers = {
             const board = BoardDAO.create(title, color, folderId || null);
             
             // Update view
-            if (AppData.view === 'folder' && AppData.currentFolder) {
+            if (AppData.view === 'folder' && AppData.currentFolder && AppData.currentFolder.id === folderId) {
                 Views.renderBoardsInFolder(AppData.currentFolder.id);
-            } else {
+            } else if (!folderId && AppData.view === 'home') {
                 Views.renderBoards(null);
             }
         }
@@ -468,6 +608,35 @@ const Controllers = {
         // Hide modal
         $('#boardModal').hide();
         $('#boardModal').removeData('id');
+    },
+    
+    /**
+     * Set board thumbnail
+     * @param {string} boardId - Board ID
+     */
+    setBoardThumbnail: function(boardId) {
+        const board = BoardDAO.getById(boardId);
+        if (!board) return;
+        
+        Views.showThumbnailModal(`Vorschaubild für "${board.name}"`, (thumbnailData) => {
+            if (thumbnailData === 'placeholder') {
+                thumbnailData = 'placeholder.png';
+            }
+            
+            BoardDAO.setThumbnail(boardId, thumbnailData);
+            
+            // Refresh view
+            if (AppData.view === 'board' && AppData.currentBoard.id === boardId) {
+                // Current board - refresh board view
+                Views.renderBoardView(boardId);
+            } else if (AppData.view === 'folder' && board.folderId === AppData.currentFolder.id) {
+                // In folder view - refresh boards
+                Views.renderBoardsInFolder(AppData.currentFolder.id);
+            } else if (AppData.view === 'home' && !board.folderId) {
+                // Home view and board not in a folder - refresh boards
+                Views.renderBoards(null);
+            }
+        });
     },
     
     /**
@@ -486,8 +655,8 @@ const Controllers = {
                 
                 // If we're in the deleted board, go back to previous view
                 if (AppData.view === 'board' && AppData.currentBoard && AppData.currentBoard.id === boardId) {
-                    if (AppData.currentBoard.folderId) {
-                        Views.renderFolderView(AppData.currentBoard.folderId);
+                    if (board.folderId) {
+                        Views.renderFolderView(board.folderId);
                     } else {
                         Views.renderHomeView();
                     }
@@ -514,6 +683,7 @@ const Controllers = {
         $('#imageUrl').val('');
         $('#linkUrl').val('');
         $('#learningappUrl').val('');
+        $('#cardPlaceholder').val('');
         
         // Reset card type
         $('.card-type-option').removeClass('active');
@@ -714,6 +884,12 @@ const Controllers = {
             category: cardCategory
         };
         
+        // Check for placeholder
+        const placeholderValue = $('#cardPlaceholder').val();
+        if (placeholderValue === 'placeholder.png') {
+            cardData.thumbnail = 'placeholder.png';
+        }
+        
         // Add type-specific data
         if (cardType === 'youtube') {
             const youtubeId = Utils.getYoutubeId($('#youtubeUrl').val().trim());
@@ -732,6 +908,9 @@ const Controllers = {
                 } catch (error) {
                     console.error('Error converting image to base64:', error);
                 }
+            } else if ($('#imagePreview img').attr('src') === 'placeholder.png') {
+                // Using placeholder
+                cardData.imageUrl = 'placeholder.png';
             } else {
                 // Use image URL
                 const imageUrl = $('#imageUrl').val().trim();
@@ -797,6 +976,31 @@ const Controllers = {
         // Hide modal
         $('#cardModal').hide();
         $('#cardModal').removeData('id');
+    },
+    
+    /**
+     * Set card thumbnail
+     * @param {string} boardId - Board ID
+     * @param {string} cardId - Card ID
+     */
+    setCardThumbnail: function(boardId, cardId) {
+        const board = BoardDAO.getById(boardId);
+        if (!board) return;
+        
+        const card = board.cards.find(c => c.id === cardId);
+        if (!card) return;
+        
+        Views.showThumbnailModal(`Vorschaubild für "${card.title}"`, (thumbnailData) => {
+            if (thumbnailData === 'placeholder') {
+                thumbnailData = 'placeholder.png';
+            }
+            
+            // Update card with new thumbnail
+            BoardDAO.updateCard(boardId, cardId, { thumbnail: thumbnailData });
+            
+            // Refresh view
+            this.refreshBoardView();
+        });
     },
     
     /**
