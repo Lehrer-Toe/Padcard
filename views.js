@@ -21,14 +21,13 @@ const Views = {
         folderColorPicker.empty();
         
         DefaultColors.folder.forEach(color => {
-            const colorOption = $(`<div class="color-option" style="background-color: ${color.color};" data-color="${color.color}" title="${color.name}"></div>`);
+            const colorOption = $(`<div class="color-option" style="background-color: ${color.color};" data-color="${color.color}"></div>`);
             folderColorPicker.append(colorOption);
-        });
-        
-        // Set click handler for folder color options
-        $('#folderColorPicker .color-option').on('click', function() {
-            $('#folderColorPicker .color-option').removeClass('active');
-            $(this).addClass('active');
+            
+            colorOption.on('click', function() {
+                folderColorPicker.find('.color-option').removeClass('active');
+                $(this).addClass('active');
+            });
         });
         
         // Select first color by default
@@ -39,14 +38,13 @@ const Views = {
         boardColorPicker.empty();
         
         DefaultColors.board.forEach(color => {
-            const colorOption = $(`<div class="color-option" style="background-color: ${color.color};" data-color="${color.color}" title="${color.name}"></div>`);
+            const colorOption = $(`<div class="color-option" style="background-color: ${color.color};" data-color="${color.color}"></div>`);
             boardColorPicker.append(colorOption);
-        });
-        
-        // Set click handler for board color options
-        $('#boardColorPicker .color-option').on('click', function() {
-            $('#boardColorPicker .color-option').removeClass('active');
-            $(this).addClass('active');
+            
+            colorOption.on('click', function() {
+                boardColorPicker.find('.color-option').removeClass('active');
+                $(this).addClass('active');
+            });
         });
         
         // Select first color by default
@@ -148,16 +146,6 @@ const Views = {
         
         // Initialize preview with default value
         customColorPreview.css('backgroundColor', customColorPicker.val());
-        
-        // Set click handlers for card color options
-        $('.color-option').on('click', function() {
-            $(this).closest('.card-color-pickers').find('.color-option').removeClass('active');
-            $(this).addClass('active');
-        });
-        
-        // Show material colors by default and hide others
-        $('.material-colors').show();
-        $('.pastel-colors, .custom-colors').hide();
     },
     
     /**
@@ -172,8 +160,8 @@ const Views = {
         // Update breadcrumb
         $('.breadcrumb-current').text('Meine Boards');
         
-        // Render top-level folders (with parentId === null)
-        this.renderFolders(null);
+        // Render folders
+        this.renderFolders();
         
         // Render boards not in folders
         this.renderBoards(null);
@@ -199,14 +187,11 @@ const Views = {
         $('#board-view').addClass('hidden');
         $('#folder-view').removeClass('hidden');
         
+        // Update breadcrumb
+        $('.breadcrumb-current').text(folder.name);
+        
         // Update folder title
         $('#folderTitle').text(folder.name);
-        
-        // Update breadcrumb with full path
-        this.updateBreadcrumbForFolder(folder);
-        
-        // Render subfolders in this folder
-        this.renderFolders(folderId);
         
         // Render boards in this folder
         this.renderBoardsInFolder(folderId);
@@ -214,43 +199,6 @@ const Views = {
         AppData.view = 'folder';
         AppData.currentFolder = folder;
         AppData.currentBoard = null;
-    },
-    
-    /**
-     * Update breadcrumb navigation for a folder
-     * @param {Object} folder - Folder object
-     */
-    updateBreadcrumbForFolder: function(folder) {
-        const path = FolderDAO.getPath(folder.id);
-        
-        // Clear current breadcrumb except home
-        $('.breadcrumb').find('.breadcrumb-item, .breadcrumb-separator').not(':first-child').remove();
-        
-        // Add each folder in path
-        path.forEach((folderItem, index) => {
-            // Add separator
-            $('.breadcrumb').append('<span class="breadcrumb-separator">/</span>');
-            
-            // Add folder link (except the last one)
-            if (index < path.length - 1) {
-                $('.breadcrumb').append(`
-                    <span class="breadcrumb-item" data-id="${folderItem.id}">
-                        ${folderItem.name}
-                    </span>
-                `);
-            } else {
-                // Last item is current folder
-                $('.breadcrumb').append(`
-                    <span class="breadcrumb-current">${folderItem.name}</span>
-                `);
-            }
-        });
-        
-        // Add click event to breadcrumb items
-        $('.breadcrumb-item').on('click', function() {
-            const folderId = $(this).data('id');
-            Controllers.openFolder(folderId);
-        });
     },
     
     /**
@@ -270,22 +218,7 @@ const Views = {
         $('#board-view').removeClass('hidden');
         
         // Update breadcrumb
-        if (board.folderId) {
-            const folder = FolderDAO.getById(board.folderId);
-            if (folder) {
-                this.updateBreadcrumbForFolder(folder);
-                // Add board to breadcrumb
-                $('.breadcrumb').append('<span class="breadcrumb-separator">/</span>');
-                $('.breadcrumb-current').text(board.name);
-            } else {
-                $('.breadcrumb-current').text(board.name);
-            }
-        } else {
-            // Board not in folder
-            $('.breadcrumb').find('.breadcrumb-item, .breadcrumb-separator').not(':first-child').remove();
-            $('.breadcrumb').append('<span class="breadcrumb-separator">/</span>');
-            $('.breadcrumb').append(`<span class="breadcrumb-current">${board.name}</span>`);
-        }
+        $('.breadcrumb-current').text(board.name);
         
         // Update board title
         $('#boardTitle').text(board.name);
@@ -402,50 +335,22 @@ const Views = {
     
     /**
      * Render folders
-     * @param {string|null} parentId - Parent folder ID or null for root folders
      */
-    renderFolders: function(parentId) {
-        const containerSelector = parentId === null ? '#folderContainer' : '#subfolderContainer';
-        const folderContainer = $(containerSelector);
+    renderFolders: function() {
+        const folderContainer = $('#folderContainer');
         folderContainer.empty();
         
-        // Get folders with specified parent
-        const folders = FolderDAO.getByParentId(parentId);
+        // Get all folders
+        const folders = FolderDAO.getAll();
         
         // Sort alphabetically
         folders.sort((a, b) => a.name.localeCompare(b.name));
-        
-        // Add the "Add subfolder" button for non-student mode when in folder view
-        if (parentId !== null && !AppData.studentMode) {
-            const addFolderButton = $(`
-                <div class="folder editor-only add-folder">
-                    <div class="folder-content">
-                        <div class="folder-icon">
-                            <i class="fas fa-folder-plus"></i>
-                        </div>
-                        <div class="folder-title">Neuen Unterordner erstellen</div>
-                    </div>
-                </div>
-            `);
-            
-            addFolderButton.on('click', function() {
-                Controllers.createSubfolder(parentId);
-            });
-            
-            folderContainer.append(addFolderButton);
-        }
         
         // Create folder elements
         folders.forEach(folder => {
             const folderElement = this.createFolderElement(folder);
             folderContainer.append(folderElement);
         });
-        
-        // Show/hide subfolders section based on if there are any folders
-        if (parentId !== null) {
-            const hasSubfolders = folders.length > 0 || !AppData.studentMode;
-            $('#subfolderSection').toggle(hasSubfolders);
-        }
     },
     
     /**
@@ -469,12 +374,6 @@ const Views = {
                             <div class="folder-menu-item" data-action="edit">
                                 <i class="fas fa-edit"></i> Bearbeiten
                             </div>
-                            <div class="folder-menu-item" data-action="addSubfolder">
-                                <i class="fas fa-folder-plus"></i> Unterordner hinzufügen
-                            </div>
-                            <div class="folder-menu-item" data-action="setThumbnail">
-                                <i class="fas fa-image"></i> Vorschaubild
-                            </div>
                             <div class="folder-menu-item" data-action="delete">
                                 <i class="fas fa-trash"></i> Löschen
                             </div>
@@ -483,11 +382,6 @@ const Views = {
                 </div>
             </div>
         `);
-        
-        // Add thumbnail if exists
-        if (folder.thumbnail) {
-            folderElement.find('.folder-icon').html(`<img src="${folder.thumbnail}" alt="Thumbnail" class="folder-thumbnail">`);
-        }
         
         // Open folder on click
         folderElement.on('click', function(e) {
@@ -513,10 +407,6 @@ const Views = {
             
             if (action === 'edit') {
                 Controllers.editFolder(folderId);
-            } else if (action === 'addSubfolder') {
-                Controllers.createSubfolder(folderId);
-            } else if (action === 'setThumbnail') {
-                Controllers.setFolderThumbnail(folderId);
             } else if (action === 'delete') {
                 Controllers.deleteFolder(folderId);
             }
@@ -673,9 +563,6 @@ const Views = {
                                 <div class="board-menu-item" data-action="edit">
                                     <i class="fas fa-edit"></i> Bearbeiten
                                 </div>
-                                <div class="board-menu-item" data-action="setThumbnail">
-                                    <i class="fas fa-image"></i> Vorschaubild
-                                </div>
                                 <div class="board-menu-item" data-action="delete">
                                     <i class="fas fa-trash"></i> Löschen
                                 </div>
@@ -694,14 +581,8 @@ const Views = {
             </div>
         `);
         
-        // If board has a thumbnail, add it to preview
-        if (board.thumbnail) {
-            boardElement.find('.board-preview').html(`
-                <img src="${board.thumbnail}" class="board-thumbnail" alt="${board.name}">
-            `);
-        } 
         // If board has a background, add it to preview
-        else if (board.background && (board.background.url || board.background.data)) {
+        if (board.background && (board.background.url || board.background.data)) {
             const bgUrl = board.background.data || board.background.url;
             boardElement.find('.board-preview').append(`
                 <img src="${bgUrl}" class="board-preview-image" alt="${board.name}">
@@ -732,8 +613,6 @@ const Views = {
             
             if (action === 'edit') {
                 Controllers.editBoard(boardId);
-            } else if (action === 'setThumbnail') {
-                Controllers.setBoardThumbnail(boardId);
             } else if (action === 'delete') {
                 Controllers.deleteBoard(boardId);
             }
@@ -1007,9 +886,6 @@ const Views = {
                                 <div class="card-menu-item" data-action="duplicate">
                                     <i class="fas fa-copy"></i> Duplizieren
                                 </div>
-                                <div class="card-menu-item" data-action="setThumbnail">
-                                    <i class="fas fa-image"></i> Vorschaubild
-                                </div>
                                 <div class="card-menu-item" data-action="delete">
                                     <i class="fas fa-trash"></i> Löschen
                                 </div>
@@ -1053,15 +929,6 @@ const Views = {
             cardContent.append(`<div class="card-text">${card.content}</div>`);
         }
         
-        // Add thumbnail if exists and not for type-specific content
-        if (card.thumbnail && card.type === 'text') {
-            cardContent.append(`
-                <div class="card-image">
-                    <img src="${card.thumbnail}" alt="Thumbnail">
-                </div>
-            `);
-        }
-        
         // Add type-specific content
         if (card.type === 'youtube' && card.youtubeId) {
             cardContent.append(`
@@ -1094,15 +961,6 @@ const Views = {
                 </div>
             `);
         } else if (card.type === 'link' && card.linkUrl) {
-            // Add thumbnail if exists
-            if (card.thumbnail) {
-                cardContent.append(`
-                    <div class="card-image">
-                        <img src="${card.thumbnail}" alt="Link-Vorschau">
-                    </div>
-                `);
-            }
-            
             cardContent.append(`
                 <div class="card-link">
                     <a href="${card.linkUrl}" target="_blank" class="btn">
@@ -1111,15 +969,6 @@ const Views = {
                 </div>
             `);
         } else if (card.type === 'learningapp' && card.learningappId) {
-            // Add thumbnail if exists (for LearningApps a placeholder will be better)
-            if (card.thumbnail) {
-                cardContent.append(`
-                    <div class="card-image">
-                        <img src="${card.thumbnail}" alt="LearningApp-Vorschau">
-                    </div>
-                `);
-            }
-            
             cardContent.append(`
                 <div class="card-learningapp">
                     <iframe src="https://learningapps.org/watch?app=${card.learningappId}" 
@@ -1129,15 +978,6 @@ const Views = {
                 </div>
             `);
         } else if (card.type === 'audio' && (card.audioUrl || card.audioData)) {
-            // Add thumbnail if exists
-            if (card.thumbnail) {
-                cardContent.append(`
-                    <div class="card-image">
-                        <img src="${card.thumbnail}" alt="Audio-Vorschau">
-                    </div>
-                `);
-            }
-            
             const audioUrl = card.audioData || card.audioUrl;
             cardContent.append(`
                 <div class="card-audio">
@@ -1170,8 +1010,6 @@ const Views = {
                 Controllers.editCard(boardId, cardId);
             } else if (action === 'duplicate') {
                 Controllers.duplicateCard(boardId, cardId);
-            } else if (action === 'setThumbnail') {
-                Controllers.setCardThumbnail(boardId, cardId);
             } else if (action === 'delete') {
                 Controllers.deleteCard(boardId, cardId);
             }
@@ -1209,59 +1047,11 @@ const Views = {
         // Add "No folder" option
         folderSelect.append('<option value="">Kein Ordner</option>');
         
-        // Add folders grouped by hierarchy
-        this.addFoldersToSelect(folderSelect, null, 0);
-    },
-    
-    /**
-     * Add folders to select dropdown recursively
-     * @param {jQuery} select - The select element
-     * @param {string|null} parentId - Parent folder ID or null for root
-     * @param {number} level - Hierarchy level (for indentation)
-     */
-    addFoldersToSelect: function(select, parentId, level) {
-        // Get folders with specified parent
-        const folders = FolderDAO.getByParentId(parentId);
-        
-        // Sort alphabetically
-        folders.sort((a, b) => a.name.localeCompare(b.name));
-        
-        // Add folders to select
+        // Add folders
+        const folders = FolderDAO.getAll();
         folders.forEach(folder => {
-            // Create indent based on level
-            const indent = '&nbsp;'.repeat(level * 4);
-            select.append(`<option value="${folder.id}">${indent}${level > 0 ? '└ ' : ''}${folder.name}</option>`);
-            
-            // Add children recursively
-            this.addFoldersToSelect(select, folder.id, level + 1);
+            folderSelect.append(`<option value="${folder.id}">${folder.name}</option>`);
         });
-    },
-    
-    /**
-     * Update parent folder select dropdown in folder modal
-     */
-    updateParentFolderSelect: function() {
-        const parentFolderSelect = $('#folderParentSelect');
-        parentFolderSelect.empty();
-        
-        // Add "No parent" option
-        parentFolderSelect.append('<option value="">Kein übergeordneter Ordner</option>');
-        
-        // Add folders grouped by hierarchy
-        this.addFoldersToSelect(parentFolderSelect, null, 0);
-        
-        // If editing a folder, exclude the folder and its children
-        const editingFolderId = $('#folderModal').data('id');
-        if (editingFolderId) {
-            // Get all children of this folder
-            const childIds = FolderDAO.getAllSubfolderIds(editingFolderId);
-            childIds.push(editingFolderId); // Also exclude the folder itself
-            
-            // Remove options for the folder and its children
-            childIds.forEach(id => {
-                parentFolderSelect.find(`option[value="${id}"]`).remove();
-            });
-        }
     },
     
     /**
@@ -1323,58 +1113,5 @@ const Views = {
         
         // Show modal
         $('#confirmModal').show();
-    },
-    
-    /**
-     * Show thumbnail modal
-     * @param {string} title - Modal title
-     * @param {function} saveCallback - Function to call when saved
-     */
-    showThumbnailModal: function(title, saveCallback) {
-        // Set modal title
-        $('#thumbnailModalTitle').text(title);
-        
-        // Reset form
-        $('#thumbnailUrl').val('');
-        $('#thumbnailUpload').val('');
-        $('#usePlaceholder').prop('checked', false);
-        $('#thumbnailPreview').hide().empty();
-        
-        // Set save button action
-        $('#saveThumbnailBtn').off('click').on('click', async function() {
-            // Check if placeholder is selected
-            if ($('#usePlaceholder').prop('checked')) {
-                saveCallback('placeholder');
-                $('#thumbnailModal').hide();
-                return;
-            }
-            
-            // Check for uploaded file
-            const file = $('#thumbnailUpload')[0].files[0];
-            if (file) {
-                try {
-                    const thumbnailData = await Utils.fileToBase64(file);
-                    saveCallback(thumbnailData);
-                    $('#thumbnailModal').hide();
-                } catch (error) {
-                    console.error('Error converting image to base64:', error);
-                    alert('Fehler beim Verarbeiten des Bildes.');
-                }
-                return;
-            }
-            
-            // Check for URL
-            const url = $('#thumbnailUrl').val().trim();
-            if (url) {
-                saveCallback(url);
-                $('#thumbnailModal').hide();
-                return;
-            }
-            
-            alert('Bitte wähle eine Bildquelle aus.');
-        });
-        
-        // Show modal
-        $('#thumbnailModal').show();
     }
 };

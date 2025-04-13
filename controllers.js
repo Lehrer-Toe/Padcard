@@ -1,157 +1,131 @@
 /**
  * Controllers for Taskcard-Manager
- *
- * Dieses File enthält die Controller-Logik, die Benutzerinteraktionen verarbeitet
- * und die Modelle mit den Views verbindet.
+ * 
+ * This file contains controller logic that handles user interactions
+ * and connects the models with the views.
  */
 
 const Controllers = {
     /**
-     * Initialisiert alle Controller
+     * Initialize controllers
      */
     init: function() {
         this.initEventHandlers();
     },
-
+    
     /**
-     * Registriert sämtliche Eventhandler
+     * Initialize event handlers
      */
     initEventHandlers: function() {
         // Navigation
         $('.breadcrumb-home').on('click', () => this.navigateHome());
-
-        // Folder-Aktionen
+        
+        // Folder actions
         $('#newFolderBtn').on('click', () => this.createFolder());
         $('#saveFolderBtn').on('click', () => this.saveFolder());
         $('#cancelFolderBtn, #closeFolderModal').on('click', () => $('#folderModal').hide());
         $('#editFolderBtn').on('click', () => this.editCurrentFolder());
-
-        // Board-Aktionen
+        
+        // Board actions
         $('#newBoardBtn, #newBoardInFolderBtn').on('click', () => this.createBoard());
         $('#saveBoardBtn').on('click', () => this.saveBoard());
         $('#cancelBoardBtn, #closeBoardModal').on('click', () => $('#boardModal').hide());
         $('#editBoardTitleBtn').on('click', () => this.editCurrentBoard());
-
-        // Card-Aktionen
+        
+        // Card actions
         $('#newCardBtn, #addCardBtnGrid').on('click', () => this.createCard());
         $('#saveCardBtn').on('click', () => this.saveCard());
         $('#cancelCardBtn, #closeCardModal').on('click', () => $('#cardModal').hide());
-
-        // Thumbnail-Modal-Aktionen
-        $('#closeThumbnailModal, #cancelThumbnailBtn').on('click', () => $('#thumbnailModal').hide());
-        $('#thumbnailUpload').on('change', function() {
-            const file = this.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    $('#thumbnailPreview')
-                        .show()
-                        .html(`<img src="${e.target.result}" alt="Preview" style="max-width: 100%; max-height: 200px;">`);
-                };
-                reader.readAsDataURL(file);
-            }
-        });
-        $('#usePlaceholder').on('change', function() {
-            if ($(this).prop('checked')) {
-                $('#thumbnailPreview')
-                    .show()
-                    .html(`<img src="placeholder.png" alt="Placeholder" style="max-width: 100%; max-height: 200px;">`);
-                $('#thumbnailUrl').prop('disabled', true);
-                $('#thumbnailUpload').prop('disabled', true);
-            } else {
-                $('#thumbnailPreview').hide();
-                $('#thumbnailUrl').prop('disabled', false);
-                $('#thumbnailUpload').prop('disabled', false);
-            }
-        });
-
-        // Card-Typ-Auswahl
+        
+        // Card type selection
         $('.card-type-option').on('click', function() {
             const type = $(this).data('type');
             $('.card-type-option').removeClass('active');
             $(this).addClass('active');
-
-            // Alle typ-spezifischen Felder ausblenden
+            
+            // Hide all type-specific fields
             $('.youtube-fields, .image-fields, .link-fields, .learningapp-fields, .audio-fields').hide();
-
-            // Gewählte Felder einblenden
+            
+            // Show selected type fields
             $(`.${type}-fields`).show();
         });
-
-        // Farb-Palette-Auswahl
+        
+        // Color palette selection
         $('.color-palette').on('click', function() {
             const palette = $(this).data('palette');
             $('.color-palette').removeClass('active');
             $(this).addClass('active');
-
-            // Alle Color-Picker ausblenden
+            
+            // Hide all color pickers
             $('.material-colors, .pastel-colors, .custom-colors').hide();
-
-            // Aktuelle Palette einblenden
+            
+            // Show selected palette
             $(`.${palette}-colors`).show();
         });
-
-        // Benutzerdefinierte Farbe übernehmen
+        
+        // Apply custom color
         $('#applyCustomColorBtn').on('click', () => {
             const customColor = $('#customColorPicker').val();
             $('.color-option').removeClass('active');
             $('#customColorPreview').css('backgroundColor', customColor);
         });
-
-        // Karten-Größe-Auswahl
+        
+        // Card size selection
         $('.width-btn').on('click', function() {
             $('.width-btn').removeClass('active');
             $(this).addClass('active');
         });
+        
         $('.height-btn').on('click', function() {
             $('.height-btn').removeClass('active');
             $(this).addClass('active');
         });
-
-        // Ansichtsauswahl (Raster, Frei, Kategorien)
+        
+        // View selection
         $('.view-btn').on('click', function() {
             const view = $(this).data('view');
             Views.changeCardView(view);
         });
-
-        // Layout-Auswahl (Spaltenanzahl)
+        
+        // Layout selection
         $('.layout-btn').on('click', function() {
             const columns = parseInt($(this).data('columns'));
             Views.updateBoardLayout(columns);
         });
-
-        // Suche
+        
+        // Search
         $('#searchInput').on('input', this.filterCards);
-
-        // Kategorie-Aktionen
+        
+        // Category actions
         $('#addCategoryBtn').on('click', () => this.createCategory());
         $('#categoriesBtn').on('click', () => this.openCategoryModal());
         $('#addCategoryFormBtn').on('click', () => this.saveCategory());
         $('#closeCategoryModal, #closeCategoryBtn').on('click', () => $('#categoryModal').hide());
-
-        // Hintergrund-Aktionen
+        
+        // Background actions
         $('#backgroundBtn').on('click', () => this.openBackgroundModal());
         $('#closeBackgroundModal, #cancelBackgroundBtn').on('click', () => $('#backgroundModal').hide());
         $('#saveBackgroundBtn').on('click', () => this.saveBackground());
         $('#removeBackgroundBtn').on('click', () => this.removeBackground());
-
-        // Stiloptionen für Hintergrund
+        
+        // Background style options
         $('.background-style-option').on('click', function() {
             $('.background-style-option').removeClass('active');
             $(this).addClass('active');
         });
-
-        // Hintergrund-Transparenz
+        
+        // Background opacity
         $('#backgroundOpacity').on('input', function() {
             const value = $(this).val();
             $('#opacityValue').text(`${value}%`);
         });
-
-        // Hintergrund-Datei-Upload
+        
+        // Background file upload
         $('#backgroundUpload').on('change', function() {
             const file = this.files[0];
             if (file) {
                 $('#backgroundFileName').text(file.name);
+                // Preview the image
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     $('.bg-preview').css('backgroundImage', `url(${e.target.result})`);
@@ -159,166 +133,135 @@ const Controllers = {
                 reader.readAsDataURL(file);
             }
         });
-
-        // Bild-Upload für Karten
+        
+        // Image upload for cards
         $('#imageUpload').on('change', function() {
             const file = this.files[0];
             if (file) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
-                    $('#imagePreview')
-                        .show()
-                        .html(`<img src="${e.target.result}" alt="Preview">`);
+                    $('#imagePreview').show().html(`<img src="${e.target.result}" alt="Preview">`);
                 };
                 reader.readAsDataURL(file);
             }
         });
-
-        // Audio-Upload für Karten
+        
+        // Audio upload for cards
         $('#audioUpload').on('change', function() {
             const file = this.files[0];
             if (file) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
-                    $('#audioPreview')
-                        .show()
-                        .html(`
-                            <audio controls>
-                                <source src="${e.target.result}" type="audio/mpeg">
-                                Dein Browser unterstützt kein Audio-Element.
-                            </audio>
-                        `);
+                    $('#audioPreview').show().html(`
+                        <audio controls>
+                            <source src="${e.target.result}" type="audio/mpeg">
+                            Dein Browser unterstützt kein Audio-Element.
+                        </audio>
+                    `);
                 };
                 reader.readAsDataURL(file);
             }
         });
-
-        // Platzhalter für Bildkarten
+        
+        // Placeholder for image cards
         $('#placeholderBtn').on('click', () => {
-            $('#imageUrl').val('');
-            $('#imagePreview')
-                .show()
-                .html(`<img src="placeholder.png" alt="Platzhalter">`);
-            $('#cardPlaceholder').val('placeholder.png');
+            $('#imageUrl').val('https://placehold.co/600x400/e3f2fd/2196F3?text=Bildinhalt');
+            $('#imagePreview').show().html(`<img src="https://placehold.co/600x400/e3f2fd/2196F3?text=Bildinhalt" alt="Preview">`);
         });
-
-        // Schülermodus umschalten
+        
+        // Student mode toggle
         $('#studentModeToggle').on('change', () => this.toggleStudentMode());
-
-        // Teilen-Button
+        
+        // Share button
         $('#shareBtn').on('click', () => this.openShareModal());
         $('#closeShareModal').on('click', () => $('#shareModal').hide());
         $('#copyLinkBtn').on('click', () => this.copyShareLink());
-
+        
         // Import/Export
         $('#exportBtn').on('click', () => StorageService.exportData());
         $('#importFile').on('change', (e) => this.importData(e));
-
-        // Sortieroptionen
+        
+        // Sort options
         $('.sort-option').on('click', function() {
             $('.sort-option').removeClass('active');
             $(this).addClass('active');
-
-            // Boards neu sortieren
+            
+            // Resort boards
             if (AppData.view === 'home') {
                 Views.renderBoards(null);
             } else if (AppData.view === 'folder' && AppData.currentFolder) {
                 Views.renderBoardsInFolder(AppData.currentFolder.id);
             }
         });
-
-        // Bestätigungs-Modal schließen
+        
+        // Close confirmation modal
         $('#closeConfirmModal, #cancelConfirmBtn').on('click', () => $('#confirmModal').hide());
-
-        // Dropdowns schließen, wenn man außen klickt
+        
+        // Close dropdowns when clicking outside
         $(document).on('click', function(e) {
             if (!$(e.target).closest('.folder-menu, .board-menu, .card-menu, .dropdown').length) {
                 $('.folder-menu-dropdown, .board-menu-dropdown, .card-menu-dropdown, .dropdown-menu').removeClass('show');
             }
         });
-
-        // Dropdown-Toggle
+        
+        // Dropdown toggle
         $('.dropdown-toggle').on('click', function() {
             $(this).siblings('.dropdown-menu').toggleClass('show');
         });
     },
-
+    
     /**
-     * Zur Startseite navigieren
+     * Navigate to home view
      */
     navigateHome: function() {
         Views.renderHomeView();
     },
-
+    
     /**
-     * Ordner öffnen
-     * @param {string} folderId - Ordner-ID
+     * Open a folder
+     * @param {string} folderId - Folder ID
      */
     openFolder: function(folderId) {
         Views.renderFolderView(folderId);
     },
-
+    
     /**
-     * Pinnwand öffnen
-     * @param {string} boardId - Pinnwand-ID
+     * Open a board
+     * @param {string} boardId - Board ID
      */
     openBoard: function(boardId) {
         Views.renderBoardView(boardId);
     },
-
+    
     /**
-     * Neuen Ordner anlegen
+     * Create a new folder
      */
     createFolder: function() {
+        // Reset form
         $('#folderModalTitle').text('Neuer Ordner');
         $('#folderTitle').val('');
-
-        // Dropdown der übergeordneten Ordner aktualisieren
-        Views.updateParentFolderSelect();
-        $('#folderParentSelect').val('');
-
-        // Farbwahl zurücksetzen
+        
+        // Reset color selection
         $('#folderColorPicker .color-option').removeClass('active');
         $('#folderColorPicker .color-option').first().addClass('active');
-
-        // Ordner-ID entfernen
-        $('#folderModal').removeData('id');
-
+        
+        // Show modal
         $('#folderModal').show();
     },
-
+    
     /**
-     * Neuen Unterordner anlegen
-     * @param {string} parentId - ID des übergeordneten Ordners
-     */
-    createSubfolder: function(parentId) {
-        $('#folderModalTitle').text('Neuer Unterordner');
-        $('#folderTitle').val('');
-
-        Views.updateParentFolderSelect();
-        $('#folderParentSelect').val(parentId);
-
-        $('#folderColorPicker .color-option').removeClass('active');
-        $('#folderColorPicker .color-option').first().addClass('active');
-
-        $('#folderModal').removeData('id');
-        $('#folderModal').show();
-    },
-
-    /**
-     * Ordner bearbeiten
-     * @param {string} folderId - Ordner-ID
+     * Edit a folder
+     * @param {string} folderId - Folder ID
      */
     editFolder: function(folderId) {
         const folder = FolderDAO.getById(folderId);
         if (!folder) return;
-
+        
+        // Set form values
         $('#folderModalTitle').text('Ordner bearbeiten');
         $('#folderTitle').val(folder.name);
-
-        Views.updateParentFolderSelect();
-        $('#folderParentSelect').val(folder.parentId || '');
-
+        
+        // Set color
         $('#folderColorPicker .color-option').removeClass('active');
         const colorOption = $(`#folderColorPicker .color-option[data-color="${folder.color}"]`);
         if (colorOption.length) {
@@ -326,172 +269,129 @@ const Controllers = {
         } else {
             $('#folderColorPicker .color-option').first().addClass('active');
         }
-
+        
+        // Store folder ID in form
         $('#folderModal').data('id', folder.id);
+        
+        // Show modal
         $('#folderModal').show();
     },
-
+    
     /**
-     * Aktuellen Ordner bearbeiten
+     * Edit the current folder
      */
     editCurrentFolder: function() {
         if (AppData.currentFolder) {
             this.editFolder(AppData.currentFolder.id);
         }
     },
-
+    
     /**
-     * Ordner speichern (neu oder update)
+     * Save a folder (create or update)
      */
     saveFolder: function() {
         const title = $('#folderTitle').val().trim();
         if (!title) {
-            alert('Bitte einen Titel eingeben.');
+            alert('Bitte gib einen Titel ein.');
             return;
         }
-
+        
         const color = $('#folderColorPicker .color-option.active').data('color') || '#2196F3';
-        const parentId = $('#folderParentSelect').val() || null;
         const folderId = $('#folderModal').data('id');
-
+        
         if (folderId) {
-            // Existierenden Ordner updaten
-            FolderDAO.update(folderId, {
-                name: title,
-                color: color,
-                parentId: parentId
-            });
-
-            if (AppData.view === 'folder') {
-                if (AppData.currentFolder && AppData.currentFolder.id === folderId) {
-                    Views.renderFolderView(folderId);
-                } else if (AppData.currentFolder && AppData.currentFolder.id === parentId) {
-                    Views.renderFolderView(AppData.currentFolder.id);
-                } else if (!parentId) {
-                    Views.renderHomeView();
-                }
+            // Update existing folder
+            FolderDAO.update(folderId, { name: title, color: color });
+            
+            // Update view
+            if (AppData.view === 'folder' && AppData.currentFolder && AppData.currentFolder.id === folderId) {
+                Views.renderFolderView(folderId);
             } else {
-                Views.renderHomeView();
+                Views.renderFolders();
             }
         } else {
-            // Neuen Ordner anlegen
-            const newFolder = FolderDAO.create(title, color, parentId);
-            if (AppData.view === 'folder' && AppData.currentFolder && AppData.currentFolder.id === parentId) {
-                Views.renderFolderView(parentId);
-            } else if (parentId === null) {
-                Views.renderHomeView();
-            }
+            // Create new folder
+            const folder = FolderDAO.create(title, color);
+            Views.renderFolders();
         }
-
+        
+        // Hide modal
         $('#folderModal').hide();
         $('#folderModal').removeData('id');
     },
-
+    
     /**
-     * Ordner löschen
-     * @param {string} folderId - Ordner-ID
+     * Delete a folder
+     * @param {string} folderId - Folder ID
      */
     deleteFolder: function(folderId) {
         const folder = FolderDAO.getById(folderId);
         if (!folder) return;
-
-        const subFolders = FolderDAO.getByParentId(folderId);
-        let message = `Soll der Ordner "${folder.name}" wirklich gelöscht werden?`;
-        if (subFolders.length > 0) {
-            message += ` Dieser Ordner enthält ${subFolders.length} Unterordner, die ebenfalls gelöscht werden!`;
-        }
-        message += ' Die Pinnwände werden nicht gelöscht, sondern nur aus dem Ordner entfernt.';
-
+        
         Views.showConfirmModal(
             'Ordner löschen',
-            message,
+            `Möchtest du den Ordner "${folder.name}" wirklich löschen? Die Pinnwände bleiben erhalten.`,
             () => {
                 FolderDAO.delete(folderId);
-                if (AppData.view === 'folder') {
-                    const currentFolderId = AppData.currentFolder?.id;
-                    if (
-                        currentFolderId === folderId ||
-                        FolderDAO.getAllSubfolderIds(folderId).includes(currentFolderId)
-                    ) {
-                        Views.renderHomeView();
-                    } else if (folder.parentId && AppData.currentFolder && AppData.currentFolder.id === folder.parentId) {
-                        Views.renderFolderView(folder.parentId);
-                    } else {
-                        Views.renderFolderView(AppData.currentFolder.id);
-                    }
-                } else {
+                
+                // If we're in the deleted folder, go back to home
+                if (AppData.view === 'folder' && AppData.currentFolder && AppData.currentFolder.id === folderId) {
                     Views.renderHomeView();
+                } else {
+                    Views.renderFolders();
                 }
             }
         );
     },
-
+    
     /**
-     * Vorschaubild für Ordner setzen
-     * @param {string} folderId - Ordner-ID
-     */
-    setFolderThumbnail: function(folderId) {
-        const folder = FolderDAO.getById(folderId);
-        if (!folder) return;
-
-        Views.showThumbnailModal(`Vorschaubild für "${folder.name}"`, (thumbnailData) => {
-            if (thumbnailData === 'placeholder') {
-                thumbnailData = 'placeholder.png';
-            }
-            FolderDAO.setThumbnail(folderId, thumbnailData);
-            if (AppData.view === 'folder') {
-                if (AppData.currentFolder.id === folderId) {
-                    Views.renderFolderView(folderId);
-                } else if (AppData.currentFolder.id === folder.parentId) {
-                    Views.renderFolders(folder.parentId);
-                }
-            } else {
-                Views.renderFolders(null);
-            }
-        });
-    },
-
-    /**
-     * Neue Pinnwand anlegen
+     * Create a new board
      */
     createBoard: function() {
+        // Reset form
         $('#boardModalTitle').text('Neue Pinnwand');
         $('#boardTitleInput').val('');
-
+        
+        // Reset color selection
         $('#boardColorPicker .color-option').removeClass('active');
         $('#boardColorPicker .color-option').first().addClass('active');
-
+        
+        // Update folder select
         Views.updateFolderSelect();
+        
+        // Set current folder if in folder view
         if (AppData.view === 'folder' && AppData.currentFolder) {
             $('#boardFolderSelect').val(AppData.currentFolder.id);
         } else {
             $('#boardFolderSelect').val('');
         }
-
-        $('#boardModal').removeData('id');
+        
+        // Show modal
         $('#boardModal').show();
     },
-
+    
     /**
-     * Neue Pinnwand in spezifischem Ordner anlegen
-     * @param {string} folderId - Ordner-ID
+     * Create a new board in a specific folder
+     * @param {string} folderId - Folder ID
      */
     createBoardInFolder: function(folderId) {
         this.createBoard();
         $('#boardFolderSelect').val(folderId);
     },
-
+    
     /**
-     * Pinnwand bearbeiten
-     * @param {string} boardId - Pinnwand-ID
+     * Edit a board
+     * @param {string} boardId - Board ID
      */
     editBoard: function(boardId) {
         const board = BoardDAO.getById(boardId);
         if (!board) return;
-
+        
+        // Set form values
         $('#boardModalTitle').text('Pinnwand bearbeiten');
         $('#boardTitleInput').val(board.name);
-
+        
+        // Set color
         $('#boardColorPicker .color-option').removeClass('active');
         const colorOption = $(`#boardColorPicker .color-option[data-color="${board.color}"]`);
         if (colorOption.length) {
@@ -499,660 +399,850 @@ const Controllers = {
         } else {
             $('#boardColorPicker .color-option').first().addClass('active');
         }
-
+        
+        // Update folder select
         Views.updateFolderSelect();
         $('#boardFolderSelect').val(board.folderId || '');
-
+        
+        // Store board ID in form
         $('#boardModal').data('id', board.id);
+        
+        // Show modal
         $('#boardModal').show();
     },
-
+    
     /**
-     * Aktuelle Pinnwand bearbeiten
+     * Edit the current board
      */
     editCurrentBoard: function() {
         if (AppData.currentBoard) {
             this.editBoard(AppData.currentBoard.id);
         }
     },
-
+    
     /**
-     * Pinnwand speichern (neu oder update)
+     * Save a board (create or update)
      */
     saveBoard: function() {
         const title = $('#boardTitleInput').val().trim();
         if (!title) {
-            alert('Bitte einen Titel für die Pinnwand eingeben.');
+            alert('Bitte gib einen Titel ein.');
             return;
         }
-
+        
         const color = $('#boardColorPicker .color-option.active').data('color') || '#4CAF50';
-        const folderId = $('#boardFolderSelect').val() || null;
+        const folderId = $('#boardFolderSelect').val();
         const boardId = $('#boardModal').data('id');
-
+        
         if (boardId) {
-            // Existierende Pinnwand updaten
-            BoardDAO.update(boardId, {
-                name: title,
+            // Update existing board
+            BoardDAO.update(boardId, { 
+                name: title, 
                 color: color,
-                folderId: folderId
+                folderId: folderId || null
             });
-
-            if (AppData.view === 'folder') {
-                if (AppData.currentFolder && AppData.currentFolder.id === folderId) {
-                    Views.renderFolderView(folderId);
-                } else {
-                    Views.renderHomeView();
-                }
+            
+            // Update view
+            if (AppData.view === 'board' && AppData.currentBoard && AppData.currentBoard.id === boardId) {
+                // Update board title
+                $('#boardTitle').text(title);
+            } else if (AppData.view === 'folder' && AppData.currentFolder) {
+                // Refresh folder view
+                Views.renderBoardsInFolder(AppData.currentFolder.id);
             } else {
-                Views.renderHomeView();
+                // Refresh home view
+                Views.renderBoards(null);
             }
         } else {
-            // Neue Pinnwand anlegen
-            const newBoard = BoardDAO.create(title, color, folderId);
-            if (AppData.view === 'folder' && AppData.currentFolder && AppData.currentFolder.id === folderId) {
-                Views.renderFolderView(folderId);
+            // Create new board
+            const board = BoardDAO.create(title, color, folderId || null);
+            
+            // Update view
+            if (AppData.view === 'folder' && AppData.currentFolder) {
+                Views.renderBoardsInFolder(AppData.currentFolder.id);
             } else {
-                Views.renderHomeView();
+                Views.renderBoards(null);
             }
         }
-
+        
+        // Hide modal
         $('#boardModal').hide();
         $('#boardModal').removeData('id');
     },
-
+    
     /**
-     * Pinnwand löschen
-     * @param {string} boardId - Pinnwand-ID
+     * Delete a board
+     * @param {string} boardId - Board ID
      */
     deleteBoard: function(boardId) {
         const board = BoardDAO.getById(boardId);
         if (!board) return;
-
+        
         Views.showConfirmModal(
             'Pinnwand löschen',
-            `Soll die Pinnwand "${board.name}" wirklich gelöscht werden?`,
+            `Möchtest du die Pinnwand "${board.name}" wirklich löschen? Alle Karten werden ebenfalls gelöscht.`,
             () => {
                 BoardDAO.delete(boardId);
+                
+                // If we're in the deleted board, go back to previous view
                 if (AppData.view === 'board' && AppData.currentBoard && AppData.currentBoard.id === boardId) {
-                    Views.renderHomeView();
+                    if (AppData.currentBoard.folderId) {
+                        Views.renderFolderView(AppData.currentBoard.folderId);
+                    } else {
+                        Views.renderHomeView();
+                    }
                 } else if (AppData.view === 'folder' && AppData.currentFolder) {
-                    Views.renderFolderView(AppData.currentFolder.id);
+                    Views.renderBoardsInFolder(AppData.currentFolder.id);
                 } else {
-                    Views.renderHomeView();
+                    Views.renderBoards(null);
                 }
             }
         );
     },
-
+    
     /**
-     * Karte erstellen
+     * Create a new card
      */
     createCard: function() {
         if (!AppData.currentBoard) return;
-        // Formular zurücksetzen
-        this.resetCardForm();
-        $('#cardModal').removeData('id');
-        $('#cardModal').show();
-    },
-
-    /**
-     * Karte bearbeiten
-     * @param {string} cardId - Karten-ID
-     */
-    editCard: function(cardId) {
-        if (!AppData.currentBoard) return;
-        const board = AppData.currentBoard;
-        const card = board.cards.find(c => c.id === cardId);
-        if (!card) return;
-
-        this.resetCardForm();
-        this.populateCardForm(card);
-
-        $('#cardModal').data('id', cardId);
-        $('#cardModal').show();
-    },
-
-    /**
-     * Karte in Formular übernehmen
-     */
-    populateCardForm: function(card) {
-        $('#cardTitle').val(card.title);
-        $('#cardContent').val(card.content);
-
-        // Kartentyp
-        $(`.card-type-option[data-type="${card.type}"]`).trigger('click');
-
-        // Spezifische Felder
-        if (card.type === 'youtube') {
-            $('#youtubeId').val(card.youtubeId);
-        } else if (card.type === 'image') {
-            $('#imageUrl').val(card.imageUrl);
-            if (card.imageData) {
-                $('#imagePreview')
-                    .show()
-                    .html(`<img src="${card.imageData}" alt="Vorschau">`);
-            }
-        } else if (card.type === 'link') {
-            $('#linkUrl').val(card.linkUrl);
-        } else if (card.type === 'learningapp') {
-            $('#learningappId').val(card.learningappId);
-        } else if (card.type === 'audio') {
-            if (card.audioData) {
-                $('#audioPreview')
-                    .show()
-                    .html(`
-                        <audio controls>
-                            <source src="${card.audioData}" type="audio/mpeg">
-                            Dein Browser unterstützt kein Audio-Element.
-                        </audio>
-                    `);
-            }
-        }
-
-        // Farbe
-        if (card.customColor) {
-            // Benutzerdefinierte Farbe
-            $('#applyCustomColorBtn').click();
-            $('#customColorPicker').val(card.customColor);
-            $('#customColorPreview').css('backgroundColor', card.customColor);
-            $('.color-palette[data-palette="custom"]').click();
-        } else {
-            // Material / Pastell
-            $('.color-option').removeClass('active');
-            if (card.color !== 'blue') {
-                // Standard war 'blue', also nach einer passenden Option suchen
-                $(`.color-option[data-color="${card.color}"]`).addClass('active');
-            } else {
-                // Falls 'blue' oder nichts Passendes, erste Option wählen
-                $('.color-option').first().addClass('active');
-            }
-        }
-
-        // Breite/Höhe
-        $(`.width-btn[data-width="${card.width}"]`).addClass('active');
-        $(`.height-btn[data-height="${card.height}"]`).addClass('active');
-
-        // Kategorie
-        $('#cardCategory').val(card.category || '');
-
-        // Position (nur in freier Ansicht relevant)
-        // Wird hier nicht gesetzt, da Position erst beim Verschieben aktualisiert wird
-    },
-
-    /**
-     * Karte-Formular zurücksetzen
-     */
-    resetCardForm: function() {
+        
+        // Reset form
+        $('#cardModalTitle').text('Neue Karte');
         $('#cardTitle').val('');
         $('#cardContent').val('');
-        $('#youtubeId').val('');
+        $('#youtubeUrl').val('');
         $('#imageUrl').val('');
         $('#linkUrl').val('');
-        $('#learningappId').val('');
-        $('#audioUpload').val('');
-        $('#imagePreview').hide().empty();
-        $('#audioPreview').hide().empty();
-        $('#placeholderBtn').show();
-
-        // Standardtyp (Text)
+        $('#learningappUrl').val('');
+        
+        // Reset card type
         $('.card-type-option').removeClass('active');
         $('.card-type-option[data-type="text"]').addClass('active');
         $('.youtube-fields, .image-fields, .link-fields, .learningapp-fields, .audio-fields').hide();
-
-        // Farben
+        
+        // Reset color selection
         $('.color-palette').removeClass('active');
         $('.color-palette[data-palette="material"]').addClass('active');
         $('.material-colors').show();
         $('.pastel-colors, .custom-colors').hide();
         $('.color-option').removeClass('active');
-        $('.color-option').first().addClass('active');
-        $('#customColorPicker').val('#000000');
-        $('#customColorPreview').css('backgroundColor', '#000000');
-
-        // Breite/Höhe
+        $('.material-colors .color-option[data-color="blue"]').addClass('active');
+        
+        // Reset size selection
         $('.width-btn, .height-btn').removeClass('active');
-        $('.width-btn[data-width="1"]').addClass('active');
-        $('.height-btn[data-height="1"]').addClass('active');
-
-        // Kategorie
+        $('.width-btn[data-width="1"], .height-btn[data-height="1"]').addClass('active');
+        
+        // Reset category selection
         $('#cardCategory').val('');
+        
+        // Reset image and audio preview
+        $('#imagePreview, #audioPreview').hide().empty();
+        
+        // Clear card ID
+        $('#cardModal').removeData('id');
+        
+        // Show modal
+        $('#cardModal').show();
     },
-
+    
     /**
-     * Karte speichern
+     * Edit a card
+     * @param {string} boardId - Board ID
+     * @param {string} cardId - Card ID
      */
-    saveCard: function() {
-        if (!AppData.currentBoard) return;
-        const board = AppData.currentBoard;
-        const cardId = $('#cardModal').data('id');
-
-        const type = $('.card-type-option.active').data('type') || 'text';
-        const title = $('#cardTitle').val().trim() || 'Neue Karte';
-        const content = $('#cardContent').val().trim() || '';
-        let customColor = '';
-        let color = $('.color-option.active').data('color') || 'blue';
-
-        // Wenn data-color="custom", dann customColor verwenden
-        if (color === 'custom') {
-            customColor = $('#customColorPicker').val();
-        }
-
-        const width = $('.width-btn.active').data('width') || 1;
-        const height = $('.height-btn.active').data('height') || 1;
-        const category = $('#cardCategory').val() || '';
-
-        // Typ-spezifische Werte
-        let youtubeId = '';
-        let imageUrl = '';
-        let imageData = null;
-        let linkUrl = '';
-        let learningappId = '';
-        let audioUrl = '';
-        let audioData = null;
-
-        if (type === 'youtube') {
-            youtubeId = $('#youtubeId').val().trim();
-        } else if (type === 'image') {
-            imageUrl = $('#imageUrl').val().trim();
-            const imgElement = $('#imagePreview img');
-            if (imgElement.length) {
-                const src = imgElement.attr('src');
-                // Falls Base64, übernehmen
-                if (src && src.startsWith('data:image/')) {
-                    imageData = src;
-                }
-            }
-        } else if (type === 'link') {
-            linkUrl = $('#linkUrl').val().trim();
-        } else if (type === 'learningapp') {
-            learningappId = $('#learningappId').val().trim();
-        } else if (type === 'audio') {
-            const audioElement = $('#audioPreview audio source');
-            if (audioElement.length) {
-                const src = audioElement.attr('src');
-                if (src && src.startsWith('data:audio/')) {
-                    audioData = src;
-                }
-            }
-        }
-
-        // Neue Daten erstellen oder bestehende updaten
-        if (cardId) {
-            // Bestehende Karte
-            const card = board.cards.find(c => c.id === cardId);
-            if (!card) return;
-
-            card.title = title;
-            card.content = content;
-            card.type = type;
-            card.color = color;
-            card.customColor = customColor;
-            card.width = width;
-            card.height = height;
-            card.category = category;
-            card.updated = new Date().toISOString();
-
-            if (type === 'youtube') {
-                card.youtubeId = youtubeId;
-                card.imageUrl = '';
-                card.imageData = null;
-                card.linkUrl = '';
-                card.learningappId = '';
-                card.audioUrl = '';
-                card.audioData = null;
-            } else if (type === 'image') {
-                card.youtubeId = '';
-                card.imageUrl = imageUrl;
-                card.imageData = imageData;
-                card.linkUrl = '';
-                card.learningappId = '';
-                card.audioUrl = '';
-                card.audioData = null;
-            } else if (type === 'link') {
-                card.youtubeId = '';
-                card.imageUrl = '';
-                card.imageData = null;
-                card.linkUrl = linkUrl;
-                card.learningappId = '';
-                card.audioUrl = '';
-                card.audioData = null;
-            } else if (type === 'learningapp') {
-                card.youtubeId = '';
-                card.imageUrl = '';
-                card.imageData = null;
-                card.linkUrl = '';
-                card.learningappId = learningappId;
-                card.audioUrl = '';
-                card.audioData = null;
-            } else if (type === 'audio') {
-                card.youtubeId = '';
-                card.imageUrl = '';
-                card.imageData = null;
-                card.linkUrl = '';
-                card.learningappId = '';
-                card.audioUrl = audioUrl;
-                card.audioData = audioData;
-            } else {
-                // Text
-                card.youtubeId = '';
-                card.imageUrl = '';
-                card.imageData = null;
-                card.linkUrl = '';
-                card.learningappId = '';
-                card.audioUrl = '';
-                card.audioData = null;
-            }
-        } else {
-            // Neue Karte
-            const cardObj = {
-                title,
-                content,
-                type,
-                color,
-                customColor,
-                width,
-                height,
-                category
-            };
-
-            if (type === 'youtube') {
-                cardObj.youtubeId = youtubeId;
-            } else if (type === 'image') {
-                cardObj.imageUrl = imageUrl;
-                cardObj.imageData = imageData;
-            } else if (type === 'link') {
-                cardObj.linkUrl = linkUrl;
-            } else if (type === 'learningapp') {
-                cardObj.learningappId = learningappId;
-            } else if (type === 'audio') {
-                cardObj.audioUrl = audioUrl;
-                cardObj.audioData = audioData;
-            }
-
-            board.cards.push(new Card(cardObj));
-        }
-
-        BoardDAO.update(board.id, { cards: board.cards });
-        $('#cardModal').hide();
-    },
-
-    /**
-     * Karte löschen
-     * @param {string} boardId - Pinnwand-ID
-     * @param {string} cardId - Karten-ID
-     */
-    deleteCard: function(boardId, cardId) {
+    editCard: function(boardId, cardId) {
         const board = BoardDAO.getById(boardId);
         if (!board) return;
-        const cardIndex = board.cards.findIndex(c => c.id === cardId);
-        if (cardIndex === -1) return;
-
+        
+        const card = board.cards.find(c => c.id === cardId);
+        if (!card) return;
+        
+        // Set form values
+        $('#cardModalTitle').text('Karte bearbeiten');
+        $('#cardTitle').val(card.title || '');
+        $('#cardContent').val(card.content || '');
+        
+        // Set card type
+        $('.card-type-option').removeClass('active');
+        $(`.card-type-option[data-type="${card.type || 'text'}"]`).addClass('active');
+        
+        // Hide all type-specific fields
+        $('.youtube-fields, .image-fields, .link-fields, .learningapp-fields, .audio-fields').hide();
+        
+        // Show and fill type-specific fields
+        if (card.type === 'youtube') {
+            $('.youtube-fields').show();
+            $('#youtubeUrl').val(card.youtubeId ? `https://www.youtube.com/watch?v=${card.youtubeId}` : '');
+        } else if (card.type === 'image') {
+            $('.image-fields').show();
+            $('#imageUrl').val(card.imageUrl || '');
+            
+            // Show image preview
+            if (card.imageUrl || card.imageData) {
+                const imageUrl = card.imageData || card.imageUrl;
+                $('#imagePreview').show().html(`<img src="${imageUrl}" alt="Preview">`);
+            } else {
+                $('#imagePreview').hide().empty();
+            }
+        } else if (card.type === 'link') {
+            $('.link-fields').show();
+            $('#linkUrl').val(card.linkUrl || '');
+        } else if (card.type === 'learningapp') {
+            $('.learningapp-fields').show();
+            $('#learningappUrl').val(card.learningappId || '');
+        } else if (card.type === 'audio') {
+            $('.audio-fields').show();
+            $('#audioUrl').val(card.audioUrl || '');
+            
+            // Show audio preview
+            if (card.audioUrl || card.audioData) {
+                const audioUrl = card.audioData || card.audioUrl;
+                $('#audioPreview').show().html(`
+                    <audio controls>
+                        <source src="${audioUrl}" type="audio/mpeg">
+                        Dein Browser unterstützt kein Audio-Element.
+                    </audio>
+                `);
+            } else {
+                $('#audioPreview').hide().empty();
+            }
+        }
+        
+        // Set color
+        let colorPalette = 'material';
+        $('.color-option').removeClass('active');
+        
+        if (card.color === 'custom' && card.customColor) {
+            colorPalette = 'custom';
+            $('#customColorPicker').val(card.customColor);
+            $('#customColorPreview').css('backgroundColor', card.customColor);
+        } else {
+            // Find the right palette for this color
+            if (['red', 'pink', 'purple', 'deep-purple', 'indigo', 'blue', 'light-blue', 
+                 'cyan', 'teal', 'green', 'light-green', 'lime', 'yellow', 'amber', 
+                 'orange', 'deep-orange', 'brown', 'grey', 'blue-grey'].includes(card.color)) {
+                colorPalette = 'material';
+                $(`.material-colors .color-option[data-color="${card.color}"]`).addClass('active');
+            } else {
+                // Try to find in pastel or custom palettes
+                const pastelOption = $(`.pastel-colors .color-option[data-custom-color="${card.customColor}"]`);
+                const customOption = $(`.custom-colors .color-option[data-custom-color="${card.customColor}"]`);
+                
+                if (pastelOption.length) {
+                    colorPalette = 'pastel';
+                    pastelOption.addClass('active');
+                } else if (customOption.length) {
+                    colorPalette = 'custom';
+                    customOption.addClass('active');
+                } else {
+                    // Default to blue if no match
+                    colorPalette = 'material';
+                    $('.material-colors .color-option[data-color="blue"]').addClass('active');
+                }
+            }
+        }
+        
+        // Set color palette
+        $('.color-palette').removeClass('active');
+        $(`.color-palette[data-palette="${colorPalette}"]`).addClass('active');
+        $('.material-colors, .pastel-colors, .custom-colors').hide();
+        $(`.${colorPalette}-colors`).show();
+        
+        // Set size
+        $('.width-btn').removeClass('active');
+        $(`.width-btn[data-width="${card.width || 1}"]`).addClass('active');
+        
+        $('.height-btn').removeClass('active');
+        $(`.height-btn[data-height="${card.height || 1}"]`).addClass('active');
+        
+        // Set category
+        $('#cardCategory').val(card.category || '');
+        
+        // Store card and board ID in form
+        $('#cardModal').data('id', card.id);
+        $('#cardModal').data('boardId', boardId);
+        
+        // Show modal
+        $('#cardModal').show();
+    },
+    
+    /**
+     * Save a card (create or update)
+     */
+    async saveCard() {
+        if (!AppData.currentBoard) return;
+        
+        const boardId = AppData.currentBoard.id;
+        const cardId = $('#cardModal').data('id');
+        const cardTitle = $('#cardTitle').val().trim();
+        
+        if (!cardTitle) {
+            alert('Bitte gib einen Titel ein.');
+            return;
+        }
+        
+        // Get selected card type
+        const cardType = $('.card-type-option.active').data('type') || 'text';
+        
+        // Get selected color
+        let cardColor = 'blue';
+        let customColor = '';
+        
+        if ($('.color-option.active').length) {
+            cardColor = $('.color-option.active').data('color');
+            if (cardColor === 'custom') {
+                customColor = $('.color-option.active').data('custom-color') || $('#customColorPicker').val();
+            }
+        }
+        
+        // Get selected size
+        const cardWidth = parseInt($('.width-btn.active').data('width') || 1);
+        const cardHeight = parseInt($('.height-btn.active').data('height') || 1);
+        
+        // Get selected category
+        const cardCategory = $('#cardCategory').val();
+        
+        // Prepare card data
+        const cardData = {
+            title: cardTitle,
+            content: $('#cardContent').val().trim(),
+            type: cardType,
+            color: cardColor,
+            customColor: customColor,
+            width: cardWidth,
+            height: cardHeight,
+            category: cardCategory
+        };
+        
+        // Add type-specific data
+        if (cardType === 'youtube') {
+            const youtubeId = Utils.getYoutubeId($('#youtubeUrl').val().trim());
+            if (!youtubeId) {
+                alert('Bitte gib eine gültige YouTube-URL ein.');
+                return;
+            }
+            cardData.youtubeId = youtubeId;
+        } else if (cardType === 'image') {
+            // Check for uploaded image first
+            const imageFile = $('#imageUpload')[0].files[0];
+            if (imageFile) {
+                try {
+                    const imageData = await Utils.fileToBase64(imageFile);
+                    cardData.imageData = imageData;
+                } catch (error) {
+                    console.error('Error converting image to base64:', error);
+                }
+            } else {
+                // Use image URL
+                const imageUrl = $('#imageUrl').val().trim();
+                if (!imageUrl) {
+                    alert('Bitte gib eine Bild-URL ein oder lade ein Bild hoch.');
+                    return;
+                }
+                cardData.imageUrl = imageUrl;
+            }
+        } else if (cardType === 'link') {
+            const linkUrl = $('#linkUrl').val().trim();
+            if (!linkUrl) {
+                alert('Bitte gib eine Link-URL ein.');
+                return;
+            }
+            
+            // Add https:// if missing
+            if (!/^https?:\/\//i.test(linkUrl)) {
+                cardData.linkUrl = 'https://' + linkUrl;
+            } else {
+                cardData.linkUrl = linkUrl;
+            }
+        } else if (cardType === 'learningapp') {
+            const learningappId = Utils.getLearningappId($('#learningappUrl').val().trim());
+            if (!learningappId) {
+                alert('Bitte gib eine gültige LearningApp-URL oder ID ein.');
+                return;
+            }
+            cardData.learningappId = learningappId;
+        } else if (cardType === 'audio') {
+            // Check for uploaded audio first
+            const audioFile = $('#audioUpload')[0].files[0];
+            if (audioFile) {
+                try {
+                    const audioData = await Utils.fileToBase64(audioFile);
+                    cardData.audioData = audioData;
+                } catch (error) {
+                    console.error('Error converting audio to base64:', error);
+                }
+            } else {
+                // Use audio URL
+                const audioUrl = $('#audioUrl').val().trim();
+                if (!audioUrl) {
+                    alert('Bitte gib eine Audio-URL ein oder lade eine Audio-Datei hoch.');
+                    return;
+                }
+                cardData.audioUrl = audioUrl;
+            }
+        }
+        
+        // Save card
+        if (cardId) {
+            // Update existing card
+            BoardDAO.updateCard(boardId, cardId, cardData);
+        } else {
+            // Create new card
+            BoardDAO.addCard(boardId, cardData);
+        }
+        
+        // Update view
+        this.refreshBoardView();
+        
+        // Hide modal
+        $('#cardModal').hide();
+        $('#cardModal').removeData('id');
+    },
+    
+    /**
+     * Duplicate a card
+     * @param {string} boardId - Board ID
+     * @param {string} cardId - Card ID
+     */
+    duplicateCard: function(boardId, cardId) {
+        const board = BoardDAO.getById(boardId);
+        if (!board) return;
+        
+        const card = board.cards.find(c => c.id === cardId);
+        if (!card) return;
+        
+        // Create a copy of the card
+        const newCardData = { ...card };
+        delete newCardData.id; // Remove ID so a new one is generated
+        
+        // Add "(Kopie)" to title
+        newCardData.title = `${newCardData.title} (Kopie)`;
+        
+        // In free view, offset position slightly
+        if (AppData.currentBoard.view === 'free' && newCardData.position) {
+            newCardData.position = {
+                left: newCardData.position.left + 20,
+                top: newCardData.position.top + 20
+            };
+        }
+        
+        // Add the new card
+        BoardDAO.addCard(boardId, newCardData);
+        
+        // Update view
+        this.refreshBoardView();
+    },
+    
+    /**
+     * Delete a card
+     * @param {string} boardId - Board ID
+     * @param {string} cardId - Card ID
+     */
+    deleteCard: function(boardId, cardId) {
         Views.showConfirmModal(
             'Karte löschen',
-            'Soll die Karte wirklich gelöscht werden?',
+            'Möchtest du diese Karte wirklich löschen?',
             () => {
-                board.cards.splice(cardIndex, 1);
-                BoardDAO.update(board.id, { cards: board.cards });
-                Views.renderBoardView(board.id);
+                BoardDAO.deleteCard(boardId, cardId);
+                this.refreshBoardView();
             }
         );
     },
-
+    
     /**
-     * Karten filtern
+     * Filter cards based on search input
      */
     filterCards: function() {
-        const query = $('#searchInput').val().toLowerCase();
-        if (!AppData.currentBoard) return;
-
-        if (AppData.currentBoard.view === 'grid') {
-            $('#boardGrid .card').each(function() {
+        const searchTerm = $('#searchInput').val().toLowerCase();
+        
+        if (AppData.currentBoard.view === 'grid' || AppData.currentBoard.view === 'free') {
+            $('.card:not(.add-card)').each(function() {
                 const title = $(this).find('.card-title').text().toLowerCase();
-                const content = $(this).find('.card-content').text().toLowerCase();
-                if (title.includes(query) || content.includes(query)) {
-                    $(this).show();
-                } else {
-                    $(this).hide();
-                }
-            });
-        } else if (AppData.currentBoard.view === 'free') {
-            $('#boardFree .card').each(function() {
-                const title = $(this).find('.card-title').text().toLowerCase();
-                const content = $(this).find('.card-content').text().toLowerCase();
-                if (title.includes(query) || content.includes(query)) {
+                const content = $(this).find('.card-text').text().toLowerCase();
+                
+                if (title.includes(searchTerm) || content.includes(searchTerm)) {
                     $(this).show();
                 } else {
                     $(this).hide();
                 }
             });
         } else if (AppData.currentBoard.view === 'categories') {
-            $('#boardCategories .card').each(function() {
+            // First hide/show cards
+            $('.card:not(.add-card)').each(function() {
                 const title = $(this).find('.card-title').text().toLowerCase();
-                const content = $(this).find('.card-content').text().toLowerCase();
-                if (title.includes(query) || content.includes(query)) {
+                const content = $(this).find('.card-text').text().toLowerCase();
+                
+                if (title.includes(searchTerm) || content.includes(searchTerm)) {
                     $(this).show();
                 } else {
                     $(this).hide();
                 }
             });
-        }
-    },
-
-    /**
-     * Schülermodus umschalten
-     */
-    toggleStudentMode: function() {
-        AppData.studentMode = $('#studentModeToggle').prop('checked');
-        StorageService.saveAppData();
-        // Neu rendern, damit Editor-Funktionen ein/ausgeblendet werden
-        if (AppData.view === 'home') {
-            Views.renderHomeView();
-        } else if (AppData.view === 'folder' && AppData.currentFolder) {
-            Views.renderFolderView(AppData.currentFolder.id);
-        } else if (AppData.view === 'board' && AppData.currentBoard) {
-            Views.renderBoardView(AppData.currentBoard.id);
-        }
-    },
-
-    /**
-     * Teilen-Modal öffnen
-     */
-    openShareModal: function() {
-        // Aktuellen Link erstellen (z.B. mit URL-Parametern)
-        let shareUrl = window.location.href;
-        if (AppData.currentBoard) {
-            shareUrl = `${window.location.origin}${window.location.pathname}?board=${AppData.currentBoard.id}`;
-        } else if (AppData.currentFolder) {
-            shareUrl = `${window.location.origin}${window.location.pathname}?folder=${AppData.currentFolder.id}`;
-        }
-
-        $('#shareLink').val(shareUrl);
-        $('#shareModal').show();
-    },
-
-    /**
-     * Share-Link kopieren
-     */
-    copyShareLink: function() {
-        const shareLink = $('#shareLink');
-        shareLink.select();
-        document.execCommand('copy');
-    },
-
-    /**
-     * Daten importieren
-     */
-    importData: function(e) {
-        const file = e.target.files[0];
-        if (!file) return;
-
-        const reader = new FileReader();
-        reader.onload = (evt) => {
-            try {
-                const importedData = JSON.parse(evt.target.result);
-                const success = StorageService.importData(importedData);
-                if (success) {
-                    alert('Daten erfolgreich importiert.');
-                    if (AppData.view === 'home') {
-                        Views.renderHomeView();
-                    } else if (AppData.view === 'folder' && AppData.currentFolder) {
-                        Views.renderFolderView(AppData.currentFolder.id);
-                    } else if (AppData.view === 'board' && AppData.currentBoard) {
-                        Views.renderBoardView(AppData.currentBoard.id);
-                    }
+            
+            // Then hide categories with no visible cards
+            $('.category').each(function() {
+                const visibleCards = $(this).find('.card:visible').length;
+                const hasPlaceholder = $(this).find('.category-placeholder').length > 0;
+                
+                if (visibleCards === 0 && (searchTerm || hasPlaceholder)) {
+                    $(this).hide();
                 } else {
-                    alert('Import fehlgeschlagen. Ungültiges Datenformat.');
+                    $(this).show();
                 }
-            } catch (err) {
-                alert('Import fehlgeschlagen. Ungültige JSON-Datei.');
-            }
-        };
-        reader.readAsText(file);
+            });
+        }
     },
-
+    
     /**
-     * Kategorie erstellen
+     * Refresh the current board view
      */
-    createCategory: function() {
+    refreshBoardView: function() {
         if (!AppData.currentBoard) return;
-        $('#categoryModalTitle').text('Neue Kategorie');
-        $('#categoryName').val('');
-        $('#categoryModal').show();
-        $('#categoryModal').removeData('id');
+        
+        const board = AppData.currentBoard;
+        
+        if (board.view === 'grid') {
+            Views.renderCardsGrid(board);
+        } else if (board.view === 'free') {
+            Views.renderCardsFree(board);
+        } else if (board.view === 'categories') {
+            Views.renderCardsCategories(board);
+        }
     },
-
+    
     /**
-     * Kategorie-Modal öffnen
+     * Open the category modal
      */
     openCategoryModal: function() {
         if (!AppData.currentBoard) return;
-        $('#categoryModalTitle').text('Kategorien verwalten');
-        $('#categoryName').val('');
+        
+        // Render categories list
+        Views.renderCategoriesList(AppData.currentBoard);
+        
+        // Reset new category input
+        $('#newCategoryInput').val('');
+        
+        // Show modal
         $('#categoryModal').show();
-        $('#categoryModal').removeData('id');
     },
-
+    
     /**
-     * Kategorie speichern
+     * Create a new category
+     */
+    createCategory: function() {
+        if (!AppData.currentBoard) return;
+        
+        // Open the modal with prompt
+        $('#categoryModal').show();
+        $('#newCategoryInput').focus();
+    },
+    
+    /**
+     * Save a new category
      */
     saveCategory: function() {
         if (!AppData.currentBoard) return;
-        const board = AppData.currentBoard;
-        const categoryName = $('#categoryName').val().trim();
+        
+        const categoryName = $('#newCategoryInput').val().trim();
         if (!categoryName) {
-            alert('Bitte einen Kategorienamen eingeben.');
+            alert('Bitte gib einen Namen für die Kategorie ein.');
             return;
         }
-
-        const categoryId = $('#categoryModal').data('id');
-        if (categoryId) {
-            // Vorhandene Kategorie updaten
-            const category = board.categories.find(cat => cat.id === categoryId);
-            if (category) {
-                category.name = categoryName;
-            }
-        } else {
-            // Neue Kategorie anlegen
-            board.categories.push(new Category(null, categoryName));
+        
+        // Add the category
+        BoardDAO.addCategory(AppData.currentBoard.id, categoryName);
+        
+        // Update views
+        Views.renderCategoriesList(AppData.currentBoard);
+        Views.updateCategoryDropdown(AppData.currentBoard);
+        
+        if (AppData.currentBoard.view === 'categories') {
+            Views.renderCardsCategories(AppData.currentBoard);
         }
-
-        BoardDAO.update(board.id, { categories: board.categories });
-        Views.renderBoardView(board.id);
-        $('#categoryModal').hide();
+        
+        // Reset input
+        $('#newCategoryInput').val('');
     },
-
+    
     /**
-     * Hintergrund-Modal öffnen
+     * Edit a category
+     * @param {string} categoryId - Category ID
+     */
+    editCategory: function(categoryId) {
+        if (!AppData.currentBoard) return;
+        
+        const category = AppData.currentBoard.categories.find(cat => cat.id === categoryId);
+        if (!category) return;
+        
+        const newName = prompt('Kategorie umbenennen:', category.name);
+        if (newName && newName.trim()) {
+            // Update the category
+            BoardDAO.updateCategory(AppData.currentBoard.id, categoryId, newName.trim());
+            
+            // Update views
+            Views.renderCategoriesList(AppData.currentBoard);
+            Views.updateCategoryDropdown(AppData.currentBoard);
+            
+            if (AppData.currentBoard.view === 'categories') {
+                Views.renderCardsCategories(AppData.currentBoard);
+            }
+        }
+    },
+    
+    /**
+     * Delete a category
+     * @param {string} categoryId - Category ID
+     */
+    deleteCategory: function(categoryId) {
+        if (!AppData.currentBoard) return;
+        
+        const category = AppData.currentBoard.categories.find(cat => cat.id === categoryId);
+        if (!category) return;
+        
+        Views.showConfirmModal(
+            'Kategorie löschen',
+            `Möchtest du die Kategorie "${category.name}" wirklich löschen? Die Karten werden nicht gelöscht, sondern nur aus der Kategorie entfernt.`,
+            () => {
+                // Delete the category
+                BoardDAO.deleteCategory(AppData.currentBoard.id, categoryId);
+                
+                // Update views
+                Views.renderCategoriesList(AppData.currentBoard);
+                Views.updateCategoryDropdown(AppData.currentBoard);
+                
+                if (AppData.currentBoard.view === 'categories') {
+                    Views.renderCardsCategories(AppData.currentBoard);
+                }
+            }
+        );
+    },
+    
+    /**
+     * Open the background modal
      */
     openBackgroundModal: function() {
         if (!AppData.currentBoard) return;
-        const board = AppData.currentBoard;
-        if (board.background) {
-            // Werte befüllen
-            if (board.background.url) {
-                $('#backgroundUrl').val(board.background.url);
-            } else {
-                $('#backgroundUrl').val('');
+        
+        // Reset form
+        $('#backgroundUrl').val('');
+        $('#backgroundUpload').val('');
+        $('#backgroundFileName').text('Keine Datei ausgewählt');
+        
+        // Reset preview images
+        $('.bg-preview').css('backgroundImage', '');
+        
+        // Set defaults from current background if exists
+        if (AppData.currentBoard.background) {
+            const bg = AppData.currentBoard.background;
+            
+            if (bg.url) {
+                $('#backgroundUrl').val(bg.url);
             }
-            $('#backgroundOpacity').val(board.background.opacity || 100);
-            $('#opacityValue').text(`${board.background.opacity || 100}%`);
+            
+            // Set style
             $('.background-style-option').removeClass('active');
-            $(`.background-style-option[data-style="${board.background.style}"]`).addClass('active');
-        } else {
-            $('#backgroundUrl').val('');
-            $('#backgroundOpacity').val(100);
-            $('#opacityValue').text('100%');
-            $('.background-style-option').removeClass('active');
-            $('.background-style-option[data-style="cover"]').addClass('active');
+            $(`.background-style-option[data-style="${bg.style || 'cover'}"]`).addClass('active');
+            
+            // Set opacity
+            $('#backgroundOpacity').val(bg.opacity !== undefined ? bg.opacity : 100);
+            $('#opacityValue').text(`${bg.opacity !== undefined ? bg.opacity : 100}%`);
+            
+            // Set preview
+            if (bg.data || bg.url) {
+                $('.bg-preview').css('backgroundImage', `url(${bg.data || bg.url})`);
+            }
         }
+        
+        // Show modal
         $('#backgroundModal').show();
     },
-
+    
     /**
-     * Hintergrund speichern
+     * Save background settings
      */
-    saveBackground: function() {
+    async saveBackground() {
         if (!AppData.currentBoard) return;
-        const board = AppData.currentBoard;
-        const url = $('#backgroundUrl').val().trim();
-        const opacity = parseInt($('#backgroundOpacity').val(), 10) || 100;
-        const style = $('.background-style-option.active').data('style');
-        let data = null;
-
-        // Falls eine Datei hochgeladen wurde
-        const fileInput = $('#backgroundUpload')[0];
-        if (fileInput.files && fileInput.files[0]) {
-            const file = fileInput.files[0];
-            const reader = new FileReader();
-            reader.onload = (evt) => {
-                data = evt.target.result;
-                BoardDAO.update(board.id, {
-                    background: {
-                        url: '',
-                        data: data,
-                        style: style,
-                        opacity: opacity
-                    }
-                });
-                Views.renderBoardView(board.id);
-                $('#backgroundModal').hide();
-            };
-            reader.readAsDataURL(file);
-        } else {
-            // Nur URL und/oder Style/Opacity
-            BoardDAO.update(board.id, {
-                background: {
-                    url: url,
-                    data: null,
-                    style: style,
-                    opacity: opacity
-                }
-            });
-            Views.renderBoardView(board.id);
-            $('#backgroundModal').hide();
+        
+        // Prepare background data
+        const backgroundData = {
+            url: $('#backgroundUrl').val().trim(),
+            style: $('.background-style-option.active').data('style') || 'cover',
+            opacity: parseInt($('#backgroundOpacity').val()) || 100
+        };
+        
+        // Check for uploaded file
+        const backgroundFile = $('#backgroundUpload')[0].files[0];
+        if (backgroundFile) {
+            try {
+                const backgroundImage = await Utils.fileToBase64(backgroundFile);
+                backgroundData.data = backgroundImage;
+                backgroundData.url = ''; // Clear URL if we have a data URI
+            } catch (error) {
+                console.error('Error converting background to base64:', error);
+            }
         }
+        
+        // Validate we have either URL or data
+        if (!backgroundData.url && !backgroundData.data) {
+            alert('Bitte gib eine URL ein oder lade ein Bild hoch.');
+            return;
+        }
+        
+        // Save background
+        BoardDAO.setBackground(AppData.currentBoard.id, backgroundData);
+        
+        // Apply background
+        Views.applyBoardBackground(AppData.currentBoard);
+        
+        // Hide modal
+        $('#backgroundModal').hide();
     },
-
+    
     /**
-     * Hintergrund entfernen
+     * Remove background from board
      */
     removeBackground: function() {
         if (!AppData.currentBoard) return;
-        const board = AppData.currentBoard;
-        BoardDAO.update(board.id, { background: null });
-        Views.renderBoardView(board.id);
+        
+        BoardDAO.removeBackground(AppData.currentBoard.id);
+        
+        // Update view
+        Views.applyBoardBackground(AppData.currentBoard);
+        
+        // Hide modal
         $('#backgroundModal').hide();
     },
-
+    
     /**
-     * checkUrlParams: Liest mögliche URL-Parameter aus und navigiert bei Bedarf direkt zu Folder oder Board
+     * Toggle student mode
+     */
+    toggleStudentMode: function() {
+        AppData.studentMode = $('#studentModeToggle').prop('checked');
+        
+        // Update URL with mode parameter
+        const url = new URL(window.location.href);
+        if (AppData.studentMode) {
+            url.searchParams.set('mode', 'student');
+        } else {
+            url.searchParams.delete('mode');
+        }
+        window.history.replaceState({}, '', url);
+        
+        // Update editor elements visibility
+        $('.editor-only').toggle(!AppData.studentMode);
+        
+        // Update add buttons visibility
+        if (AppData.studentMode) {
+            $('#addCardBtnGrid, #addCategoryBtn').hide();
+        } else {
+            $('#addCardBtnGrid, #addCategoryBtn').show();
+        }
+        
+        // If in categories view, refresh to hide empty categories
+        if (AppData.currentBoard && AppData.currentBoard.view === 'categories') {
+            Views.renderCardsCategories(AppData.currentBoard);
+        }
+        
+        // Save to localStorage
+        StorageService.saveAppData();
+        
+        // Update share link
+        this.updateShareLink();
+    },
+    
+    /**
+     * Open share modal
+     */
+    openShareModal: function() {
+        this.updateShareLink();
+        $('#shareModal').show();
+    },
+    
+    /**
+     * Update share link
+     */
+    updateShareLink: function() {
+        const url = new URL(window.location.href);
+        url.searchParams.set('mode', 'student');
+        $('#shareLink').val(url.toString());
+    },
+    
+    /**
+     * Copy share link to clipboard
+     */
+    copyShareLink: function() {
+        const shareLink = $('#shareLink')[0];
+        shareLink.select();
+        document.execCommand('copy');
+        
+        // Visual feedback
+        const copyBtn = $('#copyLinkBtn');
+        const originalHtml = copyBtn.html();
+        copyBtn.html('<i class="fas fa-check"></i>');
+        
+        setTimeout(() => {
+            copyBtn.html(originalHtml);
+        }, 2000);
+    },
+    
+    /**
+     * Import data from file
+     * @param {Event} event - Change event from file input
+     */
+    importData: function(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const importedData = JSON.parse(e.target.result);
+                
+                // Validate imported data
+                if (importedData && Array.isArray(importedData.folders) && Array.isArray(importedData.boards)) {
+                    Views.showConfirmModal(
+                        'Daten importieren',
+                        'Möchtest du die aktuellen Daten mit den importierten ersetzen? Alle vorhandenen Daten werden überschrieben.',
+                        () => {
+                            if (StorageService.importData(importedData)) {
+                                // Refresh view
+                                Views.renderHomeView();
+                                alert('Daten erfolgreich importiert.');
+                            } else {
+                                alert('Fehler beim Importieren der Daten.');
+                            }
+                        }
+                    );
+                } else {
+                    alert('Die importierte Datei enthält keine gültigen Daten.');
+                }
+            } catch (error) {
+                console.error('Import error:', error);
+                alert('Fehler beim Importieren: Ungültiges Dateiformat.');
+            }
+        };
+        reader.readAsText(file);
+        
+        // Reset input value to allow importing the same file again
+        event.target.value = '';
+    },
+    
+    /**
+     * Check URL parameters on load
      */
     checkUrlParams: function() {
-        const params = new URLSearchParams(window.location.search);
-        const folderId = params.get('folder');
-        const boardId = params.get('board');
-
+        const urlParams = new URLSearchParams(window.location.search);
+        
+        // Check for student mode
+        if (urlParams.get('mode') === 'student') {
+            $('#studentModeToggle').prop('checked', true);
+            this.toggleStudentMode();
+        }
+        
+        // Check for specific board or folder
+        const boardId = urlParams.get('board');
+        const folderId = urlParams.get('folder');
+        
         if (boardId) {
             this.openBoard(boardId);
         } else if (folderId) {

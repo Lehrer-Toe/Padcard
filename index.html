@@ -5,104 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Taskcard-Manager</title>
     
-    <!-- Fehlerbehebung für Chrome Extension Fehler -->
-    <script>
-        // Unterdrücke die Konsolen-Fehlermeldung für "message port closed"
-        (function() {
-            // Unterdrücke die Konsolen-Fehlermeldung für "message port closed"
-            const originalConsoleError = console.error;
-            console.error = function() {
-                if (arguments[0]) {
-                    const errorStr = String(arguments[0]);
-                    if (errorStr.includes('message port closed') || 
-                        errorStr.includes('port closed') ||
-                        errorStr.includes('lastError') || 
-                        errorStr.includes('runtime.lastError')) {
-                        return; // Unterdrücke diesen spezifischen Fehler
-                    }
-                }
-                return originalConsoleError.apply(this, arguments);
-            };
-            
-            // Globalen Fehler-Handler hinzufügen
-            window.addEventListener('error', function(event) {
-                if (event.error && event.error.message) {
-                    const errorMessage = event.error.message;
-                    if (errorMessage.includes('message port closed') || 
-                        errorMessage.includes('port closed') ||
-                        errorMessage.includes('lastError') || 
-                        errorMessage.includes('runtime.lastError')) {
-                        event.preventDefault();
-                        return true;
-                    }
-                }
-            }, true);
-            
-            // Unbehandelte Promise-Rejections abfangen
-            window.addEventListener('unhandledrejection', function(event) {
-                if (event.reason && event.reason.message) {
-                    const reasonMessage = event.reason.message;
-                    if (reasonMessage.includes('message port closed') || 
-                        reasonMessage.includes('port closed') ||
-                        reasonMessage.includes('lastError') || 
-                        reasonMessage.includes('runtime.lastError')) {
-                        event.preventDefault();
-                        return true;
-                    }
-                }
-            }, true);
-            
-            // Erweitere das Storage-Interface für Robustheit
-            if (typeof Storage !== 'undefined') {
-                const originalSetItem = Storage.prototype.setItem;
-                Storage.prototype.setItem = function(key, value) {
-                    try {
-                        originalSetItem.apply(this, arguments);
-                    } catch (e) {
-                        console.warn('Storage setItem fehlgeschlagen:', e);
-                    }
-                };
-                
-                const originalGetItem = Storage.prototype.getItem;
-                Storage.prototype.getItem = function(key) {
-                    try {
-                        return originalGetItem.apply(this, arguments);
-                    } catch (e) {
-                        console.warn('Storage getItem fehlgeschlagen:', e);
-                        return null;
-                    }
-                };
-            }
-        })();
-    </script>
     <!-- Externe Bibliotheken -->
-    <link
-        rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"
-    />
-    <link
-        rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.13.2/themes/base/jquery-ui.min.css"
-    />
-
-    <script
-        src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"
-    ></script>
-    <script
-        src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.13.2/jquery-ui.min.js"
-    ></script>
-
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.13.2/themes/base/jquery-ui.min.css">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.13.2/jquery-ui.min.js"></script>
+    
     <!-- Projekt-Dateien -->
-    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div id="app">
-        <!-- Navigation -->
+        <!-- Navigation Bereich -->
         <div id="nav-container">
             <div class="breadcrumb">
-                <span class="breadcrumb-home" data-id="home"
-                    ><i class="fas fa-home"></i
-                ></span>
+                <span class="breadcrumb-home" data-id="home"><i class="fas fa-home"></i></span>
                 <span class="breadcrumb-separator">/</span>
                 <span class="breadcrumb-current">Meine Boards</span>
             </div>
@@ -110,7 +28,7 @@
                 <div class="toggle-container">
                     <span class="toggle-label">Schülermodus</span>
                     <label class="toggle">
-                        <input type="checkbox" id="studentModeToggle" />
+                        <input type="checkbox" id="studentModeToggle">
                         <span class="toggle-slider"></span>
                     </label>
                 </div>
@@ -122,32 +40,19 @@
                         <i class="fas fa-cog"></i> Einstellungen
                     </button>
                     <div class="dropdown-menu">
-                        <a href="#" id="exportBtn"
-                            ><i class="fas fa-download"></i> Exportieren</a
-                        >
-                        <label for="importFile"
-                            ><i class="fas fa-upload"></i> Importieren</label
-                        >
-                        <input
-                            type="file"
-                            id="importFile"
-                            style="display: none;"
-                            accept=".json"
-                        />
-                        <a href="#" id="backgroundBtn"
-                            ><i class="fas fa-image"></i> Hintergrundbild</a
-                        >
-                        <a href="#" id="settingsBtn"
-                            ><i class="fas fa-sliders-h"></i> Einstellungen</a
-                        >
+                        <a href="#" id="exportBtn"><i class="fas fa-download"></i> Exportieren</a>
+                        <label for="importFile"><i class="fas fa-upload"></i> Importieren</label>
+                        <input type="file" id="importFile" style="display: none;" accept=".json">
+                        <a href="#" id="backgroundBtn"><i class="fas fa-image"></i> Hintergrundbild</a>
+                        <a href="#" id="settingsBtn"><i class="fas fa-sliders-h"></i> Einstellungen</a>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Home View -->
+        <!-- Home View (Ordner und Pinnwände) -->
         <div id="home-view">
-            <!-- Ordner-Bereich -->
+            <!-- Ordner Sektion -->
             <div class="section-container">
                 <div class="section-header">
                     <h2><i class="fas fa-folder"></i> Ordner</h2>
@@ -158,27 +63,20 @@
                     </div>
                 </div>
                 <div class="folder-container" id="folderContainer">
-                    <!-- Ordner werden dynamisch eingefügt -->
+                    <!-- Ordner werden dynamisch hinzugefügt -->
                 </div>
             </div>
 
-            <!-- Pinnwände-Bereich -->
+            <!-- Pinnwände Sektion -->
             <div class="section-container">
                 <div class="section-header">
                     <h2><i class="fas fa-thumbtack"></i> Pinnwände</h2>
                     <div class="section-controls editor-only">
                         <div class="sort-controls">
                             <span>Sortieren nach:</span>
-                            
-                                href="#"
-                                class="sort-option active"
-                                data-sort="name"
-                                >Name</a
-                            >
+                            <a href="#" class="sort-option active" data-sort="name">Name</a>
                             <span class="separator">|</span>
-                            <a href="#" class="sort-option" data-sort="date"
-                                >Datum</a
-                            >
+                            <a href="#" class="sort-option" data-sort="date">Datum</a>
                         </div>
                         <button class="btn btn-primary" id="newBoardBtn">
                             <i class="fas fa-plus"></i> Neue Pinnwand
@@ -186,12 +84,12 @@
                     </div>
                 </div>
                 <div class="board-container" id="boardContainer">
-                    <!-- Pinnwände werden dynamisch eingefügt -->
+                    <!-- Pinnwände werden dynamisch hinzugefügt -->
                 </div>
             </div>
         </div>
 
-        <!-- Folder View -->
+        <!-- Folder View (Zeigt Pinnwände innerhalb eines Ordners) -->
         <div id="folder-view" class="hidden">
             <div class="section-container">
                 <div class="section-header">
@@ -199,16 +97,9 @@
                     <div class="section-controls editor-only">
                         <div class="sort-controls">
                             <span>Sortieren nach:</span>
-                            
-                                href="#"
-                                class="sort-option active"
-                                data-sort="name"
-                                >Name</a
-                            >
+                            <a href="#" class="sort-option active" data-sort="name">Name</a>
                             <span class="separator">|</span>
-                            <a href="#" class="sort-option" data-sort="date"
-                                >Datum</a
-                            >
+                            <a href="#" class="sort-option" data-sort="date">Datum</a>
                         </div>
                         <button class="btn btn-secondary" id="editFolderBtn">
                             <i class="fas fa-edit"></i> Ordner bearbeiten
@@ -218,25 +109,13 @@
                         </button>
                     </div>
                 </div>
-
-                <!-- Unterordner-Bereich -->
-                <div class="section-container" id="subfolderSection">
-                    <div class="section-header">
-                        <h3><i class="fas fa-folder-open"></i> Unterordner</h3>
-                    </div>
-                    <div class="folder-container" id="subfolderContainer">
-                        <!-- Unterordner werden dynamisch eingefügt -->
-                    </div>
-                </div>
-
-                <!-- Pinnwände im Ordner -->
                 <div class="board-container" id="folderBoardContainer">
-                    <!-- Pinnwände werden dynamisch eingefügt -->
+                    <!-- Pinnwände werden dynamisch hinzugefügt -->
                 </div>
             </div>
         </div>
 
-        <!-- Board View -->
+        <!-- Board View (Pinnwand mit Karten) -->
         <div id="board-view" class="hidden">
             <div class="board-header">
                 <div class="board-title-container">
@@ -245,7 +124,7 @@
                         <i class="fas fa-edit"></i>
                     </button>
                 </div>
-
+                
                 <div class="board-controls">
                     <div class="view-selector editor-only">
                         <button class="view-btn active" data-view="grid">
@@ -271,11 +150,7 @@
                     </div>
                     <div class="search-bar">
                         <i class="fas fa-search"></i>
-                        <input
-                            type="text"
-                            placeholder="Suchen..."
-                            id="searchInput"
-                        />
+                        <input type="text" placeholder="Suchen..." id="searchInput">
                     </div>
                     <button class="btn btn-primary editor-only" id="newCardBtn">
                         <i class="fas fa-plus"></i> Neue Karte
@@ -283,23 +158,23 @@
                 </div>
             </div>
 
-            <!-- Raster-Anzeige -->
+            <!-- Grid board -->
             <div class="board-grid active" id="boardGrid">
-                <!-- Karten werden dynamisch eingefügt -->
+                <!-- Karten werden dynamisch hinzugefügt -->
                 <div class="add-card editor-only" id="addCardBtnGrid">
                     <i class="fas fa-plus"></i>
                     <div class="add-card-text">Neue Karte hinzufügen</div>
                 </div>
             </div>
 
-            <!-- Freie-Anzeige -->
+            <!-- Free position board -->
             <div class="board-free hidden" id="boardFree">
-                <!-- Karten werden hier mit absoluter Positionierung eingefügt -->
+                <!-- Karten werden dynamisch hinzugefügt mit absoluter Positionierung -->
             </div>
 
-            <!-- Kategorien-Anzeige -->
+            <!-- Categories board -->
             <div class="board-categories hidden" id="boardCategories">
-                <!-- Kategorien werden dynamisch eingefügt -->
+                <!-- Kategorien werden dynamisch hinzugefügt -->
                 <div class="add-category editor-only" id="addCategoryBtn">
                     <i class="fas fa-plus"></i>
                     <div class="add-category-text">Neue Kategorie hinzufügen</div>
@@ -312,48 +187,24 @@
         <div class="modal-overlay" id="folderModal">
             <div class="modal">
                 <div class="modal-header">
-                    <div class="modal-title" id="folderModalTitle">
-                        Neuer Ordner
-                    </div>
-                    <button class="modal-close" id="closeFolderModal">
-                        &times;
-                    </button>
+                    <div class="modal-title" id="folderModalTitle">Neuer Ordner</div>
+                    <button class="modal-close" id="closeFolderModal">&times;</button>
                 </div>
                 <div class="modal-body">
                     <div class="form-group">
                         <label for="folderTitle">Titel</label>
-                        <input
-                            type="text"
-                            class="form-control"
-                            id="folderTitle"
-                            placeholder="Ordner-Titel"
-                        />
-                    </div>
-                    <div class="form-group">
-                        <label for="folderParentSelect"
-                            >Übergeordneter Ordner</label
-                        >
-                        <select class="form-control" id="folderParentSelect">
-                            <option value="">Kein übergeordneter Ordner</option>
-                            <!-- Wird dynamisch befüllt -->
-                        </select>
-                        <p class="info-text mt-2">
-                            Wird ein übergeordneter Ordner ausgewählt, so wird
-                            dieser Ordner zum Unterordner.
-                        </p>
+                        <input type="text" class="form-control" id="folderTitle" placeholder="Ordner-Titel">
                     </div>
                     <div class="form-group">
                         <label>Farbe</label>
                         <div class="color-picker" id="folderColorPicker">
-                            <!-- Farben werden dynamisch befüllt -->
+                            <!-- Farben werden dynamisch hinzugefügt -->
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button class="btn" id="cancelFolderBtn">Abbrechen</button>
-                    <button class="btn btn-primary" id="saveFolderBtn">
-                        Speichern
-                    </button>
+                    <button class="btn btn-primary" id="saveFolderBtn">Speichern</button>
                 </div>
             </div>
         </div>
@@ -362,42 +213,31 @@
         <div class="modal-overlay" id="boardModal">
             <div class="modal">
                 <div class="modal-header">
-                    <div class="modal-title" id="boardModalTitle">
-                        Neue Pinnwand
-                    </div>
-                    <button class="modal-close" id="closeBoardModal">
-                        &times;
-                    </button>
+                    <div class="modal-title" id="boardModalTitle">Neue Pinnwand</div>
+                    <button class="modal-close" id="closeBoardModal">&times;</button>
                 </div>
                 <div class="modal-body">
                     <div class="form-group">
                         <label for="boardTitleInput">Titel</label>
-                        <input
-                            type="text"
-                            class="form-control"
-                            id="boardTitleInput"
-                            placeholder="Pinnwand-Titel"
-                        />
+                        <input type="text" class="form-control" id="boardTitleInput" placeholder="Pinnwand-Titel">
                     </div>
                     <div class="form-group">
                         <label>Farbe</label>
                         <div class="color-picker" id="boardColorPicker">
-                            <!-- Farben werden dynamisch befüllt -->
+                            <!-- Farben werden dynamisch hinzugefügt -->
                         </div>
                     </div>
                     <div class="form-group">
                         <label for="boardFolderSelect">Ordner</label>
                         <select class="form-control" id="boardFolderSelect">
                             <option value="">Kein Ordner</option>
-                            <!-- Wird dynamisch befüllt -->
+                            <!-- Ordner werden dynamisch hinzugefügt -->
                         </select>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button class="btn" id="cancelBoardBtn">Abbrechen</button>
-                    <button class="btn btn-primary" id="saveBoardBtn">
-                        Speichern
-                    </button>
+                    <button class="btn btn-primary" id="saveBoardBtn">Speichern</button>
                 </div>
             </div>
         </div>
@@ -406,302 +246,176 @@
         <div class="modal-overlay" id="cardModal">
             <div class="modal">
                 <div class="modal-header">
-                    <div class="modal-title">Neue Karte</div>
-                    <button class="modal-close" id="closeCardModal">
-                        &times;
-                    </button>
+                    <div class="modal-title" id="cardModalTitle">Neue Karte</div>
+                    <button class="modal-close" id="closeCardModal">&times;</button>
                 </div>
                 <div class="modal-body">
+                    <div class="card-type-selector">
+                        <div class="card-type-option active" data-type="text">Text</div>
+                        <div class="card-type-option" data-type="youtube">YouTube</div>
+                        <div class="card-type-option" data-type="image">Bild</div>
+                        <div class="card-type-option" data-type="link">Link</div>
+                        <div class="card-type-option" data-type="learningapp">LearningApp</div>
+                        <div class="card-type-option" data-type="audio">Audio</div>
+                    </div>
+
                     <div class="form-group">
                         <label for="cardTitle">Titel</label>
-                        <input
-                            type="text"
-                            class="form-control"
-                            id="cardTitle"
-                            placeholder="Titel der Karte"
-                        />
+                        <input type="text" class="form-control" id="cardTitle" placeholder="Titel der Karte">
                     </div>
+
                     <div class="form-group">
                         <label for="cardContent">Inhalt</label>
-                        <textarea
-                            class="form-control"
-                            id="cardContent"
-                            placeholder="Text oder Beschreibung"
-                        ></textarea>
+                        <textarea class="form-control" id="cardContent" placeholder="Inhalt der Karte"></textarea>
+                    </div>
+
+                    <div class="form-group youtube-fields" style="display: none;">
+                        <label for="youtubeUrl">YouTube URL oder Video-ID</label>
+                        <input type="text" class="form-control" id="youtubeUrl" placeholder="https://www.youtube.com/watch?v=...">
+                    </div>
+
+                    <div class="form-group image-fields" style="display: none;">
+                        <label for="imageUrl">Bild URL</label>
+                        <input type="text" class="form-control" id="imageUrl" placeholder="https://example.com/image.jpg">
+                        <div class="mt-2">
+                            <label for="imageUpload" class="btn">
+                                <i class="fas fa-upload"></i> Bild hochladen
+                            </label>
+                            <input type="file" id="imageUpload" style="display: none;" accept="image/*">
+                        </div>
+                        <div id="imagePreview" class="image-preview"></div>
+                    </div>
+
+                    <div class="form-group link-fields" style="display: none;">
+                        <label for="linkUrl">Link URL</label>
+                        <input type="text" class="form-control" id="linkUrl" placeholder="https://example.com">
+                    </div>
+
+                    <div class="form-group learningapp-fields" style="display: none;">
+                        <label for="learningappUrl">LearningApp URL oder ID</label>
+                        <input type="text" class="form-control" id="learningappUrl" placeholder="https://learningapps.org/... oder App-ID">
+                        <div class="mt-2 info-text">
+                            <p>Beispiele:</p>
+                            <ul>
+                                <li>https://learningapps.org/13002708</li>
+                                <li>13002708</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="form-group audio-fields" style="display: none;">
+                        <label for="audioUrl">Audio URL</label>
+                        <input type="text" class="form-control" id="audioUrl" placeholder="https://example.com/audio.mp3">
+                        <div class="mt-2">
+                            <label for="audioUpload" class="btn">
+                                <i class="fas fa-upload"></i> Audio hochladen
+                            </label>
+                            <input type="file" id="audioUpload" style="display: none;" accept="audio/*">
+                        </div>
+                        <div id="audioPreview" class="audio-preview"></div>
                     </div>
 
                     <div class="form-group">
-                        <label>Kartentyp</label>
-                        <div class="card-type-selector">
-                            <div
-                                class="card-type-option active"
-                                data-type="text"
-                            >
-                                <i class="fas fa-font"></i> Text
+                        <label>Kartenfarbe</label>
+                        <div class="color-options">
+                            <div class="color-palettes">
+                                <div class="color-palette active" data-palette="material">
+                                    <div class="color-samples">
+                                        <div class="color-sample" style="background-color: #f44336;"></div>
+                                        <div class="color-sample" style="background-color: #2196F3;"></div>
+                                        <div class="color-sample" style="background-color: #4CAF50;"></div>
+                                        <div class="color-sample" style="background-color: #FFC107;"></div>
+                                    </div>
+                                    <div class="color-palette-name">Material</div>
+                                </div>
+                                <div class="color-palette" data-palette="pastel">
+                                    <div class="color-samples">
+                                        <div class="color-sample" style="background-color: #FFB6C1;"></div>
+                                        <div class="color-sample" style="background-color: #ADD8E6;"></div>
+                                        <div class="color-sample" style="background-color: #98FB98;"></div>
+                                        <div class="color-sample" style="background-color: #FFFACD;"></div>
+                                    </div>
+                                    <div class="color-palette-name">Pastell</div>
+                                </div>
+                                <div class="color-palette" data-palette="custom">
+                                    <div class="color-samples">
+                                        <div class="color-sample" style="background-color: #D4A5A5;"></div>
+                                        <div class="color-sample" style="background-color: #392F5A;"></div>
+                                        <div class="color-sample" style="background-color: #31A2AC;"></div>
+                                        <div class="color-sample" style="background-color: #F0E100;"></div>
+                                    </div>
+                                    <div class="color-palette-name">Benutzerdefiniert</div>
+                                </div>
                             </div>
-                            <div class="card-type-option" data-type="youtube">
-                                <i class="fab fa-youtube"></i> YouTube
+
+                            <div class="card-color-pickers">
+                                <!-- Color pickers werden dynamisch hinzugefügt -->
                             </div>
-                            <div class="card-type-option" data-type="image">
-                                <i class="far fa-image"></i> Bild
-                            </div>
-                            <div class="card-type-option" data-type="link">
-                                <i class="fas fa-link"></i> Link
-                            </div>
-                            <div
-                                class="card-type-option"
-                                data-type="learningapp"
-                            >
-                                <i class="fas fa-chalkboard-teacher"></i>
-                                LearningApp
-                            </div>
-                            <div class="card-type-option" data-type="audio">
-                                <i class="fas fa-volume-up"></i> Audio
+
+                            <div class="custom-color">
+                                <label for="customColorPicker">Eigene Farbe:</label>
+                                <input type="color" id="customColorPicker" value="#2196F3">
+                                <div class="custom-color-preview" id="customColorPreview"></div>
+                                <button class="btn" id="applyCustomColorBtn">Anwenden</button>
                             </div>
                         </div>
                     </div>
 
-                    <!-- YouTube-Eingabefelder -->
-                    <div class="youtube-fields" style="display: none;">
-                        <div class="form-group">
-                            <label for="youtubeId">YouTube-Video-ID</label>
-                            <input
-                                type="text"
-                                class="form-control"
-                                id="youtubeId"
-                                placeholder="z.B. dQw4w9WgXcQ"
-                            />
+                    <div class="form-group size-control">
+                        <label>Kartengröße</label>
+                        <div class="size-controls">
+                            <div class="width-control">
+                                <label>Breite:</label>
+                                <div class="width-buttons">
+                                    <div class="width-btn active" data-width="1">Schmal</div>
+                                    <div class="width-btn" data-width="2">Mittel</div>
+                                    <div class="width-btn" data-width="3">Breit</div>
+                                </div>
+                            </div>
+                            <div class="height-control">
+                                <label>Höhe:</label>
+                                <div class="height-buttons">
+                                    <div class="height-btn active" data-height="1">Normal</div>
+                                    <div class="height-btn" data-height="2">Groß</div>
+                                    <div class="height-btn" data-height="3">Sehr groß</div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
-                    <!-- Bild-Eingabefelder -->
-                    <div class="image-fields" style="display: none;">
-                        <div class="form-group">
-                            <label for="imageUrl">Bild-URL</label>
-                            <input
-                                type="text"
-                                class="form-control"
-                                id="imageUrl"
-                                placeholder="https://..."
-                            />
-                        </div>
-                        <div class="form-group">
-                            <label for="imageUpload">oder hochladen</label>
-                            <input type="file" id="imageUpload" accept="image/*" />
-                        </div>
-                        <div
-                            class="image-preview"
-                            id="imagePreview"
-                            style="display: none;"
-                        ></div>
-                        <div class="form-group">
-                            <button
-                                class="btn btn-secondary"
-                                type="button"
-                                id="placeholderBtn"
-                            >
-                                Platzhalter
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Link-Eingabefelder -->
-                    <div class="link-fields" style="display: none;">
-                        <div class="form-group">
-                            <label for="linkUrl">Link-URL</label>
-                            <input
-                                type="text"
-                                class="form-control"
-                                id="linkUrl"
-                                placeholder="https://..."
-                            />
-                        </div>
-                    </div>
-
-                    <!-- LearningApp-Eingabefelder -->
-                    <div class="learningapp-fields" style="display: none;">
-                        <div class="form-group">
-                            <label for="learningappId"
-                                >LearningApps-ID</label
-                            >
-                            <input
-                                type="text"
-                                class="form-control"
-                                id="learningappId"
-                                placeholder="z.B. 123456"
-                            />
-                        </div>
-                    </div>
-
-                    <!-- Audio-Eingabefelder -->
-                    <div class="audio-fields" style="display: none;">
-                        <div class="form-group">
-                            <label for="audioUpload">Audio hochladen</label>
-                            <input type="file" id="audioUpload" accept="audio/*" />
-                        </div>
-                        <div
-                            class="image-preview"
-                            id="audioPreview"
-                            style="display: none;"
-                        ></div>
-                    </div>
-
-                    <!-- Karten-Farben -->
                     <div class="form-group">
-                        <label>Farbe der Karte</label>
-                        <div class="palette-selector">
-                            <div
-                                class="color-palette active"
-                                data-palette="material"
-                            >
-                                Material
-                            </div>
-                            <div class="color-palette" data-palette="pastel">
-                                Pastell
-                            </div>
-                            <div class="color-palette" data-palette="custom">
-                                Benutzerdefiniert
-                            </div>
-                        </div>
-                        <div class="card-color-pickers">
-                            <div class="material-colors"></div>
-                            <div class="pastel-colors"></div>
-                            <div class="custom-colors"></div>
-                            <div class="custom-color-picker">
-                                <input
-                                    type="color"
-                                    id="customColorPicker"
-                                    value="#000000"
-                                />
-                                <div
-                                    class="color-option"
-                                    id="customColorPreview"
-                                    style="background-color: #000000;"
-                                ></div>
-                                <button
-                                    class="btn btn-secondary"
-                                    type="button"
-                                    id="applyCustomColorBtn"
-                                >
-                                    Anwenden
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Breite / Höhe -->
-                    <div class="form-group size-select">
-                        <label>Breite</label>
-                        <div class="width-selector">
-                            <button
-                                class="width-btn active"
-                                type="button"
-                                data-width="1"
-                            >
-                                1
-                            </button>
-                            <button class="width-btn" type="button" data-width="2">
-                                2
-                            </button>
-                            <button class="width-btn" type="button" data-width="3">
-                                3
-                            </button>
-                        </div>
-                    </div>
-                    <div class="form-group size-select">
-                        <label>Höhe</label>
-                        <div class="height-selector">
-                            <button
-                                class="height-btn active"
-                                type="button"
-                                data-height="1"
-                            >
-                                1
-                            </button>
-                            <button
-                                class="height-btn"
-                                type="button"
-                                data-height="2"
-                            >
-                                2
-                            </button>
-                            <button
-                                class="height-btn"
-                                type="button"
-                                data-height="3"
-                            >
-                                3
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Kategorie -->
-                    <div class="form-group">
-                        <label for="cardCategory">Kategorie</label>
+                        <label>Kategorie</label>
                         <select class="form-control" id="cardCategory">
-                            <!-- Kategorien werden dynamisch befüllt -->
+                            <option value="">Keine Kategorie</option>
+                            <!-- Kategorien werden dynamisch hinzugefügt -->
                         </select>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button class="btn" id="cancelCardBtn">Abbrechen</button>
-                    <button class="btn btn-primary" id="saveCardBtn">
-                        Speichern
-                    </button>
+                    <button class="btn btn-primary" id="saveCardBtn">Speichern</button>
                 </div>
             </div>
         </div>
 
-        <!-- Thumbnail Modal -->
-        <div class="modal-overlay" id="thumbnailModal">
+        <!-- Category Modal -->
+        <div class="modal-overlay" id="categoryModal">
             <div class="modal">
                 <div class="modal-header">
-                    <div class="modal-title" id="thumbnailModalTitle">
-                        Vorschaubild
-                    </div>
-                    <button class="modal-close" id="closeThumbnailModal">
-                        &times;
-                    </button>
+                    <div class="modal-title">Kategorien verwalten</div>
+                    <button class="modal-close" id="closeCategoryModal">&times;</button>
                 </div>
                 <div class="modal-body">
-                    <p>
-                        Hier kann man ein Vorschaubild (Thumbnail) von einer URL
-                        einfügen oder eine Datei hochladen.
-                    </p>
-                    <div class="form-group">
-                        <label for="thumbnailUrl">Bild-URL</label>
-                        <input
-                            type="text"
-                            class="form-control"
-                            id="thumbnailUrl"
-                            placeholder="https://..."
-                        />
+                    <div class="category-form">
+                        <input type="text" class="form-control" placeholder="Neue Kategorie" id="newCategoryInput">
+                        <button class="btn btn-primary" id="addCategoryFormBtn">Hinzufügen</button>
                     </div>
-                    <div class="form-group">
-                        <label for="thumbnailUpload">oder hochladen</label>
-                        <input
-                            type="file"
-                            id="thumbnailUpload"
-                            accept="image/*"
-                        />
+                    <div class="category-list" id="categoryList">
+                        <!-- Kategorien werden dynamisch hinzugefügt -->
                     </div>
-                    <div class="checkbox-container">
-                        <input type="checkbox" id="usePlaceholder" />
-                        <label for="usePlaceholder"
-                            >Platzhalter verwenden</label
-                        >
-                    </div>
-                    <div
-                        class="image-preview"
-                        id="thumbnailPreview"
-                        style="display: none;"
-                    ></div>
                 </div>
                 <div class="modal-footer">
-                    <button class="btn" id="cancelThumbnailBtn">Abbrechen</button>
-                    <button class="btn btn-primary" id="saveThumbnailBtn">
-                        Speichern
-                    </button>
+                    <button class="btn" id="closeCategoryBtn">Schließen</button>
                 </div>
             </div>
         </div>
@@ -710,171 +424,97 @@
         <div class="modal-overlay" id="backgroundModal">
             <div class="modal">
                 <div class="modal-header">
-                    <div class="modal-title">Hintergrund</div>
-                    <button class="modal-close" id="closeBackgroundModal">
-                        &times;
-                    </button>
+                    <div class="modal-title">Hintergrundbild</div>
+                    <button class="modal-close" id="closeBackgroundModal">&times;</button>
                 </div>
                 <div class="modal-body">
-                    <p>
-                        Ein Bild kann per URL eingebunden oder als Datei
-                        hochgeladen werden. Außerdem lässt sich die Darstellung
-                        anpassen.
-                    </p>
                     <div class="form-group">
-                        <label for="backgroundUrl">Bild-URL</label>
-                        <input
-                            type="text"
-                            class="form-control"
-                            id="backgroundUrl"
-                            placeholder="https://..."
-                        />
+                        <label for="backgroundUrl">Bild URL</label>
+                        <input type="text" class="form-control" id="backgroundUrl" placeholder="https://example.com/image.jpg">
                     </div>
                     <div class="form-group">
-                        <label for="backgroundUpload">oder hochladen</label>
-                        <input
-                            type="file"
-                            id="backgroundUpload"
-                            accept="image/*"
-                        />
-                        <div
-                            id="backgroundFileName"
-                            style="margin-top: 5px; font-size: 0.9rem;"
-                        ></div>
-                    </div>
-                    <div class="bg-preview"></div>
-
-                    <div class="form-group">
-                        <label>Darstellungsart</label>
-                        <div class="background-style-options">
-                            <button
-                                class="background-style-option active"
-                                data-style="cover"
-                            >
-                                Cover
-                            </button>
-                            <button
-                                class="background-style-option"
-                                data-style="contain"
-                            >
-                                Contain
-                            </button>
-                            <button
-                                class="background-style-option"
-                                data-style="repeat"
-                            >
-                                Repeat
-                            </button>
+                        <label for="backgroundUpload">Bild hochladen</label>
+                        <div class="file-upload-container">
+                            <label for="backgroundUpload" class="btn">
+                                <i class="fas fa-upload"></i> Durchsuchen...
+                            </label>
+                            <span id="backgroundFileName">Keine Datei ausgewählt</span>
+                            <input type="file" id="backgroundUpload" style="display: none;" accept="image/*">
                         </div>
                     </div>
-
                     <div class="form-group">
-                        <label for="backgroundOpacity">Transparenz</label>
-                        <input
-                            type="range"
-                            id="backgroundOpacity"
-                            min="0"
-                            max="100"
-                            value="100"
-                        />
-                        <span id="opacityValue">100%</span>
+                        <label>Ansicht</label>
+                        <div class="background-style-options">
+                            <div class="background-style-option active" data-style="cover">
+                                <div class="bg-preview bg-cover"></div>
+                                <span>Vollbild</span>
+                            </div>
+                            <div class="background-style-option" data-style="contain">
+                                <div class="bg-preview bg-contain"></div>
+                                <span>Eingepasst</span>
+                            </div>
+                            <div class="background-style-option" data-style="repeat">
+                                <div class="bg-preview bg-repeat"></div>
+                                <span>Gekachelt</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="background-opacity">
+                            <label for="backgroundOpacity">Deckkraft: <span id="opacityValue">100%</span></label>
+                            <input type="range" class="form-control" id="backgroundOpacity" min="0" max="100" step="5" value="100">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <button class="btn btn-danger" id="removeBackgroundBtn">Hintergrundbild entfernen</button>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button class="btn" id="cancelBackgroundBtn">Abbrechen</button>
-                    <button class="btn btn-primary" id="saveBackgroundBtn">
-                        Speichern
-                    </button>
-                    <button class="btn btn-danger" id="removeBackgroundBtn">
-                        Entfernen
-                    </button>
+                    <button class="btn btn-primary" id="saveBackgroundBtn">Anwenden</button>
                 </div>
             </div>
         </div>
 
-        <!-- Kategorien Modal -->
-        <div class="modal-overlay" id="categoryModal">
-            <div class="modal">
-                <div class="modal-header">
-                    <div class="modal-title" id="categoryModalTitle">
-                        Neue Kategorie
-                    </div>
-                    <button class="modal-close" id="closeCategoryModal">
-                        &times;
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <div class="form-group">
-                        <label for="categoryName">Kategoriename</label>
-                        <input
-                            type="text"
-                            class="form-control"
-                            id="categoryName"
-                            placeholder="Bezeichnung eingeben"
-                        />
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button class="btn" id="closeCategoryBtn">Abbrechen</button>
-                    <button class="btn btn-primary" id="addCategoryFormBtn">
-                        Speichern
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Teilen Modal -->
+        <!-- Share Modal -->
         <div class="modal-overlay" id="shareModal">
             <div class="modal">
                 <div class="modal-header">
                     <div class="modal-title">Teilen</div>
-                    <button class="modal-close" id="closeShareModal">
-                        &times;
-                    </button>
+                    <button class="modal-close" id="closeShareModal">&times;</button>
                 </div>
                 <div class="modal-body">
-                    <p>
-                        Der Link kann kopiert und an andere weitergegeben
-                        werden.
-                    </p>
-                    <input
-                        type="text"
-                        class="form-control"
-                        id="shareLink"
-                        readonly
-                    />
-                </div>
-                <div class="modal-footer">
-                    <button class="btn" id="copyLinkBtn">Kopieren</button>
+                    <p>Kopiere diesen Link, um die Seite im Schülermodus zu teilen:</p>
+                    <div class="share-link-container">
+                        <input type="text" class="form-control" id="shareLink" readonly>
+                        <button class="btn btn-primary" id="copyLinkBtn">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                    </div>
+                    <p class="info-text">Im Schülermodus können die Inhalte angesehen, aber nicht bearbeitet werden.</p>
                 </div>
             </div>
         </div>
 
-        <!-- Bestätigungs-Modal -->
+        <!-- Confirmation Modal -->
         <div class="modal-overlay" id="confirmModal">
-            <div class="modal">
+            <div class="modal confirm-modal">
                 <div class="modal-header">
-                    <div class="modal-title" id="confirmModalTitle">
-                        Bestätigung
-                    </div>
-                    <button class="modal-close" id="closeConfirmModal">
-                        &times;
-                    </button>
+                    <div class="modal-title" id="confirmTitle">Bestätigung</div>
+                    <button class="modal-close" id="closeConfirmModal">&times;</button>
                 </div>
                 <div class="modal-body">
-                    <p id="confirmModalMessage"></p>
+                    <p id="confirmMessage">Sind Sie sicher?</p>
                 </div>
                 <div class="modal-footer">
                     <button class="btn" id="cancelConfirmBtn">Abbrechen</button>
-                    <button class="btn btn-danger" id="confirmOkBtn">
-                        Löschen
-                    </button>
+                    <button class="btn btn-danger" id="confirmBtn">Bestätigen</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- JS-Files -->
+    <!-- Scripts -->
     <script src="models.js"></script>
     <script src="views.js"></script>
     <script src="controllers.js"></script>
