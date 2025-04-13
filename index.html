@@ -5,6 +5,65 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Taskcard-Manager</title>
     
+    <!-- Fehlerbehebung für Chrome Extension Fehler -->
+    <script>
+        // Unterdrücke die Konsolen-Fehlermeldung für "message port closed"
+        (function() {
+            // Unterdrücke die Konsolen-Fehlermeldung für "message port closed"
+            const originalConsoleError = console.error;
+            console.error = function() {
+                if (arguments[0] && 
+                    (String(arguments[0]).includes('message port closed') || 
+                     String(arguments[0]).includes('lastError'))) {
+                    return; // Unterdrücke diesen spezifischen Fehler
+                }
+                return originalConsoleError.apply(this, arguments);
+            };
+            
+            // Globalen Fehler-Handler hinzufügen
+            window.addEventListener('error', function(event) {
+                if (event.error && event.error.message && 
+                    (event.error.message.includes('message port closed') || 
+                     event.error.message.includes('lastError'))) {
+                    event.preventDefault();
+                    return true;
+                }
+            });
+            
+            // Unbehandelte Promise-Rejections abfangen
+            window.addEventListener('unhandledrejection', function(event) {
+                if (event.reason && event.reason.message && 
+                    (event.reason.message.includes('message port closed') || 
+                     event.reason.message.includes('lastError'))) {
+                    event.preventDefault();
+                    return true;
+                }
+            });
+            
+            // Erweitere das Storage-Interface für Robustheit
+            if (typeof Storage !== 'undefined') {
+                const originalSetItem = Storage.prototype.setItem;
+                Storage.prototype.setItem = function(key, value) {
+                    try {
+                        originalSetItem.apply(this, arguments);
+                    } catch (e) {
+                        console.warn('Storage setItem fehlgeschlagen:', e);
+                    }
+                };
+                
+                const originalGetItem = Storage.prototype.getItem;
+                Storage.prototype.getItem = function(key) {
+                    try {
+                        return originalGetItem.apply(this, arguments);
+                    } catch (e) {
+                        console.warn('Storage getItem fehlgeschlagen:', e);
+                        return null;
+                    }
+                };
+            }
+        })();
+    </script>
+    
     <!-- Externe Bibliotheken -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.13.2/themes/base/jquery-ui.min.css">
