@@ -11,397 +11,235 @@ const Controllers = {
      */
     init: function() {
         this.initEventHandlers();
-        this.initErrorHandling();
     },
     
     /**
      * Initialize event handlers
      */
     initEventHandlers: function() {
-        try {
-            // Navigation
-            $('.breadcrumb-home').on('click', (e) => {
-                e.preventDefault();
-                this.navigateHome();
-            });
-            
-            // Folder actions
-            $('#newFolderBtn').on('click', () => this.createFolder());
-            $('#newSubfolderBtn').on('click', () => this.createSubfolder($(this).data('parentId')));
-            $('#saveFolderBtn').on('click', () => this.saveFolder());
-            $('#cancelFolderBtn, #closeFolderModal').on('click', () => $('#folderModal').hide());
-            $('#editFolderBtn').on('click', () => this.editCurrentFolder());
-            
-            // Board actions
-            $('#newBoardBtn, #newBoardInFolderBtn').on('click', () => this.createBoard());
-            $('#saveBoardBtn').on('click', () => this.saveBoard());
-            $('#cancelBoardBtn, #closeBoardModal').on('click', () => $('#boardModal').hide());
-            $('#editBoardTitleBtn').on('click', () => this.editCurrentBoard());
-            
-            // Card actions
-            $('#newCardBtn, #addCardBtnGrid').on('click', () => this.createCard());
-            $('#saveCardBtn').on('click', () => this.saveCard());
-            $('#cancelCardBtn, #closeCardModal').on('click', () => $('#cardModal').hide());
-            
-            // Card type selection
-            $('.card-type-option').on('click', function() {
-                const type = $(this).data('type');
-                $('.card-type-option').removeClass('active');
-                $(this).addClass('active');
-                
-                // Hide all type-specific fields
-                $('.youtube-fields, .image-fields, .link-fields, .learningapp-fields, .audio-fields').hide();
-                
-                // Show selected type fields
-                $(`.${type}-fields`).show();
-            });
-            
-            // Color palette selection
-            $('.color-palette').on('click', function() {
-                const palette = $(this).data('palette');
-                $('.color-palette').removeClass('active');
-                $(this).addClass('active');
-                
-                // Hide all color pickers
-                $('.material-colors, .pastel-colors, .custom-colors').hide();
-                
-                // Show selected palette
-                $(`.${palette}-colors`).show();
-            });
-            
-            // Apply custom color
-            $('#applyCustomColorBtn').on('click', () => {
-                const customColor = $('#customColorPicker').val();
-                $('.color-option').removeClass('active');
-                $('#customColorPreview').css('backgroundColor', customColor);
-            });
-            
-            // Card size selection
-            $('.width-btn').on('click', function() {
-                $('.width-btn').removeClass('active');
-                $(this).addClass('active');
-            });
-            
-            $('.height-btn').on('click', function() {
-                $('.height-btn').removeClass('active');
-                $(this).addClass('active');
-            });
-            
-            // View selection
-            $('.view-btn').on('click', function() {
-                const view = $(this).data('view');
-                Views.changeCardView(view);
-            });
-            
-            // Layout selection
-            $('.layout-btn').on('click', function() {
-                const columns = parseInt($(this).data('columns'));
-                Views.updateBoardLayout(columns);
-            });
-            
-            // Search
-            $('#searchInput').on('input', this.filterCards);
-            
-            // Category actions
-            $('#addCategoryBtn').on('click', () => this.createCategory());
-            $('#categoriesBtn').on('click', () => this.openCategoryModal());
-            $('#addCategoryFormBtn').on('click', () => this.saveCategory());
-            $('#closeCategoryModal, #closeCategoryBtn').on('click', () => $('#categoryModal').hide());
-            
-            // Background actions
-            $('#backgroundBtn').on('click', () => this.openBackgroundModal());
-            $('#closeBackgroundModal, #cancelBackgroundBtn').on('click', () => $('#backgroundModal').hide());
-            $('#saveBackgroundBtn').on('click', () => this.saveBackground());
-            $('#removeBackgroundBtn').on('click', () => this.removeBackground());
-            
-            // Background style options
-            $('.background-style-option').on('click', function() {
-                $('.background-style-option').removeClass('active');
-                $(this).addClass('active');
-            });
-            
-            // Background opacity
-            $('#backgroundOpacity').on('input', function() {
-                const value = $(this).val();
-                $('#opacityValue').text(`${value}%`);
-            });
-            
-            // Background file upload
-            $('#backgroundUpload').on('change', (e) => {
-                try {
-                    const file = e.target.files[0];
-                    if (file) {
-                        $('#backgroundFileName').text(file.name);
-                        // Preview the image
-                        this.safeFileUpload($('#backgroundUpload')[0], $('.bg-preview'), function(result) {
-                            $('.bg-preview').css('backgroundImage', `url(${result})`);
-                        });
-                    }
-                } catch (error) {
-                    console.warn('Fehler beim Hochladen des Hintergrundbilds:', error);
-                }
-            });
-            
-            // Image upload for cards
-            $('#imageUpload').on('change', (e) => {
-                this.safeFileUpload($('#imageUpload')[0], $('#imagePreview'));
-            });
-            
-            // Audio upload for cards
-            $('#audioUpload').on('change', function() {
-                try {
-                    const file = this.files[0];
-                    if (file) {
-                        const reader = new FileReader();
-                        reader.onload = function(e) {
-                            $('#audioPreview').show().html(`
-                                <audio controls>
-                                    <source src="${e.target.result}" type="audio/mpeg">
-                                    Dein Browser unterstützt kein Audio-Element.
-                                </audio>
-                            `);
-                        };
-                        reader.readAsDataURL(file);
-                    }
-                } catch (error) {
-                    console.warn('Fehler beim Hochladen der Audiodatei:', error);
-                }
-            });
-            
-            // Thumbnail-related handlers
-            $('#thumbnailUpload').on('change', (e) => {
-                this.safeFileUpload($('#thumbnailUpload')[0], $('#thumbnailPreview'));
-            });
-            
-            $('#usePlaceholder').on('change', function() {
-                try {
-                    if ($(this).is(':checked')) {
-                        $('#thumbnailPreview').html('<img src="placeholder.png" alt="Platzhalter">').show();
-                        $('#thumbnailUrl').prop('disabled', true);
-                        $('#thumbnailUpload').prop('disabled', true);
-                    } else {
-                        $('#thumbnailPreview').empty();
-                        $('#thumbnailUrl').prop('disabled', false);
-                        $('#thumbnailUpload').prop('disabled', false);
-                    }
-                } catch (error) {
-                    console.warn('Fehler beim Umschalten des Platzhalters:', error);
-                }
-            });
-            
-            // Placeholder for image cards
-            $('#placeholderBtn').on('click', () => {
-                $('#imageUrl').val('');
-                $('#imagePreview').show().html(`<img src="placeholder.png" alt="Platzhalter">`);
-                $('#cardPlaceholder').val('placeholder.png');
-            });
-            
-            // Student mode toggle
-            $('#studentModeToggle').on('change', () => this.toggleStudentMode());
-            
-            // Share button
-            $('#shareBtn').on('click', () => this.openShareModal());
-            $('#closeShareModal').on('click', () => $('#shareModal').hide());
-            $('#copyLinkBtn').on('click', () => this.copyShareLink());
-            
-            // Import/Export
-            $('#exportBtn').on('click', () => StorageService.exportData());
-            $('#importBtn').on('click', () => $('#importFile').click());
-            $('#importFile').on('change', (e) => this.importData(e));
-            
-            // Sort options
-            $('.sort-option').on('click', function(e) {
-                e.preventDefault();
-                $('.sort-option').removeClass('active');
-                $(this).addClass('active');
-                
-                // Resort boards
-                if (AppData.view === 'home') {
-                    Views.renderBoards(null);
-                } else if (AppData.view === 'folder' && AppData.currentFolder) {
-                    Views.renderBoards(AppData.currentFolder.id);
-                }
-            });
-            
-            // Close confirmation modal
-            $('#closeConfirmModal, #cancelConfirmBtn').on('click', () => $('#confirmModal').hide());
-            
-            // Close dropdowns when clicking outside
-            $(document).on('click', function(e) {
-                if (!$(e.target).closest('.folder-menu, .board-menu, .card-menu, .dropdown').length) {
-                    $('.folder-menu-dropdown, .board-menu-dropdown, .card-menu-dropdown, .dropdown-menu').removeClass('show');
-                }
-            });
-            
-            // Dropdown toggle
-            $('.dropdown-toggle').on('click', function() {
-                $(this).siblings('.dropdown-menu').toggleClass('show');
-            });
-            
-        } catch (error) {
-            console.warn('Fehler beim Initialisieren der Event-Handler:', error);
-        }
-    },
-    
-    /**
-     * Initialize error handling for browser communication
-     */
-    initErrorHandling: function() {
-        // Handler für die Kommunikation mit Browser-Extensions
-        window.addEventListener('message', function(event) {
-            try {
-                // Sichere Verarbeitung von Nachrichten
-                if (event.source !== window) return;
-                if (!event.data || typeof event.data !== 'object') return;
-                
-                // Behandle Nachrichtentypen entsprechend
-                if (event.data.type === 'taskcard-event') {
-                    // Verarbeite App-spezifische Nachrichten
-                }
-            } catch (error) {
-                // Fehler abfangen, ohne sie in der Konsole anzuzeigen
-                if (error.message && (
-                    error.message.includes('message port closed') ||
-                    error.message.includes('lastError')
-                )) {
-                    // Ignoriere diese spezifischen Fehler
-                    return;
-                }
-                console.warn('Nachrichtenverarbeitung fehlgeschlagen:', error);
+        // Navigation
+        $('.breadcrumb-home').on('click', () => this.navigateHome());
+        
+        // Folder actions
+        $('#newFolderBtn').on('click', () => this.createFolder());
+        $('#saveFolderBtn').on('click', () => this.saveFolder());
+        $('#cancelFolderBtn, #closeFolderModal').on('click', () => $('#folderModal').hide());
+        $('#editFolderBtn').on('click', () => this.editCurrentFolder());
+        
+        // Board actions
+        $('#newBoardBtn, #newBoardInFolderBtn').on('click', () => this.createBoard());
+        $('#saveBoardBtn').on('click', () => this.saveBoard());
+        $('#cancelBoardBtn, #closeBoardModal').on('click', () => $('#boardModal').hide());
+        $('#editBoardTitleBtn').on('click', () => this.editCurrentBoard());
+        
+        // Card actions
+        $('#newCardBtn, #addCardBtnGrid').on('click', () => this.createCard());
+        $('#saveCardBtn').on('click', () => this.saveCard());
+        $('#cancelCardBtn, #closeCardModal').on('click', () => $('#cardModal').hide());
+        
+        // Thumbnail modal actions
+        $('#closeThumbnailModal, #cancelThumbnailBtn').on('click', () => $('#thumbnailModal').hide());
+        $('#thumbnailUpload').on('change', function() {
+            const file = this.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    $('#thumbnailPreview').show().html(`<img src="${e.target.result}" alt="Preview" style="max-width: 100%; max-height: 200px;">`);
+                };
+                reader.readAsDataURL(file);
             }
         });
-    },
-    
-    /**
-     * Wrapper für Chrome API-Interaktionen
-     */
-    chromeInteraction: function(callback) {
-        try {
-            if (typeof chrome !== 'undefined' && chrome.runtime) {
-                // Sichere Ausführung in einem Try-Catch-Block
-                try {
-                    callback();
-                } catch (e) {
-                    if (e.message && (
-                        e.message.includes('message port closed') ||
-                        e.message.includes('lastError')
-                    )) {
-                        // Ignoriere diese spezifischen Fehler
-                        return;
-                    }
-                    console.warn('Chrome API Fehler:', e);
-                }
-            }
-        } catch (error) {
-            // Chrome ist nicht definiert oder nicht verfügbar - das ist in Ordnung
-        }
-    },
-    
-    /**
-     * Sichere Datei-Upload-Funktion
-     */
-    safeFileUpload: function(fileInput, previewElement, callback) {
-        try {
-            const file = fileInput.files[0];
-            if (!file) return;
-            
-            const reader = new FileReader();
-            
-            reader.onload = function(e) {
-                try {
-                    if (previewElement) {
-                        previewElement.html(`<img src="${e.target.result}" alt="Vorschau">`).show();
-                    }
-                    
-                    if (typeof callback === 'function') {
-                        callback(e.target.result);
-                    }
-                } catch (previewError) {
-                    console.warn('Fehler bei der Vorschau-Anzeige:', previewError);
-                }
-            };
-            
-            reader.onerror = function() {
-                console.warn('Datei konnte nicht gelesen werden');
-            };
-            
-            // Datei als Daten-URL lesen
-            reader.readAsDataURL(file);
-        } catch (error) {
-            console.warn('Fehler beim Hochladen der Datei:', error);
-        }
-    },
-    
-    /**
-     * Sichere Clipboard-Kopieren-Funktion
-     */
-    safeClipboardCopy: function(text) {
-        try {
-            // Moderne Methode mit Clipboard API
-            if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(text)
-                    .then(() => {
-                        console.log('Text erfolgreich in die Zwischenablage kopiert');
-                    })
-                    .catch(err => {
-                        console.warn('Clipboard API fehlgeschlagen, versuche Fallback:', err);
-                        this.clipboardFallback(text);
-                    });
+        $('#usePlaceholder').on('change', function() {
+            if ($(this).prop('checked')) {
+                $('#thumbnailPreview').show().html(`<img src="placeholder.png" alt="Placeholder" style="max-width: 100%; max-height: 200px;">`);
+                $('#thumbnailUrl').prop('disabled', true);
+                $('#thumbnailUpload').prop('disabled', true);
             } else {
-                // Fallback für ältere Browser
-                this.clipboardFallback(text);
+                $('#thumbnailPreview').hide();
+                $('#thumbnailUrl').prop('disabled', false);
+                $('#thumbnailUpload').prop('disabled', false);
             }
-        } catch (error) {
-            console.warn('Fehler beim Kopieren in die Zwischenablage:', error);
-        }
-    },
-    
-    /**
-     * Fallback-Methode für die Zwischenablage
-     */
-    clipboardFallback: function(text) {
-        try {
-            const textArea = document.createElement('textarea');
-            textArea.value = text;
+        });
+        
+        // Card type selection
+        $('.card-type-option').on('click', function() {
+            const type = $(this).data('type');
+            $('.card-type-option').removeClass('active');
+            $(this).addClass('active');
             
-            // Verhindere das Scrollen zur Textbox
-            textArea.style.position = 'fixed';
-            textArea.style.top = '0';
-            textArea.style.left = '0';
-            textArea.style.width = '2em';
-            textArea.style.height = '2em';
-            textArea.style.padding = '0';
-            textArea.style.border = 'none';
-            textArea.style.outline = 'none';
-            textArea.style.boxShadow = 'none';
-            textArea.style.background = 'transparent';
+            // Hide all type-specific fields
+            $('.youtube-fields, .image-fields, .link-fields, .learningapp-fields, .audio-fields').hide();
             
-            document.body.appendChild(textArea);
-            textArea.focus();
-            textArea.select();
+            // Show selected type fields
+            $(`.${type}-fields`).show();
+        });
+        
+        // Color palette selection
+        $('.color-palette').on('click', function() {
+            const palette = $(this).data('palette');
+            $('.color-palette').removeClass('active');
+            $(this).addClass('active');
             
-            try {
-                document.execCommand('copy');
-                console.log('Fallback-Kopieren erfolgreich');
-            } catch (err) {
-                console.warn('Fallback-Kopieren fehlgeschlagen:', err);
+            // Hide all color pickers
+            $('.material-colors, .pastel-colors, .custom-colors').hide();
+            
+            // Show selected palette
+            $(`.${palette}-colors`).show();
+        });
+        
+        // Apply custom color
+        $('#applyCustomColorBtn').on('click', () => {
+            const customColor = $('#customColorPicker').val();
+            $('.color-option').removeClass('active');
+            $('#customColorPreview').css('backgroundColor', customColor);
+        });
+        
+        // Card size selection
+        $('.width-btn').on('click', function() {
+            $('.width-btn').removeClass('active');
+            $(this).addClass('active');
+        });
+        
+        $('.height-btn').on('click', function() {
+            $('.height-btn').removeClass('active');
+            $(this).addClass('active');
+        });
+        
+        // View selection
+        $('.view-btn').on('click', function() {
+            const view = $(this).data('view');
+            Views.changeCardView(view);
+        });
+        
+        // Layout selection
+        $('.layout-btn').on('click', function() {
+            const columns = parseInt($(this).data('columns'));
+            Views.updateBoardLayout(columns);
+        });
+        
+        // Search
+        $('#searchInput').on('input', this.filterCards);
+        
+        // Category actions
+        $('#addCategoryBtn').on('click', () => this.createCategory());
+        $('#categoriesBtn').on('click', () => this.openCategoryModal());
+        $('#addCategoryFormBtn').on('click', () => this.saveCategory());
+        $('#closeCategoryModal, #closeCategoryBtn').on('click', () => $('#categoryModal').hide());
+        
+        // Background actions
+        $('#backgroundBtn').on('click', () => this.openBackgroundModal());
+        $('#closeBackgroundModal, #cancelBackgroundBtn').on('click', () => $('#backgroundModal').hide());
+        $('#saveBackgroundBtn').on('click', () => this.saveBackground());
+        $('#removeBackgroundBtn').on('click', () => this.removeBackground());
+        
+        // Background style options
+        $('.background-style-option').on('click', function() {
+            $('.background-style-option').removeClass('active');
+            $(this).addClass('active');
+        });
+        
+        // Background opacity
+        $('#backgroundOpacity').on('input', function() {
+            const value = $(this).val();
+            $('#opacityValue').text(`${value}%`);
+        });
+        
+        // Background file upload
+        $('#backgroundUpload').on('change', function() {
+            const file = this.files[0];
+            if (file) {
+                $('#backgroundFileName').text(file.name);
+                // Preview the image
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    $('.bg-preview').css('backgroundImage', `url(${e.target.result})`);
+                };
+                reader.readAsDataURL(file);
             }
+        });
+        
+        // Image upload for cards
+        $('#imageUpload').on('change', function() {
+            const file = this.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    $('#imagePreview').show().html(`<img src="${e.target.result}" alt="Preview">`);
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+        
+        // Audio upload for cards
+        $('#audioUpload').on('change', function() {
+            const file = this.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    $('#audioPreview').show().html(`
+                        <audio controls>
+                            <source src="${e.target.result}" type="audio/mpeg">
+                            Dein Browser unterstützt kein Audio-Element.
+                        </audio>
+                    `);
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+        
+        // Placeholder for image cards
+        $('#placeholderBtn').on('click', () => {
+            $('#imageUrl').val('');
+            $('#imagePreview').show().html(`<img src="placeholder.png" alt="Platzhalter">`);
+            $('#cardPlaceholder').val('placeholder.png');
+        });
+        
+        // Student mode toggle
+        $('#studentModeToggle').on('change', () => this.toggleStudentMode());
+        
+        // Share button
+        $('#shareBtn').on('click', () => this.openShareModal());
+        $('#closeShareModal').on('click', () => $('#shareModal').hide());
+        $('#copyLinkBtn').on('click', () => this.copyShareLink());
+        
+        // Import/Export
+        $('#exportBtn').on('click', () => StorageService.exportData());
+        $('#importFile').on('change', (e) => this.importData(e));
+        
+        // Sort options
+        $('.sort-option').on('click', function() {
+            $('.sort-option').removeClass('active');
+            $(this).addClass('active');
             
-            document.body.removeChild(textArea);
-        } catch (error) {
-            console.warn('Clipboard-Fallback fehlgeschlagen:', error);
-        }
+            // Resort boards
+            if (AppData.view === 'home') {
+                Views.renderBoards(null);
+            } else if (AppData.view === 'folder' && AppData.currentFolder) {
+                Views.renderBoardsInFolder(AppData.currentFolder.id);
+            }
+        });
+        
+        // Close confirmation modal
+        $('#closeConfirmModal, #cancelConfirmBtn').on('click', () => $('#confirmModal').hide());
+        
+        // Close dropdowns when clicking outside
+        $(document).on('click', function(e) {
+            if (!$(e.target).closest('.folder-menu, .board-menu, .card-menu, .dropdown').length) {
+                $('.folder-menu-dropdown, .board-menu-dropdown, .card-menu-dropdown, .dropdown-menu').removeClass('show');
+            }
+        });
+        
+        // Dropdown toggle
+        $('.dropdown-toggle').on('click', function() {
+            $(this).siblings('.dropdown-menu').toggleClass('show');
+        });
     },
     
     /**
      * Navigate to home view
      */
     navigateHome: function() {
-        try {
-            Views.renderHomeView();
-        } catch (error) {
-            console.warn('Fehler beim Navigieren zur Startseite:', error);
-        }
+        Views.renderHomeView();
     },
     
     /**
@@ -409,13 +247,7 @@ const Controllers = {
      * @param {string} folderId - Folder ID
      */
     openFolder: function(folderId) {
-        try {
-            Views.renderFolderView(folderId);
-        } catch (error) {
-            console.warn('Fehler beim Öffnen des Ordners:', error);
-            // Fallback zur Startseite
-            this.navigateHome();
-        }
+        Views.renderFolderView(folderId);
     },
     
     /**
@@ -423,40 +255,30 @@ const Controllers = {
      * @param {string} boardId - Board ID
      */
     openBoard: function(boardId) {
-        try {
-            Views.renderBoardView(boardId);
-        } catch (error) {
-            console.warn('Fehler beim Öffnen der Pinnwand:', error);
-            // Fallback zur Startseite
-            this.navigateHome();
-        }
+        Views.renderBoardView(boardId);
     },
     
     /**
      * Create a new folder
      */
     createFolder: function() {
-        try {
-            // Reset form
-            $('#folderModalTitle').text('Neuer Ordner');
-            $('#folderTitle').val('');
-            
-            // Reset parent folder selection
-            Views.updateParentFolderSelect();
-            $('#folderParentSelect').val('');
-            
-            // Reset color selection
-            $('#folderColorPicker .color-option').removeClass('active');
-            $('#folderColorPicker .color-option').first().addClass('active');
-            
-            // Remove folder ID data
-            $('#folderModal').removeData('id');
-            
-            // Show modal
-            $('#folderModal').css('display', 'flex');
-        } catch (error) {
-            console.warn('Fehler beim Erstellen eines neuen Ordners:', error);
-        }
+        // Reset form
+        $('#folderModalTitle').text('Neuer Ordner');
+        $('#folderTitle').val('');
+        
+        // Reset parent folder selection
+        Views.updateParentFolderSelect();
+        $('#folderParentSelect').val('');
+        
+        // Reset color selection
+        $('#folderColorPicker .color-option').removeClass('active');
+        $('#folderColorPicker .color-option').first().addClass('active');
+        
+        // Remove folder ID data
+        $('#folderModal').removeData('id');
+        
+        // Show modal
+        $('#folderModal').show();
     },
     
     /**
@@ -464,27 +286,23 @@ const Controllers = {
      * @param {string} parentId - Parent folder ID
      */
     createSubfolder: function(parentId) {
-        try {
-            // Reset form
-            $('#folderModalTitle').text('Neuer Unterordner');
-            $('#folderTitle').val('');
-            
-            // Set parent folder
-            Views.updateParentFolderSelect();
-            $('#folderParentSelect').val(parentId || AppData.currentFolder?.id);
-            
-            // Reset color selection
-            $('#folderColorPicker .color-option').removeClass('active');
-            $('#folderColorPicker .color-option').first().addClass('active');
-            
-            // Remove folder ID data
-            $('#folderModal').removeData('id');
-            
-            // Show modal
-            $('#folderModal').css('display', 'flex');
-        } catch (error) {
-            console.warn('Fehler beim Erstellen eines neuen Unterordners:', error);
-        }
+        // Reset form
+        $('#folderModalTitle').text('Neuer Unterordner');
+        $('#folderTitle').val('');
+        
+        // Set parent folder
+        Views.updateParentFolderSelect();
+        $('#folderParentSelect').val(parentId);
+        
+        // Reset color selection
+        $('#folderColorPicker .color-option').removeClass('active');
+        $('#folderColorPicker .color-option').first().addClass('active');
+        
+        // Remove folder ID data
+        $('#folderModal').removeData('id');
+        
+        // Show modal
+        $('#folderModal').show();
     },
     
     /**
@@ -492,42 +310,39 @@ const Controllers = {
      * @param {string} folderId - Folder ID
      */
     editFolder: function(folderId) {
-        try {
-            const folder = FolderDAO.getById(folderId);
-            if (!folder) return;
-            
-            // Set form values
-            $('#folderModalTitle').text('Ordner bearbeiten');
-            $('#folderTitle').val(folder.name);
-            
-            // Set parent folder
-            Views.updateParentFolderSelect();
-            $('#folderParentSelect').val(folder.parentId || '');
-            
-            // Set color
-            $('#folderColorPicker .color-option').removeClass('active');
-            $(`#folderColorPicker .color-option[data-color="${folder.color}"]`).addClass('active');
-            
-            // Store folder ID in form
-            $('#folderModal').data('id', folderId);
-            
-            // Show modal
-            $('#folderModal').css('display', 'flex');
-        } catch (error) {
-            console.warn('Fehler beim Bearbeiten des Ordners:', error);
+        const folder = FolderDAO.getById(folderId);
+        if (!folder) return;
+        
+        // Set form values
+        $('#folderModalTitle').text('Ordner bearbeiten');
+        $('#folderTitle').val(folder.name);
+        
+        // Set parent folder
+        Views.updateParentFolderSelect();
+        $('#folderParentSelect').val(folder.parentId || '');
+        
+        // Set color
+        $('#folderColorPicker .color-option').removeClass('active');
+        const colorOption = $(`#folderColorPicker .color-option[data-color="${folder.color}"]`);
+        if (colorOption.length) {
+            colorOption.addClass('active');
+        } else {
+            $('#folderColorPicker .color-option').first().addClass('active');
         }
+        
+        // Store folder ID in form
+        $('#folderModal').data('id', folder.id);
+        
+        // Show modal
+        $('#folderModal').show();
     },
     
     /**
      * Edit the current folder
      */
     editCurrentFolder: function() {
-        try {
-            if (AppData.currentFolder) {
-                this.editFolder(AppData.currentFolder.id);
-            }
-        } catch (error) {
-            console.warn('Fehler beim Bearbeiten des aktuellen Ordners:', error);
+        if (AppData.currentFolder) {
+            this.editFolder(AppData.currentFolder.id);
         }
     },
     
@@ -535,118 +350,57 @@ const Controllers = {
      * Save a folder (create or update)
      */
     saveFolder: function() {
-        try {
-            const folderName = $('#folderTitle').val().trim();
-            if (!folderName) {
-                alert('Bitte gib einen Namen für den Ordner ein.');
-                return;
-            }
+        const title = $('#folderTitle').val().trim();
+        if (!title) {
+            alert('Bitte gib einen Titel ein.');
+            return;
+        }
+        
+        const color = $('#folderColorPicker .color-option.active').data('color') || '#2196F3';
+        const parentId = $('#folderParentSelect').val() || null;
+        const folderId = $('#folderModal').data('id');
+        
+        if (folderId) {
+            // Update existing folder
+            FolderDAO.update(folderId, { 
+                name: title, 
+                color: color,
+                parentId: parentId
+            });
             
-            const folderColor = $('#folderColorPicker .color-option.active').data('color') || '#2196F3';
-            const parentId = $('#folderParentSelect').val() || null;
-            const folderId = $('#folderModal').data('id');
-            
-            if (folderId) {
-                // Update existing folder
-                FolderDAO.update(folderId, { 
-                    name: folderName, 
-                    color: folderColor,
-                    parentId: parentId
-                });
-                
-                // Update view
-                if (AppData.view === 'folder') {
-                    if (AppData.currentFolder && AppData.currentFolder.id === folderId) {
-                        Views.renderFolderView(folderId);
-                    } else if (AppData.currentFolder && AppData.currentFolder.id === parentId) {
-                        Views.renderFolderView(AppData.currentFolder.id);
-                    } else {
-                        Views.renderHomeView();
-                    }
-                } else {
+            // Update view
+            if (AppData.view === 'folder') {
+                if (AppData.currentFolder && AppData.currentFolder.id === folderId) {
+                    // If we're updating the current folder
+                    Views.renderFolderView(folderId);
+                } else if (AppData.currentFolder && AppData.currentFolder.id === parentId) {
+                    // If we've moved the folder to be a child of the current folder
+                    Views.renderFolderView(AppData.currentFolder.id);
+                } else if (!parentId) {
+                    // If we've moved the folder to the root and were in a different folder
                     Views.renderHomeView();
                 }
             } else {
-                // Create new folder
-                const folder = FolderDAO.create(folderName, folderColor, parentId);
-                
-                // Update view
-                if (AppData.view === 'folder' && AppData.currentFolder && AppData.currentFolder.id === parentId) {
-                    Views.renderFolderView(parentId);
-                } else if (parentId === null) {
-                    Views.renderHomeView();
-                }
+                // If we're in home view, refresh it
+                Views.renderHomeView();
             }
+        } else {
+            // Create new folder
+            const folder = FolderDAO.create(title, color, parentId);
             
-            // Hide modal
-            $('#folderModal').hide();
-            $('#folderModal').removeData('id');
-        } catch (error) {
-            console.warn('Fehler beim Speichern des Ordners:', error);
+            // Update view
+            if (AppData.view === 'folder' && AppData.currentFolder && AppData.currentFolder.id === parentId) {
+                // If we're in the parent folder view, refresh it
+                Views.renderFolderView(parentId);
+            } else if (parentId === null) {
+                // If we've created a root folder, refresh home view
+                Views.renderHomeView();
+            }
         }
-    },
-    
-    /**
-     * Set folder thumbnail
-     * @param {string} folderId - Folder ID
-     */
-    setFolderThumbnail: function(folderId) {
-        try {
-            const folder = FolderDAO.getById(folderId);
-            if (!folder) return;
-            
-            // Reset thumbnail form
-            $('#thumbnailModalTitle').text(`Vorschaubild für "${folder.name}"`);
-            $('#thumbnailUrl').val('').prop('disabled', false);
-            $('#thumbnailUpload').val('').prop('disabled', false);
-            $('#usePlaceholder').prop('checked', false);
-            $('#thumbnailPreview').empty().hide();
-            
-            // Set callback function
-            $('#thumbnailModal').data('callback', () => {
-                try {
-                    let thumbnailData = null;
-                    
-                    // Get thumbnail data
-                    if ($('#usePlaceholder').prop('checked')) {
-                        thumbnailData = 'placeholder.png';
-                    } else if ($('#thumbnailUpload')[0].files.length > 0) {
-                        // Use uploaded image data from preview
-                        const imgSrc = $('#thumbnailPreview img').attr('src');
-                        if (imgSrc) {
-                            thumbnailData = imgSrc;
-                        }
-                    } else if ($('#thumbnailUrl').val().trim()) {
-                        thumbnailData = $('#thumbnailUrl').val().trim();
-                    }
-                    
-                    if (thumbnailData) {
-                        FolderDAO.setThumbnail(folderId, thumbnailData);
-                        
-                        // Refresh view
-                        if (AppData.view === 'folder') {
-                            if (AppData.currentFolder.id === folderId) {
-                                // Current folder - refresh folder view
-                                Views.renderFolderView(folderId);
-                            } else if (AppData.currentFolder.id === folder.parentId) {
-                                // Parent folder - refresh subfolders
-                                Views.renderFolders(folder.parentId);
-                            }
-                        } else {
-                            // Home view - refresh folders
-                            Views.renderFolders(null);
-                        }
-                    }
-                } catch (error) {
-                    console.warn('Fehler beim Speichern des Vorschaubilds für Ordner:', error);
-                }
-            });
-            
-            // Show modal
-            $('#thumbnailModal').css('display', 'flex');
-        } catch (error) {
-            console.warn('Fehler beim Öffnen des Vorschaubild-Dialogs für Ordner:', error);
-        }
+        
+        // Hide modal
+        $('#folderModal').hide();
+        $('#folderModal').removeData('id');
     },
     
     /**
@@ -654,80 +408,101 @@ const Controllers = {
      * @param {string} folderId - Folder ID
      */
     deleteFolder: function(folderId) {
-        try {
-            const folder = FolderDAO.getById(folderId);
-            if (!folder) return;
-            
-            // Get all subfolders
-            const subFolders = FolderDAO.getByParentId(folderId);
-            
-            let message = `Möchtest du den Ordner "${folder.name}" wirklich löschen?`;
-            if (subFolders.length > 0) {
-                message += ` Dieser Ordner enthält ${subFolders.length} Unterordner, die ebenfalls gelöscht werden!`;
-            }
-            message += ' Die Pinnwände werden nicht gelöscht, sondern nur aus dem Ordner entfernt.';
-            
-            Views.showConfirmDialog(message, () => {
-                try {
-                    FolderDAO.delete(folderId);
-                    
-                    // If we're in the deleted folder or any of its descendants, go back to home
-                    if (AppData.view === 'folder') {
-                        const currentFolderId = AppData.currentFolder?.id;
-                        if (currentFolderId === folderId || FolderDAO.getAllSubfolderIds(folderId).includes(currentFolderId)) {
-                            Views.renderHomeView();
-                        } else if (folder.parentId && AppData.currentFolder && AppData.currentFolder.id === folder.parentId) {
-                            // If we're in the parent folder, refresh it
-                            Views.renderFolderView(folder.parentId);
-                        } else {
-                            // Otherwise stay in current folder
-                            Views.renderFolderView(AppData.currentFolder.id);
-                        }
-                    } else {
-                        Views.renderHomeView();
-                    }
-                } catch (error) {
-                    console.warn('Fehler beim Löschen des Ordners:', error);
-                }
-            });
-        } catch (error) {
-            console.warn('Fehler beim Vorbereitungen zum Löschen des Ordners:', error);
+        const folder = FolderDAO.getById(folderId);
+        if (!folder) return;
+        
+        // Get all subfolders
+        const subFolders = FolderDAO.getByParentId(folderId);
+        
+        let message = `Möchtest du den Ordner "${folder.name}" wirklich löschen?`;
+        if (subFolders.length > 0) {
+            message += ` Dieser Ordner enthält ${subFolders.length} Unterordner, die ebenfalls gelöscht werden!`;
         }
+        message += ' Die Pinnwände werden nicht gelöscht, sondern nur aus dem Ordner entfernt.';
+        
+        Views.showConfirmModal(
+            'Ordner löschen',
+            message,
+            () => {
+                FolderDAO.delete(folderId);
+                
+                // If we're in the deleted folder or any of its descendants, go back to home
+                if (AppData.view === 'folder') {
+                    const currentFolderId = AppData.currentFolder?.id;
+                    if (currentFolderId === folderId || FolderDAO.getAllSubfolderIds(folderId).includes(currentFolderId)) {
+                        Views.renderHomeView();
+                    } else if (folder.parentId && AppData.currentFolder && AppData.currentFolder.id === folder.parentId) {
+                        // If we're in the parent folder, refresh it
+                        Views.renderFolderView(folder.parentId);
+                    } else {
+                        // Otherwise stay in current folder
+                        Views.renderFolderView(AppData.currentFolder.id);
+                    }
+                } else {
+                    Views.renderHomeView();
+                }
+            }
+        );
     },
     
-    // ... Rest der Controller-Methoden mit ähnlichen Try-Catch-Blöcken ...
+    /**
+     * Set folder thumbnail
+     * @param {string} folderId - Folder ID
+     */
+    setFolderThumbnail: function(folderId) {
+        const folder = FolderDAO.getById(folderId);
+        if (!folder) return;
+        
+        Views.showThumbnailModal(`Vorschaubild für "${folder.name}"`, (thumbnailData) => {
+            if (thumbnailData === 'placeholder') {
+                thumbnailData = 'placeholder.png';
+            }
+            
+            FolderDAO.setThumbnail(folderId, thumbnailData);
+            
+            // Refresh view
+            if (AppData.view === 'folder') {
+                if (AppData.currentFolder.id === folderId) {
+                    // Current folder - refresh folder view
+                    Views.renderFolderView(folderId);
+                } else if (AppData.currentFolder.id === folder.parentId) {
+                    // Parent folder - refresh subfolders
+                    Views.renderFolders(folder.parentId);
+                }
+            } else {
+                // Home view - refresh folders
+                Views.renderFolders(null);
+            }
+        });
+    },
     
     /**
      * Create a new board
      */
     createBoard: function() {
-        try {
-            // Reset form
-            $('#boardModalTitle').text('Neue Pinnwand');
-            $('#boardTitleInput').val('');
-            
-            // Reset color selection
-            $('#boardColorPicker .color-option').removeClass('active');
-            $('#boardColorPicker .color-option').first().addClass('active');
-            
-            // Update folder select
-            Views.updateFolderSelect();
-            
-            // Set current folder if in folder view
-            if (AppData.view === 'folder' && AppData.currentFolder) {
-                $('#boardFolderSelect').val(AppData.currentFolder.id);
-            } else {
-                $('#boardFolderSelect').val('');
-            }
-            
-            // Remove board ID data
-            $('#boardModal').removeData('id');
-            
-            // Show modal
-            $('#boardModal').css('display', 'flex');
-        } catch (error) {
-            console.warn('Fehler beim Erstellen einer neuen Pinnwand:', error);
+        // Reset form
+        $('#boardModalTitle').text('Neue Pinnwand');
+        $('#boardTitleInput').val('');
+        
+        // Reset color selection
+        $('#boardColorPicker .color-option').removeClass('active');
+        $('#boardColorPicker .color-option').first().addClass('active');
+        
+        // Update folder select
+        Views.updateFolderSelect();
+        
+        // Set current folder if in folder view
+        if (AppData.view === 'folder' && AppData.currentFolder) {
+            $('#boardFolderSelect').val(AppData.currentFolder.id);
+        } else {
+            $('#boardFolderSelect').val('');
         }
+        
+        // Remove board ID data
+        $('#boardModal').removeData('id');
+        
+        // Show modal
+        $('#boardModal').show();
     },
     
     /**
@@ -735,125 +510,947 @@ const Controllers = {
      * @param {string} folderId - Folder ID
      */
     createBoardInFolder: function(folderId) {
-        try {
-            this.createBoard();
-            $('#boardFolderSelect').val(folderId);
-        } catch (error) {
-            console.warn('Fehler beim Erstellen einer neuen Pinnwand im Ordner:', error);
+        this.createBoard();
+        $('#boardFolderSelect').val(folderId);
+    },
+    
+    /**
+     * Edit a board
+     * @param {string} boardId - Board ID
+     */
+    editBoard: function(boardId) {
+        const board = BoardDAO.getById(boardId);
+        if (!board) return;
+        
+        // Set form values
+        $('#boardModalTitle').text('Pinnwand bearbeiten');
+        $('#boardTitleInput').val(board.name);
+        
+        // Set color
+        $('#boardColorPicker .color-option').removeClass('active');
+        const colorOption = $(`#boardColorPicker .color-option[data-color="${board.color}"]`);
+        if (colorOption.length) {
+            colorOption.addClass('active');
+        } else {
+            $('#boardColorPicker .color-option').first().addClass('active');
         }
+        
+        // Update folder select
+        Views.updateFolderSelect();
+        $('#boardFolderSelect').val(board.folderId || '');
+        
+        // Store board ID in form
+        $('#boardModal').data('id', board.id);
+        
+        // Show modal
+        $('#boardModal').show();
+    },
+    
+    /**
+     * Edit the current board
+     */
+    editCurrentBoard: function() {
+        if (AppData.currentBoard) {
+            this.editBoard(AppData.currentBoard.id);
+        }
+    },
+    
+    /**
+     * Save a board (create or update)
+     */
+    saveBoard: function() {
+        const title = $('#boardTitleInput').val().trim();
+        if (!title) {
+            alert('Bitte gib einen Titel ein.');
+            return;
+        }
+        
+        const color = $('#boardColorPicker .color-option.active').data('color') || '#4CAF50';
+        const folderId = $('#boardFolderSelect').val();
+        const boardId = $('#boardModal').data('id');
+        
+        if (boardId) {
+            // Update existing board
+            BoardDAO.update(boardId, { 
+                name: title, 
+                color: color,
+                folderId: folderId || null
+            });
+            
+            // Update view
+            if (AppData.view === 'board' && AppData.currentBoard && AppData.currentBoard.id === boardId) {
+                // Update board title
+                $('#boardTitle').text(title);
+                
+                // If folder changed, may need to refresh entire view
+                if (AppData.currentBoard.folderId !== folderId) {
+                    Views.renderBoardView(boardId);
+                }
+            } else if (AppData.view === 'folder' && AppData.currentFolder) {
+                // Refresh folder view
+                Views.renderBoardsInFolder(AppData.currentFolder.id);
+            } else {
+                // Refresh home view
+                Views.renderBoards(null);
+            }
+        } else {
+            // Create new board
+            const board = BoardDAO.create(title, color, folderId || null);
+            
+            // Update view
+            if (AppData.view === 'folder' && AppData.currentFolder && AppData.currentFolder.id === folderId) {
+                Views.renderBoardsInFolder(AppData.currentFolder.id);
+            } else if (!folderId && AppData.view === 'home') {
+                Views.renderBoards(null);
+            }
+        }
+        
+        // Hide modal
+        $('#boardModal').hide();
+        $('#boardModal').removeData('id');
+    },
+    
+    /**
+     * Set board thumbnail
+     * @param {string} boardId - Board ID
+     */
+    setBoardThumbnail: function(boardId) {
+        const board = BoardDAO.getById(boardId);
+        if (!board) return;
+        
+        Views.showThumbnailModal(`Vorschaubild für "${board.name}"`, (thumbnailData) => {
+            if (thumbnailData === 'placeholder') {
+                thumbnailData = 'placeholder.png';
+            }
+            
+            BoardDAO.setThumbnail(boardId, thumbnailData);
+            
+            // Refresh view
+            if (AppData.view === 'board' && AppData.currentBoard.id === boardId) {
+                // Current board - refresh board view
+                Views.renderBoardView(boardId);
+            } else if (AppData.view === 'folder' && board.folderId === AppData.currentFolder.id) {
+                // In folder view - refresh boards
+                Views.renderBoardsInFolder(AppData.currentFolder.id);
+            } else if (AppData.view === 'home' && !board.folderId) {
+                // Home view and board not in a folder - refresh boards
+                Views.renderBoards(null);
+            }
+        });
+    },
+    
+    /**
+     * Delete a board
+     * @param {string} boardId - Board ID
+     */
+    deleteBoard: function(boardId) {
+        const board = BoardDAO.getById(boardId);
+        if (!board) return;
+        
+        Views.showConfirmModal(
+            'Pinnwand löschen',
+            `Möchtest du die Pinnwand "${board.name}" wirklich löschen? Alle Karten werden ebenfalls gelöscht.`,
+            () => {
+                BoardDAO.delete(boardId);
+                
+                // If we're in the deleted board, go back to previous view
+                if (AppData.view === 'board' && AppData.currentBoard && AppData.currentBoard.id === boardId) {
+                    if (board.folderId) {
+                        Views.renderFolderView(board.folderId);
+                    } else {
+                        Views.renderHomeView();
+                    }
+                } else if (AppData.view === 'folder' && AppData.currentFolder) {
+                    Views.renderBoardsInFolder(AppData.currentFolder.id);
+                } else {
+                    Views.renderBoards(null);
+                }
+            }
+        );
+    },
+    
+    /**
+     * Create a new card
+     */
+    createCard: function() {
+        if (!AppData.currentBoard) return;
+        
+        // Reset form
+        $('#cardModalTitle').text('Neue Karte');
+        $('#cardTitle').val('');
+        $('#cardContent').val('');
+        $('#youtubeUrl').val('');
+        $('#imageUrl').val('');
+        $('#linkUrl').val('');
+        $('#learningappUrl').val('');
+        $('#cardPlaceholder').val('');
+        
+        // Reset card type
+        $('.card-type-option').removeClass('active');
+        $('.card-type-option[data-type="text"]').addClass('active');
+        $('.youtube-fields, .image-fields, .link-fields, .learningapp-fields, .audio-fields').hide();
+        
+        // Reset color selection
+        $('.color-palette').removeClass('active');
+        $('.color-palette[data-palette="material"]').addClass('active');
+        $('.material-colors').show();
+        $('.pastel-colors, .custom-colors').hide();
+        $('.color-option').removeClass('active');
+        $('.material-colors .color-option[data-color="blue"]').addClass('active');
+        
+        // Reset size selection
+        $('.width-btn, .height-btn').removeClass('active');
+        $('.width-btn[data-width="1"], .height-btn[data-height="1"]').addClass('active');
+        
+        // Reset category selection
+        $('#cardCategory').val('');
+        
+        // Reset image and audio preview
+        $('#imagePreview, #audioPreview').hide().empty();
+        
+        // Clear card ID
+        $('#cardModal').removeData('id');
+        
+        // Show modal
+        $('#cardModal').show();
+    },
+    
+    /**
+     * Edit a card
+     * @param {string} boardId - Board ID
+     * @param {string} cardId - Card ID
+     */
+    editCard: function(boardId, cardId) {
+        const board = BoardDAO.getById(boardId);
+        if (!board) return;
+        
+        const card = board.cards.find(c => c.id === cardId);
+        if (!card) return;
+        
+        // Set form values
+        $('#cardModalTitle').text('Karte bearbeiten');
+        $('#cardTitle').val(card.title || '');
+        $('#cardContent').val(card.content || '');
+        
+        // Set card type
+        $('.card-type-option').removeClass('active');
+        $(`.card-type-option[data-type="${card.type || 'text'}"]`).addClass('active');
+        
+        // Hide all type-specific fields
+        $('.youtube-fields, .image-fields, .link-fields, .learningapp-fields, .audio-fields').hide();
+        
+        // Show and fill type-specific fields
+        if (card.type === 'youtube') {
+            $('.youtube-fields').show();
+            $('#youtubeUrl').val(card.youtubeId ? `https://www.youtube.com/watch?v=${card.youtubeId}` : '');
+        } else if (card.type === 'image') {
+            $('.image-fields').show();
+            $('#imageUrl').val(card.imageUrl || '');
+            
+            // Show image preview
+            if (card.imageUrl || card.imageData) {
+                const imageUrl = card.imageData || card.imageUrl;
+                $('#imagePreview').show().html(`<img src="${imageUrl}" alt="Preview">`);
+            } else {
+                $('#imagePreview').hide().empty();
+            }
+        } else if (card.type === 'link') {
+            $('.link-fields').show();
+            $('#linkUrl').val(card.linkUrl || '');
+        } else if (card.type === 'learningapp') {
+            $('.learningapp-fields').show();
+            $('#learningappUrl').val(card.learningappId || '');
+        } else if (card.type === 'audio') {
+            $('.audio-fields').show();
+            $('#audioUrl').val(card.audioUrl || '');
+            
+            // Show audio preview
+            if (card.audioUrl || card.audioData) {
+                const audioUrl = card.audioData || card.audioUrl;
+                $('#audioPreview').show().html(`
+                    <audio controls>
+                        <source src="${audioUrl}" type="audio/mpeg">
+                        Dein Browser unterstützt kein Audio-Element.
+                    </audio>
+                `);
+            } else {
+                $('#audioPreview').hide().empty();
+            }
+        }
+        
+        // Set color
+        let colorPalette = 'material';
+        $('.color-option').removeClass('active');
+        
+        if (card.color === 'custom' && card.customColor) {
+            colorPalette = 'custom';
+            $('#customColorPicker').val(card.customColor);
+            $('#customColorPreview').css('backgroundColor', card.customColor);
+        } else {
+            // Find the right palette for this color
+            if (['red', 'pink', 'purple', 'deep-purple', 'indigo', 'blue', 'light-blue', 
+                 'cyan', 'teal', 'green', 'light-green', 'lime', 'yellow', 'amber', 
+                 'orange', 'deep-orange', 'brown', 'grey', 'blue-grey'].includes(card.color)) {
+                colorPalette = 'material';
+                $(`.material-colors .color-option[data-color="${card.color}"]`).addClass('active');
+            } else {
+                // Try to find in pastel or custom palettes
+                const pastelOption = $(`.pastel-colors .color-option[data-custom-color="${card.customColor}"]`);
+                const customOption = $(`.custom-colors .color-option[data-custom-color="${card.customColor}"]`);
+                
+                if (pastelOption.length) {
+                    colorPalette = 'pastel';
+                    pastelOption.addClass('active');
+                } else if (customOption.length) {
+                    colorPalette = 'custom';
+                    customOption.addClass('active');
+                } else {
+                    // Default to blue if no match
+                    colorPalette = 'material';
+                    $('.material-colors .color-option[data-color="blue"]').addClass('active');
+                }
+            }
+        }
+        
+        // Set color palette
+        $('.color-palette').removeClass('active');
+        $(`.color-palette[data-palette="${colorPalette}"]`).addClass('active');
+        $('.material-colors, .pastel-colors, .custom-colors').hide();
+        $(`.${colorPalette}-colors`).show();
+        
+        // Set size
+        $('.width-btn').removeClass('active');
+        $(`.width-btn[data-width="${card.width || 1}"]`).addClass('active');
+        
+        $('.height-btn').removeClass('active');
+        $(`.height-btn[data-height="${card.height || 1}"]`).addClass('active');
+        
+        // Set category
+        $('#cardCategory').val(card.category || '');
+        
+        // Store card and board ID in form
+        $('#cardModal').data('id', card.id);
+        $('#cardModal').data('boardId', boardId);
+        
+        // Show modal
+        $('#cardModal').show();
+    },
+    
+    /**
+     * Save a card (create or update)
+     */
+    async saveCard() {
+        if (!AppData.currentBoard) return;
+        
+        const boardId = AppData.currentBoard.id;
+        const cardId = $('#cardModal').data('id');
+        const cardTitle = $('#cardTitle').val().trim();
+        
+        if (!cardTitle) {
+            alert('Bitte gib einen Titel ein.');
+            return;
+        }
+        
+        // Get selected card type
+        const cardType = $('.card-type-option.active').data('type') || 'text';
+        
+        // Get selected color
+        let cardColor = 'blue';
+        let customColor = '';
+        
+        if ($('.color-option.active').length) {
+            cardColor = $('.color-option.active').data('color');
+            if (cardColor === 'custom') {
+                customColor = $('.color-option.active').data('custom-color') || $('#customColorPicker').val();
+            }
+        }
+        
+        // Get selected size
+        const cardWidth = parseInt($('.width-btn.active').data('width') || 1);
+        const cardHeight = parseInt($('.height-btn.active').data('height') || 1);
+        
+        // Get selected category
+        const cardCategory = $('#cardCategory').val();
+        
+        // Prepare card data
+        const cardData = {
+            title: cardTitle,
+            content: $('#cardContent').val().trim(),
+            type: cardType,
+            color: cardColor,
+            customColor: customColor,
+            width: cardWidth,
+            height: cardHeight,
+            category: cardCategory
+        };
+        
+        // Check for placeholder
+        const placeholderValue = $('#cardPlaceholder').val();
+        if (placeholderValue === 'placeholder.png') {
+            cardData.thumbnail = 'placeholder.png';
+        }
+        
+        // Add type-specific data
+        if (cardType === 'youtube') {
+            const youtubeId = Utils.getYoutubeId($('#youtubeUrl').val().trim());
+            if (!youtubeId) {
+                alert('Bitte gib eine gültige YouTube-URL ein.');
+                return;
+            }
+            cardData.youtubeId = youtubeId;
+        } else if (cardType === 'image') {
+            // Check for uploaded image first
+            const imageFile = $('#imageUpload')[0].files[0];
+            if (imageFile) {
+                try {
+                    const imageData = await Utils.fileToBase64(imageFile);
+                    cardData.imageData = imageData;
+                } catch (error) {
+                    console.error('Error converting image to base64:', error);
+                }
+            } else if ($('#imagePreview img').attr('src') === 'placeholder.png') {
+                // Using placeholder
+                cardData.imageUrl = 'placeholder.png';
+            } else {
+                // Use image URL
+                const imageUrl = $('#imageUrl').val().trim();
+                if (!imageUrl) {
+                    alert('Bitte gib eine Bild-URL ein oder lade ein Bild hoch.');
+                    return;
+                }
+                cardData.imageUrl = imageUrl;
+            }
+        } else if (cardType === 'link') {
+            const linkUrl = $('#linkUrl').val().trim();
+            if (!linkUrl) {
+                alert('Bitte gib eine Link-URL ein.');
+                return;
+            }
+            
+            // Add https:// if missing
+            if (!/^https?:\/\//i.test(linkUrl)) {
+                cardData.linkUrl = 'https://' + linkUrl;
+            } else {
+                cardData.linkUrl = linkUrl;
+            }
+        } else if (cardType === 'learningapp') {
+            const learningappId = Utils.getLearningappId($('#learningappUrl').val().trim());
+            if (!learningappId) {
+                alert('Bitte gib eine gültige LearningApp-URL oder ID ein.');
+                return;
+            }
+            cardData.learningappId = learningappId;
+        } else if (cardType === 'audio') {
+            // Check for uploaded audio first
+            const audioFile = $('#audioUpload')[0].files[0];
+            if (audioFile) {
+                try {
+                    const audioData = await Utils.fileToBase64(audioFile);
+                    cardData.audioData = audioData;
+                } catch (error) {
+                    console.error('Error converting audio to base64:', error);
+                }
+            } else {
+                // Use audio URL
+                const audioUrl = $('#audioUrl').val().trim();
+                if (!audioUrl) {
+                    alert('Bitte gib eine Audio-URL ein oder lade eine Audio-Datei hoch.');
+                    return;
+                }
+                cardData.audioUrl = audioUrl;
+            }
+        }
+        
+        // Save card
+        if (cardId) {
+            // Update existing card
+            BoardDAO.updateCard(boardId, cardId, cardData);
+        } else {
+            // Create new card
+            BoardDAO.addCard(boardId, cardData);
+        }
+        
+        // Update view
+        this.refreshBoardView();
+        
+        // Hide modal
+        $('#cardModal').hide();
+        $('#cardModal').removeData('id');
+    },
+    
+    /**
+     * Set card thumbnail
+     * @param {string} boardId - Board ID
+     * @param {string} cardId - Card ID
+     */
+    setCardThumbnail: function(boardId, cardId) {
+        const board = BoardDAO.getById(boardId);
+        if (!board) return;
+        
+        const card = board.cards.find(c => c.id === cardId);
+        if (!card) return;
+        
+        Views.showThumbnailModal(`Vorschaubild für "${card.title}"`, (thumbnailData) => {
+            if (thumbnailData === 'placeholder') {
+                thumbnailData = 'placeholder.png';
+            }
+            
+            // Update card with new thumbnail
+            BoardDAO.updateCard(boardId, cardId, { thumbnail: thumbnailData });
+            
+            // Refresh view
+            this.refreshBoardView();
+        });
+    },
+    
+    /**
+     * Duplicate a card
+     * @param {string} boardId - Board ID
+     * @param {string} cardId - Card ID
+     */
+    duplicateCard: function(boardId, cardId) {
+        const board = BoardDAO.getById(boardId);
+        if (!board) return;
+        
+        const card = board.cards.find(c => c.id === cardId);
+        if (!card) return;
+        
+        // Create a copy of the card
+        const newCardData = { ...card };
+        delete newCardData.id; // Remove ID so a new one is generated
+        
+        // Add "(Kopie)" to title
+        newCardData.title = `${newCardData.title} (Kopie)`;
+        
+        // In free view, offset position slightly
+        if (AppData.currentBoard.view === 'free' && newCardData.position) {
+            newCardData.position = {
+                left: newCardData.position.left + 20,
+                top: newCardData.position.top + 20
+            };
+        }
+        
+        // Add the new card
+        BoardDAO.addCard(boardId, newCardData);
+        
+        // Update view
+        this.refreshBoardView();
+    },
+    
+    /**
+     * Delete a card
+     * @param {string} boardId - Board ID
+     * @param {string} cardId - Card ID
+     */
+    deleteCard: function(boardId, cardId) {
+        Views.showConfirmModal(
+            'Karte löschen',
+            'Möchtest du diese Karte wirklich löschen?',
+            () => {
+                BoardDAO.deleteCard(boardId, cardId);
+                this.refreshBoardView();
+            }
+        );
+    },
+    
+    /**
+     * Filter cards based on search input
+     */
+    filterCards: function() {
+        const searchTerm = $('#searchInput').val().toLowerCase();
+        
+        if (AppData.currentBoard.view === 'grid' || AppData.currentBoard.view === 'free') {
+            $('.card:not(.add-card)').each(function() {
+                const title = $(this).find('.card-title').text().toLowerCase();
+                const content = $(this).find('.card-text').text().toLowerCase();
+                
+                if (title.includes(searchTerm) || content.includes(searchTerm)) {
+                    $(this).show();
+                } else {
+                    $(this).hide();
+                }
+            });
+        } else if (AppData.currentBoard.view === 'categories') {
+            // First hide/show cards
+            $('.card:not(.add-card)').each(function() {
+                const title = $(this).find('.card-title').text().toLowerCase();
+                const content = $(this).find('.card-text').text().toLowerCase();
+                
+                if (title.includes(searchTerm) || content.includes(searchTerm)) {
+                    $(this).show();
+                } else {
+                    $(this).hide();
+                }
+            });
+            
+            // Then hide categories with no visible cards
+            $('.category').each(function() {
+                const visibleCards = $(this).find('.card:visible').length;
+                const hasPlaceholder = $(this).find('.category-placeholder').length > 0;
+                
+                if (visibleCards === 0 && (searchTerm || hasPlaceholder)) {
+                    $(this).hide();
+                } else {
+                    $(this).show();
+                }
+            });
+        }
+    },
+    
+    /**
+     * Refresh the current board view
+     */
+    refreshBoardView: function() {
+        if (!AppData.currentBoard) return;
+        
+        const board = AppData.currentBoard;
+        
+        if (board.view === 'grid') {
+            Views.renderCardsGrid(board);
+        } else if (board.view === 'free') {
+            Views.renderCardsFree(board);
+        } else if (board.view === 'categories') {
+            Views.renderCardsCategories(board);
+        }
+    },
+    
+    /**
+     * Open the category modal
+     */
+    openCategoryModal: function() {
+        if (!AppData.currentBoard) return;
+        
+        // Render categories list
+        Views.renderCategoriesList(AppData.currentBoard);
+        
+        // Reset new category input
+        $('#newCategoryInput').val('');
+        
+        // Show modal
+        $('#categoryModal').show();
+    },
+    
+    /**
+     * Create a new category
+     */
+    createCategory: function() {
+        if (!AppData.currentBoard) return;
+        
+        // Open the modal with prompt
+        $('#categoryModal').show();
+        $('#newCategoryInput').focus();
+    },
+    
+    /**
+     * Save a new category
+     */
+    saveCategory: function() {
+        if (!AppData.currentBoard) return;
+        
+        const categoryName = $('#newCategoryInput').val().trim();
+        if (!categoryName) {
+            alert('Bitte gib einen Namen für die Kategorie ein.');
+            return;
+        }
+        
+        // Add the category
+        BoardDAO.addCategory(AppData.currentBoard.id, categoryName);
+        
+        // Update views
+        Views.renderCategoriesList(AppData.currentBoard);
+        Views.updateCategoryDropdown(AppData.currentBoard);
+        
+        if (AppData.currentBoard.view === 'categories') {
+            Views.renderCardsCategories(AppData.currentBoard);
+        }
+        
+        // Reset input
+        $('#newCategoryInput').val('');
+    },
+    
+    /**
+     * Edit a category
+     * @param {string} categoryId - Category ID
+     */
+    editCategory: function(categoryId) {
+        if (!AppData.currentBoard) return;
+        
+        const category = AppData.currentBoard.categories.find(cat => cat.id === categoryId);
+        if (!category) return;
+        
+        const newName = prompt('Kategorie umbenennen:', category.name);
+        if (newName && newName.trim()) {
+            // Update the category
+            BoardDAO.updateCategory(AppData.currentBoard.id, categoryId, newName.trim());
+            
+            // Update views
+            Views.renderCategoriesList(AppData.currentBoard);
+            Views.updateCategoryDropdown(AppData.currentBoard);
+            
+            if (AppData.currentBoard.view === 'categories') {
+                Views.renderCardsCategories(AppData.currentBoard);
+            }
+        }
+    },
+    
+    /**
+     * Delete a category
+     * @param {string} categoryId - Category ID
+     */
+    deleteCategory: function(categoryId) {
+        if (!AppData.currentBoard) return;
+        
+        const category = AppData.currentBoard.categories.find(cat => cat.id === categoryId);
+        if (!category) return;
+        
+        Views.showConfirmModal(
+            'Kategorie löschen',
+            `Möchtest du die Kategorie "${category.name}" wirklich löschen? Die Karten werden nicht gelöscht, sondern nur aus der Kategorie entfernt.`,
+            () => {
+                // Delete the category
+                BoardDAO.deleteCategory(AppData.currentBoard.id, categoryId);
+                
+                // Update views
+                Views.renderCategoriesList(AppData.currentBoard);
+                Views.updateCategoryDropdown(AppData.currentBoard);
+                
+                if (AppData.currentBoard.view === 'categories') {
+                    Views.renderCardsCategories(AppData.currentBoard);
+                }
+            }
+        );
+    },
+    
+    /**
+     * Open the background modal
+     */
+    openBackgroundModal: function() {
+        if (!AppData.currentBoard) return;
+        
+        // Reset form
+        $('#backgroundUrl').val('');
+        $('#backgroundUpload').val('');
+        $('#backgroundFileName').text('Keine Datei ausgewählt');
+        
+        // Reset preview images
+        $('.bg-preview').css('backgroundImage', '');
+        
+        // Set defaults from current background if exists
+        if (AppData.currentBoard.background) {
+            const bg = AppData.currentBoard.background;
+            
+            if (bg.url) {
+                $('#backgroundUrl').val(bg.url);
+            }
+            
+            // Set style
+            $('.background-style-option').removeClass('active');
+            $(`.background-style-option[data-style="${bg.style || 'cover'}"]`).addClass('active');
+            
+            // Set opacity
+            $('#backgroundOpacity').val(bg.opacity !== undefined ? bg.opacity : 100);
+            $('#opacityValue').text(`${bg.opacity !== undefined ? bg.opacity : 100}%`);
+            
+            // Set preview
+            if (bg.data || bg.url) {
+                $('.bg-preview').css('backgroundImage', `url(${bg.data || bg.url})`);
+            }
+        }
+        
+        // Show modal
+        $('#backgroundModal').show();
+    },
+    
+    /**
+     * Save background settings
+     */
+    async saveBackground() {
+        if (!AppData.currentBoard) return;
+        
+        // Prepare background data
+        const backgroundData = {
+            url: $('#backgroundUrl').val().trim(),
+            style: $('.background-style-option.active').data('style') || 'cover',
+            opacity: parseInt($('#backgroundOpacity').val()) || 100
+        };
+        
+        // Check for uploaded file
+        const backgroundFile = $('#backgroundUpload')[0].files[0];
+        if (backgroundFile) {
+            try {
+                const backgroundImage = await Utils.fileToBase64(backgroundFile);
+                backgroundData.data = backgroundImage;
+                backgroundData.url = ''; // Clear URL if we have a data URI
+            } catch (error) {
+                console.error('Error converting background to base64:', error);
+            }
+        }
+        
+        // Validate we have either URL or data
+        if (!backgroundData.url && !backgroundData.data) {
+            alert('Bitte gib eine URL ein oder lade ein Bild hoch.');
+            return;
+        }
+        
+        // Save background
+        BoardDAO.setBackground(AppData.currentBoard.id, backgroundData);
+        
+        // Apply background
+        Views.applyBoardBackground(AppData.currentBoard);
+        
+        // Hide modal
+        $('#backgroundModal').hide();
+    },
+    
+    /**
+     * Remove background from board
+     */
+    removeBackground: function() {
+        if (!AppData.currentBoard) return;
+        
+        BoardDAO.removeBackground(AppData.currentBoard.id);
+        
+        // Update view
+        Views.applyBoardBackground(AppData.currentBoard);
+        
+        // Hide modal
+        $('#backgroundModal').hide();
     },
     
     /**
      * Toggle student mode
      */
     toggleStudentMode: function() {
-        try {
-            AppData.studentMode = $('#studentModeToggle').prop('checked');
-            
-            // Update URL with mode parameter
-            const url = new URL(window.location.href);
-            if (AppData.studentMode) {
-                url.searchParams.set('mode', 'student');
-            } else {
-                url.searchParams.delete('mode');
-            }
-            window.history.replaceState({}, '', url);
-            
-            // Update editor elements visibility
-            $('.editor-only').toggle(!AppData.studentMode);
-            
-            // Update add buttons visibility
-            if (AppData.studentMode) {
-                $('#addCardBtnGrid, #addCategoryBtn').hide();
-            } else {
-                $('#addCardBtnGrid, #addCategoryBtn').show();
-            }
-            
-            // If in categories view, refresh to hide empty categories
-            if (AppData.currentBoard && AppData.currentBoard.view === 'categories') {
-                Views.renderCardsCategories(AppData.currentBoard);
-            }
-            
-            // Save to localStorage
-            StorageService.saveAppData();
-            
-            // Update share link
-            this.updateShareLink();
-        } catch (error) {
-            console.warn('Fehler beim Umschalten des Schülermodus:', error);
+        AppData.studentMode = $('#studentModeToggle').prop('checked');
+        
+        // Update URL with mode parameter
+        const url = new URL(window.location.href);
+        if (AppData.studentMode) {
+            url.searchParams.set('mode', 'student');
+        } else {
+            url.searchParams.delete('mode');
         }
+        window.history.replaceState({}, '', url);
+        
+        // Update editor elements visibility
+        $('.editor-only').toggle(!AppData.studentMode);
+        
+        // Update add buttons visibility
+        if (AppData.studentMode) {
+            $('#addCardBtnGrid, #addCategoryBtn').hide();
+        } else {
+            $('#addCardBtnGrid, #addCategoryBtn').show();
+        }
+        
+        // If in categories view, refresh to hide empty categories
+        if (AppData.currentBoard && AppData.currentBoard.view === 'categories') {
+            Views.renderCardsCategories(AppData.currentBoard);
+        }
+        
+        // Save to localStorage
+        StorageService.saveAppData();
+        
+        // Update share link
+        this.updateShareLink();
     },
     
     /**
      * Open share modal
      */
     openShareModal: function() {
-        try {
-            this.updateShareLink();
-            $('#shareModal').css('display', 'flex');
-        } catch (error) {
-            console.warn('Fehler beim Öffnen des Teilen-Dialogs:', error);
-        }
+        this.updateShareLink();
+        $('#shareModal').show();
     },
     
     /**
      * Update share link
      */
     updateShareLink: function() {
-        try {
-            const url = new URL(window.location.href);
-            url.searchParams.set('mode', 'student');
-            $('#shareLink').val(url.toString());
-        } catch (error) {
-            console.warn('Fehler beim Aktualisieren des Teilen-Links:', error);
-        }
+        const url = new URL(window.location.href);
+        url.searchParams.set('mode', 'student');
+        $('#shareLink').val(url.toString());
     },
     
     /**
      * Copy share link to clipboard
      */
     copyShareLink: function() {
-        try {
-            const shareLink = $('#shareLink').val();
-            this.safeClipboardCopy(shareLink);
-            
-            // Visual feedback
-            const copyBtn = $('#copyLinkBtn');
-            const originalHtml = copyBtn.html();
-            copyBtn.html('<i class="fas fa-check"></i>');
-            
-            setTimeout(() => {
-                copyBtn.html(originalHtml);
-            }, 2000);
-        } catch (error) {
-            console.warn('Fehler beim Kopieren des Teilen-Links:', error);
-        }
+        const shareLink = $('#shareLink')[0];
+        shareLink.select();
+        document.execCommand('copy');
+        
+        // Visual feedback
+        const copyBtn = $('#copyLinkBtn');
+        const originalHtml = copyBtn.html();
+        copyBtn.html('<i class="fas fa-check"></i>');
+        
+        setTimeout(() => {
+            copyBtn.html(originalHtml);
+        }, 2000);
+    },
+    
+    /**
+     * Import data from file
+     * @param {Event} event - Change event from file input
+     */
+    importData: function(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const importedData = JSON.parse(e.target.result);
+                
+                // Validate imported data
+                if (importedData && Array.isArray(importedData.folders) && Array.isArray(importedData.boards)) {
+                    Views.showConfirmModal(
+                        'Daten importieren',
+                        'Möchtest du die aktuellen Daten mit den importierten ersetzen? Alle vorhandenen Daten werden überschrieben.',
+                        () => {
+                            if (StorageService.importData(importedData)) {
+                                // Refresh view
+                                Views.renderHomeView();
+                                alert('Daten erfolgreich importiert.');
+                            } else {
+                                alert('Fehler beim Importieren der Daten.');
+                            }
+                        }
+                    );
+                } else {
+                    alert('Die importierte Datei enthält keine gültigen Daten.');
+                }
+            } catch (error) {
+                console.error('Import error:', error);
+                alert('Fehler beim Importieren: Ungültiges Dateiformat.');
+            }
+        };
+        reader.readAsText(file);
+        
+        // Reset input value to allow importing the same file again
+        event.target.value = '';
     },
     
     /**
      * Check URL parameters on load
      */
     checkUrlParams: function() {
-        try {
-            const urlParams = new URLSearchParams(window.location.search);
-            
-            // Check for student mode
-            if (urlParams.get('mode') === 'student') {
-                $('#studentModeToggle').prop('checked', true);
-                this.toggleStudentMode();
-            }
-            
-            // Check for specific board or folder
-            const boardId = urlParams.get('board');
-            const folderId = urlParams.get('folder');
-            
-            if (boardId) {
-                this.openBoard(boardId);
-            } else if (folderId) {
-                this.openFolder(folderId);
-            }
-        } catch (error) {
-            console.warn('Fehler beim Prüfen der URL-Parameter:', error);
+        const urlParams = new URLSearchParams(window.location.search);
+        
+        // Check for student mode
+        if (urlParams.get('mode') === 'student') {
+            $('#studentModeToggle').prop('checked', true);
+            this.toggleStudentMode();
+        }
+        
+        // Check for specific board or folder
+        const boardId = urlParams.get('board');
+        const folderId = urlParams.get('folder');
+        
+        if (boardId) {
+            this.openBoard(boardId);
+        } else if (folderId) {
+            this.openFolder(folderId);
         }
     }
 };
