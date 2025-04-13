@@ -43,7 +43,7 @@
                 if (event.reason && event.reason.message) {
                     const reasonMessage = event.reason.message;
                     if (reasonMessage.includes('message port closed') || 
-                        errorMessage.includes('port closed') ||
+                        reasonMessage.includes('port closed') ||
                         reasonMessage.includes('lastError') || 
                         reasonMessage.includes('runtime.lastError')) {
                         event.preventDefault();
@@ -165,11 +165,11 @@
             <!-- Pinnwände-Bereich -->
             <div class="section-container">
                 <div class="section-header">
-                    <h2><i class="fas fa-thumbt"></i> Pinnwände</h2>
+                    <h2><i class="fas fa-thumbtack"></i> Pinnwände</h2>
                     <div class="section-controls editor-only">
                         <div class="sort-controls">
                             <span>Sortieren nach:</span>
-                            <a
+                            
                                 href="#"
                                 class="sort-option active"
                                 data-sort="name"
@@ -199,7 +199,7 @@
                     <div class="section-controls editor-only">
                         <div class="sort-controls">
                             <span>Sortieren nach:</span>
-                            <a
+                            
                                 href="#"
                                 class="sort-option active"
                                 data-sort="name"

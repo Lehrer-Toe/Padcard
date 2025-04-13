@@ -3,11 +3,6 @@
  */
 
 // Fehlerbehebung für Chrome-Nachrichten-Port-Fehler
-/**
- * Main application initialization for Taskcard-Manager
- */
-
-// Fehlerbehebung für Chrome-Nachrichten-Port-Fehler
 (function suppressRuntimeErrors() {
     const originalConsoleError = console.error;
     console.error = function() {
@@ -52,51 +47,8 @@
     }, true);
 })();
 
-// Initialize application when document is ready
-$(document).ready(function() {
-    // Rest of the code remains unchanged
-    // ...
-    const originalConsoleError = console.error;
-    console.error = function() {
-        if (
-            arguments[0] &&
-            (String(arguments[0]).includes('message port closed') ||
-             String(arguments[0]).includes('lastError'))
-        ) {
-            return; // Unterdrückt diesen spezifischen Fehler
-        }
-        return originalConsoleError.apply(this, arguments);
-    };
-
-    // Globalen Fehler-Handler hinzufügen
-    window.addEventListener('error', function(event) {
-        if (
-            event.error &&
-            event.error.message &&
-            (event.error.message.includes('message port closed') ||
-             event.error.message.includes('lastError'))
-        ) {
-            event.preventDefault();
-            return true;
-        }
-    });
-
-    // Unbehandelte Promise-Rejections abfangen
-    window.addEventListener('unhandledrejection', function(event) {
-        if (
-            event.reason &&
-            event.reason.message &&
-            (event.reason.message.includes('message port closed') ||
-             event.reason.message.includes('lastError'))
-        ) {
-            event.preventDefault();
-            return true;
-        }
-    });
-})();
-
 // Dokument-Ready
-$(document).ready(function() {
+$(function() {
     // Placeholder-Bild erzeugen
     createPlaceholderImage();
 
@@ -277,30 +229,56 @@ function showWelcomeMessage() {
             <div class="modal-overlay" id="welcomeModal" style="display: flex;">
                 <div class="modal">
                     <div class="modal-header">
-                        <div class="modal-title">Willkommen!</div>
+                        <div class="modal-title">Willkommen beim Taskcard-Manager!</div>
                         <button class="modal-close" id="closeWelcomeModal">&times;</button>
                     </div>
                     <div class="modal-body">
-                        <p>
-                            Willkommen im Taskcard-Manager! Hier kann man Pinnwände anlegen,
-                            Karten erstellen und alles verwalten, was für den Unterricht oder
-                            Projekte benötigt wird.
-                        </p>
-                        <p>Viel Spaß bei der Nutzung!</p>
+                        <p>Herzlich willkommen beim neuen Taskcard-Manager! Mit dieser Anwendung kannst du:</p>
+                        <ul style="margin-left: 20px; margin-bottom: 15px;">
+                            <li>Ordner und Unterordner in beliebiger Hierarchie erstellen</li>
+                            <li>Pinnwände erstellen, um deine Inhalte zu organisieren</li>
+                            <li>Verschiedene Arten von Karten erstellen (Text, YouTube, Bilder, Links, LearningApps, Audio)</li>
+                            <li>Vorschaubilder für Ordner, Pinnwände und Karten festlegen</li>
+                            <li>Karten in verschiedenen Ansichten anzeigen (Raster, Frei positionierbar, Kategorien)</li>
+                            <li>Inhalte im Schülermodus teilen</li>
+                        </ul>
+                        
+                        <p>Hier sind einige Tipps, um schnell loszulegen:</p>
+                        <ol style="margin-left: 20px; margin-bottom: 15px;">
+                            <li>Erstelle einen Ordner und darin Unterordner, um deine Inhalte zu strukturieren</li>
+                            <li>Erstelle eine Pinnwand und füge Karten hinzu</li>
+                            <li>Nutze Vorschaubilder, um die Inhalte ansprechender zu gestalten</li>
+                            <li>Wechsle zwischen verschiedenen Ansichten (Raster, Frei, Kategorien)</li>
+                            <li>Aktiviere den Schülermodus, um zu sehen, wie deine Inhalte für Schüler aussehen</li>
+                            <li>Teile deine Pinnwände mit dem Teilen-Button</li>
+                        </ol>
+                        
+                        <p>Tastenkombinationen:</p>
+                        <ul style="margin-left: 20px;">
+                            <li><strong>STRG+O</strong>: Neuen Ordner erstellen</li>
+                            <li><strong>STRG+P</strong>: Neue Pinnwand erstellen</li>
+                            <li><strong>STRG+N</strong>: Neue Karte erstellen</li>
+                            <li><strong>STRG+B</strong>: Schülermodus umschalten</li>
+                            <li><strong>STRG+F</strong>: Suche fokussieren</li>
+                            <li><strong>STRG+S</strong>: Teilen-Dialog öffnen</li>
+                            <li><strong>ESC</strong>: Dialog schließen</li>
+                        </ul>
                     </div>
                     <div class="modal-footer">
-                        <button class="btn btn-primary" id="startUsingBtn">Los geht's!</button>
+                        <button class="btn btn-primary" id="startUsingAppBtn">Los geht's!</button>
                     </div>
                 </div>
             </div>
         `);
-
+        
+        // Append to body
         $('body').append(welcomeModal);
-
-        $('#closeWelcomeModal, #startUsingBtn').on('click', function() {
+        
+        // Close button event
+        $('#closeWelcomeModal, #startUsingAppBtn').on('click', function() {
             $('#welcomeModal').remove();
         });
-    } catch (e) {
-        console.warn('Fehler beim Anzeigen der Willkommensnachricht:', e);
+    } catch (error) {
+        console.warn('Fehler beim Anzeigen der Willkommensnachricht:', error);
     }
 }
