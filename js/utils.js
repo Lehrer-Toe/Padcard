@@ -166,35 +166,5 @@ const Utils = {
         
         // HTML generieren
         return `<div class="${sizeClass}" style="text-align:${align}">${formattedText}</div>`;
-    },
-    
-    /**
-     * Prüft, ob ein bestimmtes Verzeichnis existiert, und erstellt es bei Bedarf
-     * @param {string} dir - Verzeichnispfad
-     */
-    ensureDirectoryExists: function(dir) {
-        try {
-            // Verwende FileSystem API wenn verfügbar (NodeJS Umgebung)
-            // In Browser-Umgebung ist dies nur ein Dummy
-            console.log(`Stelle sicher, dass Verzeichnis existiert: ${dir}`);
-        } catch (e) {
-            console.error(`Fehler beim Erstellen des Verzeichnisses ${dir}:`, e);
-        }
-    },
-    
-    /**
-     * Erstellt die notwendigen Verzeichnisse für die Anwendung
-     */
-    createDirectoryStructure: function() {
-        const dirsList = document.getElementById('create-dirs');
-        if (dirsList) {
-            const dirs = dirsList.getAttribute('data-dirs').split(',');
-            dirs.forEach(dir => this.ensureDirectoryExists(dir.trim()));
-        }
     }
 };
-
-// Verzeichnisstruktur erstellen, wenn die Seite geladen ist
-document.addEventListener('DOMContentLoaded', function() {
-    Utils.createDirectoryStructure();
-});
