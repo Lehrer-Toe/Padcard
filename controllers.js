@@ -1,9 +1,3 @@
-/**
- * Data Models and Storage for snapWall
- * 
- * This file contains the data structures and storage logic for the application.
- */
-
 // Application data store
 const AppData = {
     folders: [],         // Array of folder objects
