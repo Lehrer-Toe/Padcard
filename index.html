@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mein Taskcard-Manager</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.13.2/themes/base/jquery-ui.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.13.2/jquery-ui.min.js"></script>
     <style>
         :root {
             --primary-color: #2196F3;
@@ -62,6 +65,7 @@
             display: flex;
             gap: 10px;
             align-items: center;
+            flex-wrap: wrap;
         }
 
         .toggle-container {
@@ -154,6 +158,8 @@
         .toolbar-left {
             display: flex;
             gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
         }
 
         .layout-btn {
@@ -190,11 +196,111 @@
             color: #666;
         }
 
-        .board {
+        .view-selector {
+            display: flex;
+            gap: 5px;
+            margin-left: 15px;
+        }
+        
+        .view-btn {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            background-color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .view-btn.active {
+            background-color: #e6f2ff;
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+            font-weight: 500;
+        }
+
+        /* Grid Layout */
+        .board-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
             gap: 20px;
             margin-top: 20px;
+        }
+
+        /* Free Layout */
+        .board-free {
+            position: relative;
+            margin-top: 20px;
+            min-height: 600px;
+            background-color: rgba(255, 255, 255, 0.5);
+            border-radius: 10px;
+            border: 2px dashed #ddd;
+        }
+
+        /* Category Layout */
+        .board-categories {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+            margin-top: 20px;
+        }
+
+        .category {
+            background-color: white;
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: var(--card-shadow);
+        }
+
+        .category-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .category-title {
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .category-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+            min-height: 100px;
+        }
+
+        .category-placeholder {
+            border: 2px dashed #ddd;
+            border-radius: var(--card-border-radius);
+            min-height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #aaa;
+        }
+
+        .add-category {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 15px;
+            background-color: white;
+            border-radius: 10px;
+            border: 2px dashed #ddd;
+            cursor: pointer;
+        }
+        
+        .add-category i {
+            font-size: 20px;
+            color: #666;
+        }
+        
+        .add-category-text {
+            color: #666;
+            font-weight: 500;
         }
 
         .card {
@@ -203,6 +309,17 @@
             box-shadow: var(--card-shadow);
             overflow: hidden;
             position: relative;
+        }
+
+        /* For free positioning mode */
+        .board-free .card {
+            position: absolute;
+            width: 300px;
+            z-index: 1;
+        }
+
+        .board-free .card.ui-draggable-dragging {
+            z-index: 100;
         }
 
         .card-content {
@@ -268,7 +385,7 @@
             display: block;
         }
 
-        .card-youtube {
+        .card-youtube, .card-learningapp {
             position: relative;
             width: 100%;
             padding-bottom: 56.25%; /* 16:9 aspect ratio */
@@ -299,6 +416,15 @@
         .card-youtube .play-button i {
             color: white;
             font-size: 24px;
+        }
+
+        .card-learningapp iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
         }
 
         .add-card {
@@ -412,6 +538,7 @@
             display: flex;
             margin-bottom: 20px;
             border-bottom: 1px solid #eee;
+            flex-wrap: wrap;
         }
 
         .card-type-option {
@@ -426,8 +553,50 @@
             font-weight: 500;
         }
 
+        /* Color picker */
+        .color-options {
+            margin-top: 10px;
+        }
+
+        .color-palettes {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .color-palette {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .color-palette.active {
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        .color-palette-name {
+            font-size: 12px;
+        }
+
+        .color-samples {
+            display: flex;
+            height: 15px;
+            width: 80px;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .color-sample {
+            flex: 1;
+        }
+
         .color-picker {
             display: flex;
+            flex-wrap: wrap;
             gap: 8px;
             margin-top: 10px;
         }
@@ -444,35 +613,41 @@
             border-color: #333;
         }
 
-        .card-red {
-            background-color: #ffebee;
-            border-top: 4px solid #f44336;
+        .custom-color {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
         }
 
-        .card-blue {
-            background-color: #e3f2fd;
-            border-top: 4px solid #2196F3;
+        .custom-color-preview {
+            width: 30px;
+            height: 30px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
         }
 
-        .card-green {
-            background-color: #e8f5e9;
-            border-top: 4px solid #4CAF50;
-        }
-
-        .card-yellow {
-            background-color: #fffde7;
-            border-top: 4px solid #FFEB3B;
-        }
-
-        .card-purple {
-            background-color: #f3e5f5;
-            border-top: 4px solid #9C27B0;
-        }
-
-        .card-orange {
-            background-color: #fff3e0;
-            border-top: 4px solid #FF9800;
-        }
+        /* Card colors */
+        .card-red { background-color: #ffebee; border-top: 4px solid #f44336; }
+        .card-pink { background-color: #FCE4EC; border-top: 4px solid #E91E63; }
+        .card-purple { background-color: #f3e5f5; border-top: 4px solid #9C27B0; }
+        .card-deep-purple { background-color: #EDE7F6; border-top: 4px solid #673AB7; }
+        .card-indigo { background-color: #E8EAF6; border-top: 4px solid #3F51B5; }
+        .card-blue { background-color: #e3f2fd; border-top: 4px solid #2196F3; }
+        .card-light-blue { background-color: #E1F5FE; border-top: 4px solid #03A9F4; }
+        .card-cyan { background-color: #E0F7FA; border-top: 4px solid #00BCD4; }
+        .card-teal { background-color: #E0F2F1; border-top: 4px solid #009688; }
+        .card-green { background-color: #e8f5e9; border-top: 4px solid #4CAF50; }
+        .card-light-green { background-color: #F1F8E9; border-top: 4px solid #8BC34A; }
+        .card-lime { background-color: #F9FBE7; border-top: 4px solid #CDDC39; }
+        .card-yellow { background-color: #fffde7; border-top: 4px solid #FFEB3B; }
+        .card-amber { background-color: #FFF8E1; border-top: 4px solid #FFC107; }
+        .card-orange { background-color: #fff3e0; border-top: 4px solid #FF9800; }
+        .card-deep-orange { background-color: #FBE9E7; border-top: 4px solid #FF5722; }
+        .card-brown { background-color: #EFEBE9; border-top: 4px solid #795548; }
+        .card-grey { background-color: #FAFAFA; border-top: 4px solid #9E9E9E; }
+        .card-blue-grey { background-color: #ECEFF1; border-top: 4px solid #607D8B; }
+        .card-custom { border-top: 4px solid #000; }
 
         .width-control {
             margin-top: 15px;
@@ -504,29 +679,57 @@
             display: none !important;
         }
 
-        @media (max-width: 768px) {
-            .board {
-                grid-template-columns: 1fr;
-            }
-            
-            .header {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 15px;
-            }
-            
-            .header-right {
-                width: 100%;
-                flex-wrap: wrap;
-            }
-            
-            .toolbar {
-                flex-direction: column;
-            }
-            
-            .search-bar {
-                max-width: 100%;
-            }
+        /* Category modal */
+        .category-form {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .category-form input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        .category-list {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #eee;
+            border-radius: 5px;
+        }
+
+        .category-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .category-item:last-child {
+            border-bottom: none;
+        }
+
+        .category-item-title {
+            font-weight: 500;
+        }
+
+        .category-item-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .category-item-actions button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #666;
+        }
+
+        .category-item-actions button:hover {
+            color: #000;
         }
 
         /* Share modal */
@@ -560,6 +763,39 @@
             border-radius: 0 5px 5px 0;
             cursor: pointer;
         }
+
+        @media (max-width: 768px) {
+            .board-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+            
+            .header-right {
+                width: 100%;
+                flex-wrap: wrap;
+            }
+            
+            .toolbar {
+                flex-direction: column;
+            }
+            
+            .search-bar {
+                max-width: 100%;
+            }
+            
+            .category-cards {
+                grid-template-columns: 1fr;
+            }
+            
+            .board-free .card {
+                width: 250px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -586,6 +822,9 @@
                 <i class="fas fa-upload"></i> Importieren
             </label>
             <input type="file" id="importFile" style="display: none;" accept=".json">
+            <button class="btn" id="categoriesBtn">
+                <i class="fas fa-folder"></i> Kategorien
+            </button>
             <button class="btn btn-primary" id="newCardBtn">
                 <i class="fas fa-plus"></i> Neue Karte
             </button>
@@ -594,15 +833,23 @@
 
     <div class="toolbar">
         <div class="toolbar-left">
-            <button class="layout-btn active" data-columns="3">
-                <i class="fas fa-grip-vertical"></i>
-            </button>
-            <button class="layout-btn" data-columns="2">
-                <i class="fas fa-grip-horizontal"></i>
-            </button>
-            <button class="layout-btn" data-columns="1">
-                <i class="fas fa-list"></i>
-            </button>
+            <div class="view-selector">
+                <button class="view-btn active" data-view="grid">Raster</button>
+                <button class="view-btn" data-view="free">Frei</button>
+                <button class="view-btn" data-view="categories">Kategorien</button>
+            </div>
+            
+            <div class="grid-controls">
+                <button class="layout-btn active" data-columns="3">
+                    <i class="fas fa-grip-vertical"></i>
+                </button>
+                <button class="layout-btn" data-columns="2">
+                    <i class="fas fa-grip-horizontal"></i>
+                </button>
+                <button class="layout-btn" data-columns="1">
+                    <i class="fas fa-list"></i>
+                </button>
+            </div>
         </div>
         <div class="search-bar">
             <i class="fas fa-search"></i>
@@ -610,10 +857,25 @@
         </div>
     </div>
 
-    <div class="board" id="board">
-        <div class="add-card" id="addCardBtn">
+    <!-- Grid board -->
+    <div class="board-grid" id="boardGrid">
+        <div class="add-card" id="addCardBtnGrid">
             <i class="fas fa-plus"></i>
             <div class="add-card-text">Neue Karte hinzufügen</div>
+        </div>
+    </div>
+
+    <!-- Free position board -->
+    <div class="board-free hidden" id="boardFree">
+        <!-- Cards will be added here with absolute positioning -->
+    </div>
+
+    <!-- Categories board -->
+    <div class="board-categories hidden" id="boardCategories">
+        <!-- Categories will be added here -->
+        <div class="add-category" id="addCategoryBtn">
+            <i class="fas fa-plus"></i>
+            <div class="add-category-text">Neue Kategorie hinzufügen</div>
         </div>
     </div>
 
@@ -630,6 +892,7 @@
                     <div class="card-type-option" data-type="youtube">YouTube</div>
                     <div class="card-type-option" data-type="image">Bild</div>
                     <div class="card-type-option" data-type="link">Link</div>
+                    <div class="card-type-option" data-type="learningapp">LearningApp</div>
                 </div>
 
                 <div class="form-group">
@@ -658,15 +921,108 @@
                     <input type="text" class="form-control" id="linkUrl" placeholder="https://example.com">
                 </div>
 
+                <div class="form-group learningapp-fields" style="display: none;">
+                    <label for="learningappUrl">LearningApp URL oder ID</label>
+                    <input type="text" class="form-control" id="learningappUrl" placeholder="https://learningapps.org/... oder App-ID">
+                    <div style="margin-top: 10px; color: #666; font-size: 14px;">
+                        <p>Beispiel URL: https://learningapps.org/watch?v=p5705o6at21</p>
+                        <p>Beispiel ID: p5705o6at21</p>
+                    </div>
+                </div>
+
                 <div class="form-group">
                     <label>Kartenfarbe</label>
-                    <div class="color-picker">
-                        <div class="color-option active" style="background-color: #e3f2fd;" data-color="blue"></div>
-                        <div class="color-option" style="background-color: #ffebee;" data-color="red"></div>
-                        <div class="color-option" style="background-color: #e8f5e9;" data-color="green"></div>
-                        <div class="color-option" style="background-color: #fffde7;" data-color="yellow"></div>
-                        <div class="color-option" style="background-color: #f3e5f5;" data-color="purple"></div>
-                        <div class="color-option" style="background-color: #fff3e0;" data-color="orange"></div>
+                    <div class="color-options">
+                        <div class="color-palettes">
+                            <div class="color-palette active" data-palette="material">
+                                <div class="color-samples">
+                                    <div class="color-sample" style="background-color: #f44336;"></div>
+                                    <div class="color-sample" style="background-color: #2196F3;"></div>
+                                    <div class="color-sample" style="background-color: #4CAF50;"></div>
+                                    <div class="color-sample" style="background-color: #FFC107;"></div>
+                                </div>
+                                <div class="color-palette-name">Material</div>
+                            </div>
+                            <div class="color-palette" data-palette="pastel">
+                                <div class="color-samples">
+                                    <div class="color-sample" style="background-color: #FFB6C1;"></div>
+                                    <div class="color-sample" style="background-color: #ADD8E6;"></div>
+                                    <div class="color-sample" style="background-color: #98FB98;"></div>
+                                    <div class="color-sample" style="background-color: #FFFACD;"></div>
+                                </div>
+                                <div class="color-palette-name">Pastell</div>
+                            </div>
+                            <div class="color-palette" data-palette="custom">
+                                <div class="color-samples">
+                                    <div class="color-sample" style="background-color: #D4A5A5;"></div>
+                                    <div class="color-sample" style="background-color: #392F5A;"></div>
+                                    <div class="color-sample" style="background-color: #31A2AC;"></div>
+                                    <div class="color-sample" style="background-color: #F0E100;"></div>
+                                </div>
+                                <div class="color-palette-name">Benutzerdefiniert</div>
+                            </div>
+                        </div>
+
+                        <!-- Material Colors -->
+                        <div class="color-picker material-colors">
+                            <div class="color-option active" style="background-color: #e3f2fd;" data-color="blue"></div>
+                            <div class="color-option" style="background-color: #ffebee;" data-color="red"></div>
+                            <div class="color-option" style="background-color: #FCE4EC;" data-color="pink"></div>
+                            <div class="color-option" style="background-color: #f3e5f5;" data-color="purple"></div>
+                            <div class="color-option" style="background-color: #EDE7F6;" data-color="deep-purple"></div>
+                            <div class="color-option" style="background-color: #E8EAF6;" data-color="indigo"></div>
+                            <div class="color-option" style="background-color: #E1F5FE;" data-color="light-blue"></div>
+                            <div class="color-option" style="background-color: #E0F7FA;" data-color="cyan"></div>
+                            <div class="color-option" style="background-color: #E0F2F1;" data-color="teal"></div>
+                            <div class="color-option" style="background-color: #e8f5e9;" data-color="green"></div>
+                            <div class="color-option" style="background-color: #F1F8E9;" data-color="light-green"></div>
+                            <div class="color-option" style="background-color: #F9FBE7;" data-color="lime"></div>
+                            <div class="color-option" style="background-color: #fffde7;" data-color="yellow"></div>
+                            <div class="color-option" style="background-color: #FFF8E1;" data-color="amber"></div>
+                            <div class="color-option" style="background-color: #fff3e0;" data-color="orange"></div>
+                            <div class="color-option" style="background-color: #FBE9E7;" data-color="deep-orange"></div>
+                            <div class="color-option" style="background-color: #EFEBE9;" data-color="brown"></div>
+                            <div class="color-option" style="background-color: #FAFAFA;" data-color="grey"></div>
+                            <div class="color-option" style="background-color: #ECEFF1;" data-color="blue-grey"></div>
+                        </div>
+
+                        <!-- Pastel Colors -->
+                        <div class="color-picker pastel-colors" style="display: none;">
+                            <div class="color-option" style="background-color: #FFB6C1;" data-custom-color="#FFB6C1" data-color="custom"></div>
+                            <div class="color-option" style="background-color: #FFC0CB;" data-custom-color="#FFC0CB" data-color="custom"></div>
+                            <div class="color-option" style="background-color: #FFD1DC;" data-custom-color="#FFD1DC" data-color="custom"></div>
+                            <div class="color-option" style="background-color: #B0E0E6;" data-custom-color="#B0E0E6" data-color="custom"></div>
+                            <div class="color-option" style="background-color: #ADD8E6;" data-custom-color="#ADD8E6" data-color="custom"></div>
+                            <div class="color-option" style="background-color: #87CEFA;" data-custom-color="#87CEFA" data-color="custom"></div>
+                            <div class="color-option" style="background-color: #98FB98;" data-custom-color="#98FB98" data-color="custom"></div>
+                            <div class="color-option" style="background-color: #90EE90;" data-custom-color="#90EE90" data-color="custom"></div>
+                            <div class="color-option" style="background-color: #FFFACD;" data-custom-color="#FFFACD" data-color="custom"></div>
+                            <div class="color-option" style="background-color: #FFEFD5;" data-custom-color="#FFEFD5" data-color="custom"></div>
+                            <div class="color-option" style="background-color: #FFDAB9;" data-custom-color="#FFDAB9" data-color="custom"></div>
+                            <div class="color-option" style="background-color: #D8BFD8;" data-custom-color="#D8BFD8" data-color="custom"></div>
+                            <div class="color-option" style="background-color: #E6E6FA;" data-custom-color="#E6E6FA" data-color="custom"></div>
+                            <div class="color-option" style="background-color: #F0FFF0;" data-custom-color="#F0FFF0" data-color="custom"></div>
+                            <div class="color-option" style="background-color: #F5F5DC;" data-custom-color="#F5F5DC" data-color="custom"></div>
+                        </div>
+
+                        <!-- Custom Colors -->
+                        <div class="color-picker custom-colors" style="display: none;">
+                            <div class="color-option" style="background-color: #D4A5A5;" data-custom-color="#D4A5A5" data-color="custom"></div>
+                            <div class="color-option" style="background-color: #392F5A;" data-custom-color="#392F5A" data-color="custom"></div>
+                            <div class="color-option" style="background-color: #31A2AC;" data-custom-color="#31A2AC" data-color="custom"></div>
+                            <div class="color-option" style="background-color: #F0E100;" data-custom-color="#F0E100" data-color="custom"></div>
+                            <div class="color-option" style="background-color: #FF6B6B;" data-custom-color="#FF6B6B" data-color="custom"></div>
+                            <div class="color-option" style="background-color: #4ECDC4;" data-custom-color="#4ECDC4" data-color="custom"></div>
+                            <div class="color-option" style="background-color: #1A535C;" data-custom-color="#1A535C" data-color="custom"></div>
+                            <div class="color-option" style="background-color: #FFE66D;" data-custom-color="#FFE66D" data-color="custom"></div>
+                        </div>
+
+                        <div class="custom-color">
+                            <label for="customColorPicker">Eigene Farbe:</label>
+                            <input type="color" id="customColorPicker" value="#2196F3">
+                            <div class="custom-color-preview" id="customColorPreview"></div>
+                            <button class="btn" id="applyCustomColorBtn">Anwenden</button>
+                        </div>
                     </div>
                 </div>
 
@@ -678,10 +1034,40 @@
                         <div class="width-btn" data-width="3">Breit</div>
                     </div>
                 </div>
+
+                <div class="form-group">
+                    <label>Kategorie</label>
+                    <select class="form-control" id="cardCategory">
+                        <option value="">Keine Kategorie</option>
+                        <!-- Categories will be added here -->
+                    </select>
+                </div>
             </div>
             <div class="modal-footer">
                 <button class="btn" id="cancelCardBtn">Abbrechen</button>
                 <button class="btn btn-primary" id="saveCardBtn">Speichern</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Category Modal -->
+    <div class="modal-overlay" id="categoryModal">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-title">Kategorien verwalten</div>
+                <button class="modal-close" id="closeCategoryModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="category-form">
+                    <input type="text" placeholder="Neue Kategorie" id="newCategoryInput">
+                    <button class="btn btn-primary" id="addCategoryFormBtn">Hinzufügen</button>
+                </div>
+                <div class="category-list" id="categoryList">
+                    <!-- Categories will be listed here -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" id="closeCategoryBtn">Schließen</button>
             </div>
         </div>
     </div>
@@ -707,657 +1093,1162 @@
     </div>
 
     <script>
-        // DOM Elements
-        const board = document.getElementById('board');
-        const addCardBtn = document.getElementById('addCardBtn');
-        const newCardBtn = document.getElementById('newCardBtn');
-        const searchInput = document.getElementById('searchInput');
-        const layoutButtons = document.querySelectorAll('.layout-btn');
-        const studentModeToggle = document.getElementById('studentModeToggle');
-        
-        // Modals
-        const cardModal = document.getElementById('cardModal');
-        const cardModalTitle = document.getElementById('cardModalTitle');
-        const closeCardModal = document.getElementById('closeCardModal');
-        const cancelCardBtn = document.getElementById('cancelCardBtn');
-        const saveCardBtn = document.getElementById('saveCardBtn');
-        
-        const shareModal = document.getElementById('shareModal');
-        const shareBtn = document.getElementById('shareBtn');
-        const closeShareModal = document.getElementById('closeShareModal');
-        const shareLink = document.getElementById('shareLink');
-        const copyLinkBtn = document.getElementById('copyLinkBtn');
-        
-        // Card form fields
-        const cardTitle = document.getElementById('cardTitle');
-        const cardContent = document.getElementById('cardContent');
-        const youtubeUrl = document.getElementById('youtubeUrl');
-        const imageUrl = document.getElementById('imageUrl');
-        const linkUrl = document.getElementById('linkUrl');
-        const placeholderBtn = document.getElementById('placeholderBtn');
-        
-        // Card type selection
-        const cardTypeOptions = document.querySelectorAll('.card-type-option');
-        const youtubeFields = document.querySelector('.youtube-fields');
-        const imageFields = document.querySelector('.image-fields');
-        const linkFields = document.querySelector('.link-fields');
-        
-        // Color selection
-        const colorOptions = document.querySelectorAll('.color-option');
-        
-        // Width selection
-        const widthButtons = document.querySelectorAll('.width-btn');
-        
-        // Import/Export
-        const exportBtn = document.getElementById('exportBtn');
-        const importFile = document.getElementById('importFile');
-        
-        // App state
-        let boardData = {
-            cards: [],
-            layout: 3
-        };
-        let isEditMode = false;
-        let currentCardId = null;
-        let currentCardType = 'text';
-        let currentCardColor = 'blue';
-        let currentCardWidth = 1;
-        
-        // Initialize the app
-        initApp();
-        
-        // Event Listeners
-        addCardBtn.addEventListener('click', openNewCardModal);
-        newCardBtn.addEventListener('click', openNewCardModal);
-        closeCardModal.addEventListener('click', closeModal);
-        cancelCardBtn.addEventListener('click', closeModal);
-        saveCardBtn.addEventListener('click', saveCard);
-        
-        shareBtn.addEventListener('click', openShareModal);
-        closeShareModal.addEventListener('click', () => shareModal.style.display = 'none');
-        copyLinkBtn.addEventListener('click', copyShareLink);
-        
-        studentModeToggle.addEventListener('change', toggleStudentMode);
-        searchInput.addEventListener('input', filterCards);
-        
-        exportBtn.addEventListener('click', exportBoardData);
-        importFile.addEventListener('change', importBoardData);
-        
-        // Window click to close modals
-        window.addEventListener('click', (e) => {
-            if (e.target === cardModal) closeModal();
-            if (e.target === shareModal) shareModal.style.display = 'none';
-        });
-        
-        // Card type options
-        cardTypeOptions.forEach(option => {
-            option.addEventListener('click', () => {
-                currentCardType = option.dataset.type;
-                updateCardTypeSelection();
+        $(document).ready(function() {
+            // DOM Elements
+            const boardGrid = $('#boardGrid');
+            const boardFree = $('#boardFree');
+            const boardCategories = $('#boardCategories');
+            const addCardBtnGrid = $('#addCardBtnGrid');
+            const newCardBtn = $('#newCardBtn');
+            const searchInput = $('#searchInput');
+            const viewButtons = $('.view-btn');
+            const layoutButtons = $('.layout-btn');
+            const studentModeToggle = $('#studentModeToggle');
+            const addCategoryBtn = $('#addCategoryBtn');
+            
+            // Category management
+            const categoriesBtn = $('#categoriesBtn');
+            const categoryModal = $('#categoryModal');
+            const closeCategoryModal = $('#closeCategoryModal');
+            const closeCategoryBtn = $('#closeCategoryBtn');
+            const newCategoryInput = $('#newCategoryInput');
+            const addCategoryFormBtn = $('#addCategoryFormBtn');
+            const categoryList = $('#categoryList');
+            const cardCategory = $('#cardCategory');
+            
+            // Card Modal
+            const cardModal = $('#cardModal');
+            const cardModalTitle = $('#cardModalTitle');
+            const closeCardModal = $('#closeCardModal');
+            const cancelCardBtn = $('#cancelCardBtn');
+            const saveCardBtn = $('#saveCardBtn');
+            
+            // Share Modal
+            const shareModal = $('#shareModal');
+            const shareBtn = $('#shareBtn');
+            const closeShareModal = $('#closeShareModal');
+            const shareLink = $('#shareLink');
+            const copyLinkBtn = $('#copyLinkBtn');
+            
+            // Card form fields
+            const cardTitle = $('#cardTitle');
+            const cardContent = $('#cardContent');
+            const youtubeUrl = $('#youtubeUrl');
+            const imageUrl = $('#imageUrl');
+            const linkUrl = $('#linkUrl');
+            const learningappUrl = $('#learningappUrl');
+            const placeholderBtn = $('#placeholderBtn');
+            
+            // Card type selection
+            const cardTypeOptions = $('.card-type-option');
+            const youtubeFields = $('.youtube-fields');
+            const imageFields = $('.image-fields');
+            const linkFields = $('.link-fields');
+            const learningappFields = $('.learningapp-fields');
+            
+            // Color selection
+            const colorPalettes = $('.color-palette');
+            const materialColors = $('.material-colors');
+            const pastelColors = $('.pastel-colors');
+            const customColors = $('.custom-colors');
+            const colorOptions = $('.color-option');
+            const customColorPicker = $('#customColorPicker');
+            const customColorPreview = $('#customColorPreview');
+            const applyCustomColorBtn = $('#applyCustomColorBtn');
+            
+            // Width selection
+            const widthButtons = $('.width-btn');
+            
+            // Import/Export
+            const exportBtn = $('#exportBtn');
+            const importFile = $('#importFile');
+            
+            // App state
+            let boardData = {
+                cards: [],
+                layout: 3,
+                view: 'grid',
+                categories: []
+            };
+            let isEditMode = false;
+            let currentCardId = null;
+            let currentCardType = 'text';
+            let currentCardColor = 'blue';
+            let currentCardCustomColor = '';
+            let currentCardWidth = 1;
+            let currentCardCategory = '';
+            
+            // Initialize the app
+            initApp();
+            
+            // Initialize drag and drop for free positioning mode
+            function initDragAndDrop() {
+                boardFree.find('.card').draggable({
+                    containment: 'parent',
+                    handle: '.card-header',
+                    stop: function(event, ui) {
+                        const cardId = $(this).data('id');
+                        const card = boardData.cards.find(c => c.id === cardId);
+                        if (card) {
+                            card.position = {
+                                left: ui.position.left,
+                                top: ui.position.top
+                            };
+                            saveBoardData();
+                        }
+                    }
+                });
+            }
+            
+            // Sortable categories
+            function initSortableCategories() {
+                $('.category-cards').sortable({
+                    connectWith: '.category-cards',
+                    placeholder: 'card',
+                    stop: function(event, ui) {
+                        const cardId = ui.item.data('id');
+                        const categoryId = ui.item.closest('.category').data('id');
+                        
+                        // Update card category
+                        const card = boardData.cards.find(c => c.id === cardId);
+                        if (card) {
+                            card.category = categoryId;
+                            saveBoardData();
+                        }
+                    }
+                }).disableSelection();
+            }
+            
+            // Event Listeners
+            addCardBtnGrid.on('click', openNewCardModal);
+            newCardBtn.on('click', openNewCardModal);
+            closeCardModal.on('click', () => cardModal.hide());
+            cancelCardBtn.on('click', () => cardModal.hide());
+            saveCardBtn.on('click', saveCard);
+            
+            // View buttons
+            viewButtons.on('click', function() {
+                const view = $(this).data('view');
+                changeView(view);
             });
-        });
-        
-        // Color options
-        colorOptions.forEach(option => {
-            option.addEventListener('click', () => {
-                currentCardColor = option.dataset.color;
-                updateColorSelection();
-            });
-        });
-        
-        // Width buttons
-        widthButtons.forEach(btn => {
-            btn.addEventListener('click', () => {
-                currentCardWidth = parseInt(btn.dataset.width);
-                updateWidthSelection();
-            });
-        });
-        
-        // Layout buttons
-        layoutButtons.forEach(btn => {
-            btn.addEventListener('click', () => {
-                const columns = parseInt(btn.dataset.columns);
+            
+            // Share
+            shareBtn.on('click', openShareModal);
+            closeShareModal.on('click', () => shareModal.hide());
+            copyLinkBtn.on('click', copyShareLink);
+            
+            // Categories
+            categoriesBtn.on('click', openCategoryModal);
+            closeCategoryModal.on('click', () => categoryModal.hide());
+            closeCategoryBtn.on('click', () => categoryModal.hide());
+            addCategoryFormBtn.on('click', addNewCategory);
+            addCategoryBtn.on('click', promptAddCategory);
+            
+            // Student mode
+            studentModeToggle.on('change', toggleStudentMode);
+            
+            // Search
+            searchInput.on('input', filterCards);
+            
+            // Layout buttons
+            layoutButtons.on('click', function() {
+                const columns = parseInt($(this).data('columns'));
                 changeLayout(columns);
             });
-        });
-        
-        // Placeholder button
-        placeholderBtn.addEventListener('click', () => {
-            imageUrl.value = `https://placehold.co/600x400/e3f2fd/2196F3?text=Bildinhalt`;
-        });
-        
-        // Initialize app
-        function initApp() {
-            loadBoardData();
-            renderBoard();
-            checkUrlForStudentMode();
-            updateShareLink();
-        }
-        
-        // Load board data from localStorage
-        function loadBoardData() {
-            const savedData = localStorage.getItem('taskCardBoard');
-            if (savedData) {
-                try {
-                    boardData = JSON.parse(savedData);
-                } catch (error) {
-                    console.error('Failed to load board data:', error);
-                    boardData = { cards: [], layout: 3 };
+            
+            // Export/Import
+            exportBtn.on('click', exportBoardData);
+            importFile.on('change', importBoardData);
+            
+            // Card type options
+            cardTypeOptions.on('click', function() {
+                currentCardType = $(this).data('type');
+                updateCardTypeSelection();
+            });
+            
+            // Color palettes
+            colorPalettes.on('click', function() {
+                const palette = $(this).data('palette');
+                changeColorPalette(palette);
+            });
+            
+            // Color options
+            colorOptions.on('click', function() {
+                if ($(this).data('color') === 'custom') {
+                    currentCardColor = 'custom';
+                    currentCardCustomColor = $(this).data('custom-color');
+                    customColorPicker.val(currentCardCustomColor);
+                    customColorPreview.css('backgroundColor', currentCardCustomColor);
+                } else {
+                    currentCardColor = $(this).data('color');
+                    currentCardCustomColor = '';
                 }
+                updateColorSelection();
+            });
+            
+            // Custom color picker
+            customColorPicker.on('input', function() {
+                customColorPreview.css('backgroundColor', $(this).val());
+            });
+            
+            applyCustomColorBtn.on('click', function() {
+                currentCardColor = 'custom';
+                currentCardCustomColor = customColorPicker.val();
+                updateColorSelection();
+            });
+            
+            // Width buttons
+            widthButtons.on('click', function() {
+                currentCardWidth = parseInt($(this).data('width'));
+                updateWidthSelection();
+            });
+            
+            // Placeholder button
+            placeholderBtn.on('click', function() {
+                imageUrl.val('https://placehold.co/600x400/e3f2fd/2196F3?text=Bildinhalt');
+            });
+            
+            // Initialize app
+            function initApp() {
+                loadBoardData();
+                renderBoard();
+                checkUrlForStudentMode();
+                updateShareLink();
+                updateCategorySelect();
             }
             
-            // Apply layout
-            changeLayout(boardData.layout || 3);
-        }
-        
-        // Save board data to localStorage
-        function saveBoardData() {
-            localStorage.setItem('taskCardBoard', JSON.stringify(boardData));
-        }
-        
-        // Render the board
-        function renderBoard() {
-            // Remove all cards except the add button
-            const existingCards = document.querySelectorAll('.card:not(.add-card)');
-            existingCards.forEach(card => card.remove());
-            
-            // Add all cards from boardData
-            boardData.cards.forEach(cardData => {
-                const cardElement = createCardElement(cardData);
-                board.insertBefore(cardElement, addCardBtn);
-            });
-            
-            // Update visibility based on student mode
-            updateStudentModeVisibility();
-        }
-        
-        // Create a card element from data
-        function createCardElement(cardData) {
-            const card = document.createElement('div');
-            card.className = `card card-${cardData.color || 'blue'}`;
-            card.dataset.id = cardData.id;
-            
-            // Apply width
-            if (cardData.width === 2) {
-                card.style.gridColumn = 'span 2';
-            } else if (cardData.width === 3) {
-                card.style.gridColumn = 'span 3';
+            // Load board data from localStorage
+            function loadBoardData() {
+                const savedData = localStorage.getItem('taskCardBoard');
+                if (savedData) {
+                    try {
+                        boardData = JSON.parse(savedData);
+                        // Make sure all required properties exist
+                        boardData.cards = boardData.cards || [];
+                        boardData.layout = boardData.layout || 3;
+                        boardData.view = boardData.view || 'grid';
+                        boardData.categories = boardData.categories || [];
+                    } catch (error) {
+                        console.error('Failed to load board data:', error);
+                        boardData = { cards: [], layout: 3, view: 'grid', categories: [] };
+                    }
+                }
+                
+                // Set current view
+                changeView(boardData.view, false);
+                
+                // Apply layout
+                changeLayout(boardData.layout || 3);
             }
             
-            // Card content
-            const content = document.createElement('div');
-            content.className = 'card-content';
-            
-            // Card header
-            const header = document.createElement('div');
-            header.className = 'card-header';
-            
-            // Title
-            const title = document.createElement('div');
-            title.className = 'card-title';
-            title.textContent = cardData.title;
-            
-            // Menu
-            const menu = document.createElement('div');
-            menu.className = 'card-menu editor-only';
-            menu.innerHTML = `
-                <i class="fas fa-ellipsis-v"></i>
-                <div class="card-menu-dropdown">
-                    <div class="card-menu-item edit-card">
-                        <i class="fas fa-edit"></i> Bearbeiten
-                    </div>
-                    <div class="card-menu-item duplicate-card">
-                        <i class="fas fa-copy"></i> Duplizieren
-                    </div>
-                    <div class="card-menu-item delete-card">
-                        <i class="fas fa-trash"></i> Löschen
-                    </div>
-                </div>
-            `;
-            
-            // Add menu click handler
-            menu.querySelector('i').addEventListener('click', (e) => {
-                e.stopPropagation();
-                const dropdown = menu.querySelector('.card-menu-dropdown');
-                
-                // Close all other dropdowns
-                document.querySelectorAll('.card-menu-dropdown.show').forEach(el => {
-                    if (el !== dropdown) el.classList.remove('show');
-                });
-                
-                dropdown.classList.toggle('show');
-            });
-            
-            // Add menu item handlers
-            menu.querySelector('.edit-card').addEventListener('click', () => {
-                openEditCardModal(cardData.id);
-            });
-            
-            menu.querySelector('.duplicate-card').addEventListener('click', () => {
-                duplicateCard(cardData.id);
-            });
-            
-            menu.querySelector('.delete-card').addEventListener('click', () => {
-                deleteCard(cardData.id);
-            });
-            
-            header.appendChild(title);
-            header.appendChild(menu);
-            content.appendChild(header);
-            
-            // Card text content
-            if (cardData.content) {
-                const text = document.createElement('div');
-                text.className = 'card-text';
-                text.textContent = cardData.content;
-                content.appendChild(text);
+            // Save board data to localStorage
+            function saveBoardData() {
+                localStorage.setItem('taskCardBoard', JSON.stringify(boardData));
             }
             
-            // Card type-specific content
-            if (cardData.type === 'youtube' && cardData.youtubeId) {
-                const youtubeContainer = document.createElement('div');
-                youtubeContainer.className = 'card-youtube';
-                youtubeContainer.dataset.youtubeId = cardData.youtubeId;
-                youtubeContainer.innerHTML = `
-                    <img src="https://img.youtube.com/vi/${cardData.youtubeId}/maxresdefault.jpg" alt="YouTube Thumbnail">
-                    <div class="play-button">
-                        <i class="fas fa-play"></i>
-                    </div>
-                `;
+            // Change view (grid, free, categories)
+            function changeView(view, saveChange = true) {
+                // Update active button
+                viewButtons.removeClass('active');
+                $(`.view-btn[data-view="${view}"]`).addClass('active');
                 
-                youtubeContainer.querySelector('.play-button').addEventListener('click', () => {
-                    const iframe = document.createElement('iframe');
-                    iframe.width = '100%';
-                    iframe.height = '100%';
-                    iframe.src = `https://www.youtube.com/embed/${cardData.youtubeId}?autoplay=1`;
-                    iframe.frameBorder = '0';
-                    iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
-                    iframe.allowFullscreen = true;
+                // Show correct board
+                boardGrid.addClass('hidden');
+                boardFree.addClass('hidden');
+                boardCategories.addClass('hidden');
+                
+                if (view === 'grid') {
+                    boardGrid.removeClass('hidden');
+                    $('.grid-controls').show();
+                } else if (view === 'free') {
+                    boardFree.removeClass('hidden');
+                    $('.grid-controls').hide();
+                } else if (view === 'categories') {
+                    boardCategories.removeClass('hidden');
+                    $('.grid-controls').hide();
+                }
+                
+                if (saveChange) {
+                    boardData.view = view;
+                    saveBoardData();
+                }
+                
+                // Re-render board to ensure correct display
+                renderBoard();
+            }
+            
+            // Change layout (columns for grid view)
+            function changeLayout(columns) {
+                // Update board display
+                boardGrid.css('gridTemplateColumns', `repeat(${columns}, 1fr)`);
+                
+                // Update active button
+                layoutButtons.removeClass('active');
+                $(`.layout-btn[data-columns="${columns}"]`).addClass('active');
+                
+                // Save layout
+                boardData.layout = columns;
+                saveBoardData();
+            }
+            
+            // Render the board
+            function renderBoard() {
+                const view = boardData.view;
+                
+                if (view === 'grid') {
+                    renderGridBoard();
+                } else if (view === 'free') {
+                    renderFreeBoard();
+                } else if (view === 'categories') {
+                    renderCategoriesBoard();
+                }
+                
+                // Update visibility based on student mode
+                updateStudentModeVisibility();
+            }
+            
+            // Render grid board
+            function renderGridBoard() {
+                // Remove all cards except the add button
+                boardGrid.find('.card:not(.add-card)').remove();
+                
+                // Add all cards from boardData
+                boardData.cards.forEach(cardData => {
+                    // Skip cards assigned to categories in grid view
+                    if (cardData.category) return;
                     
-                    youtubeContainer.innerHTML = '';
-                    youtubeContainer.appendChild(iframe);
+                    const cardElement = createCardElement(cardData);
+                    cardElement.insertBefore(addCardBtnGrid);
+                });
+            }
+            
+            // Render free positioning board
+            function renderFreeBoard() {
+                // Clear board
+                boardFree.empty();
+                
+                // Add cards with absolute positioning
+                boardData.cards.forEach(cardData => {
+                    const cardElement = createCardElement(cardData);
+                    
+                    // Set position if available
+                    if (cardData.position) {
+                        cardElement.css({
+                            position: 'absolute',
+                            left: cardData.position.left,
+                            top: cardData.position.top
+                        });
+                    } else {
+                        // Default position if none set
+                        const randomLeft = Math.floor(Math.random() * 300);
+                        const randomTop = Math.floor(Math.random() * 300);
+                        cardElement.css({
+                            position: 'absolute',
+                            left: randomLeft,
+                            top: randomTop
+                        });
+                        
+                        // Save position
+                        cardData.position = { left: randomLeft, top: randomTop };
+                    }
+                    
+                    boardFree.append(cardElement);
                 });
                 
-                content.appendChild(youtubeContainer);
-            } else if (cardData.type === 'image' && cardData.imageUrl) {
-                const imageContainer = document.createElement('div');
-                imageContainer.className = 'card-image';
-                imageContainer.innerHTML = `<img src="${cardData.imageUrl}" alt="Bild">`;
-                content.appendChild(imageContainer);
-            } else if (cardData.type === 'link' && cardData.linkUrl) {
-                const linkContainer = document.createElement('div');
-                linkContainer.className = 'card-link';
-                linkContainer.innerHTML = `
-                    <a href="${cardData.linkUrl}" target="_blank" class="btn">
-                        <i class="fas fa-external-link-alt"></i> Link öffnen
-                    </a>
-                `;
-                content.appendChild(linkContainer);
+                // Make cards draggable
+                initDragAndDrop();
             }
             
-            card.appendChild(content);
-            return card;
-        }
-        
-        // Open new card modal
-        function openNewCardModal() {
-            isEditMode = false;
-            currentCardId = null;
-            cardModalTitle.textContent = 'Neue Karte';
-            
-            // Reset form
-            cardTitle.value = '';
-            cardContent.value = '';
-            youtubeUrl.value = '';
-            imageUrl.value = '';
-            linkUrl.value = '';
-            
-            // Reset selections
-            currentCardType = 'text';
-            currentCardColor = 'blue';
-            currentCardWidth = 1;
-            
-            updateCardTypeSelection();
-            updateColorSelection();
-            updateWidthSelection();
-            
-            cardModal.style.display = 'flex';
-        }
-        
-        // Open edit card modal
-        function openEditCardModal(cardId) {
-            const cardData = boardData.cards.find(card => card.id === cardId);
-            if (!cardData) return;
-            
-            isEditMode = true;
-            currentCardId = cardId;
-            cardModalTitle.textContent = 'Karte bearbeiten';
-            
-            // Fill form
-            cardTitle.value = cardData.title || '';
-            cardContent.value = cardData.content || '';
-            
-            if (cardData.type === 'youtube') {
-                youtubeUrl.value = cardData.youtubeId ? `https://www.youtube.com/watch?v=${cardData.youtubeId}` : '';
-            } else if (cardData.type === 'image') {
-                imageUrl.value = cardData.imageUrl || '';
-            } else if (cardData.type === 'link') {
-                linkUrl.value = cardData.linkUrl || '';
+            // Render categories board
+            function renderCategoriesBoard() {
+                // Clear categories (except add category button)
+                boardCategories.find('.category').remove();
+                
+                // Create "Uncategorized" section
+                const uncategorizedCards = boardData.cards.filter(card => !card.category);
+                if (uncategorizedCards.length > 0 || !studentModeToggle.prop('checked')) {
+                    const uncategorizedCategory = $('<div class="category" data-id="">');
+                    uncategorizedCategory.append(`
+                        <div class="category-header">
+                            <div class="category-title">Nicht kategorisiert</div>
+                        </div>
+                        <div class="category-cards"></div>
+                    `);
+                    
+                    const categoryCards = uncategorizedCategory.find('.category-cards');
+                    
+                    uncategorizedCards.forEach(cardData => {
+                        const cardElement = createCardElement(cardData);
+                        categoryCards.append(cardElement);
+                    });
+                    
+                    // Add placeholder if empty
+                    if (uncategorizedCards.length === 0) {
+                        categoryCards.append(`
+                            <div class="category-placeholder">Keine Karten in dieser Kategorie</div>
+                        `);
+                    }
+                    
+                    uncategorizedCategory.insertBefore(addCategoryBtn);
+                }
+                
+                // Add defined categories
+                boardData.categories.forEach(category => {
+                    const categoryCards = boardData.cards.filter(card => card.category === category.id);
+                    
+                    // Skip empty categories in student mode
+                    if (categoryCards.length === 0 && studentModeToggle.prop('checked')) return;
+                    
+                    const categoryElement = $(`<div class="category" data-id="${category.id}">`);
+                    categoryElement.append(`
+                        <div class="category-header">
+                            <div class="category-title">${category.name}</div>
+                        </div>
+                        <div class="category-cards"></div>
+                    `);
+                    
+                    const categoryCardsContainer = categoryElement.find('.category-cards');
+                    
+                    categoryCards.forEach(cardData => {
+                        const cardElement = createCardElement(cardData);
+                        categoryCardsContainer.append(cardElement);
+                    });
+                    
+                    // Add placeholder if empty
+                    if (categoryCards.length === 0) {
+                        categoryCardsContainer.append(`
+                            <div class="category-placeholder">Keine Karten in dieser Kategorie</div>
+                        `);
+                    }
+                    
+                    categoryElement.insertBefore(addCategoryBtn);
+                });
+                
+                // Initialize sortable
+                initSortableCategories();
             }
             
-            // Set selections
-            currentCardType = cardData.type || 'text';
-            currentCardColor = cardData.color || 'blue';
-            currentCardWidth = cardData.width || 1;
-            
-            updateCardTypeSelection();
-            updateColorSelection();
-            updateWidthSelection();
-            
-            cardModal.style.display = 'flex';
-        }
-        
-        // Close modal
-        function closeModal() {
-            cardModal.style.display = 'none';
-        }
-        
-        // Update card type selection
-        function updateCardTypeSelection() {
-            // Update active class
-            cardTypeOptions.forEach(option => {
-                if (option.dataset.type === currentCardType) {
-                    option.classList.add('active');
-                } else {
-                    option.classList.remove('active');
+            // Create a card element from data
+            function createCardElement(cardData) {
+                const card = $(`<div class="card card-${cardData.color || 'blue'}" data-id="${cardData.id}">`);
+                
+                // Apply custom color if set
+                if (cardData.color === 'custom' && cardData.customColor) {
+                    card.css({
+                        'background-color': lightenColor(cardData.customColor, 0.9),
+                        'border-top': `4px solid ${cardData.customColor}`
+                    });
                 }
-            });
-            
-            // Show/hide type-specific fields
-            youtubeFields.style.display = currentCardType === 'youtube' ? 'block' : 'none';
-            imageFields.style.display = currentCardType === 'image' ? 'block' : 'none';
-            linkFields.style.display = currentCardType === 'link' ? 'block' : 'none';
-        }
-        
-        // Update color selection
-        function updateColorSelection() {
-            colorOptions.forEach(option => {
-                if (option.dataset.color === currentCardColor) {
-                    option.classList.add('active');
-                } else {
-                    option.classList.remove('active');
+                
+                // Apply width in grid view
+                if (boardData.view === 'grid' && cardData.width > 1) {
+                    card.css('grid-column', `span ${cardData.width}`);
                 }
-            });
-        }
-        
-        // Update width selection
-        function updateWidthSelection() {
-            widthButtons.forEach(btn => {
-                if (parseInt(btn.dataset.width) === currentCardWidth) {
-                    btn.classList.add('active');
-                } else {
-                    btn.classList.remove('active');
+                
+                // Card content
+                const content = $('<div class="card-content">');
+                
+                // Card header
+                const header = $('<div class="card-header">');
+                
+                // Title
+                const title = $('<div class="card-title">').text(cardData.title);
+                
+                // Menu
+                const menu = $(`
+                    <div class="card-menu editor-only">
+                        <i class="fas fa-ellipsis-v"></i>
+                        <div class="card-menu-dropdown">
+                            <div class="card-menu-item edit-card">
+                                <i class="fas fa-edit"></i> Bearbeiten
+                            </div>
+                            <div class="card-menu-item duplicate-card">
+                                <i class="fas fa-copy"></i> Duplizieren
+                            </div>
+                            <div class="card-menu-item delete-card">
+                                <i class="fas fa-trash"></i> Löschen
+                            </div>
+                        </div>
+                    </div>
+                `);
+                
+                // Add menu click handler
+                menu.find('i').first().on('click', function(e) {
+                    e.stopPropagation();
+                    const dropdown = menu.find('.card-menu-dropdown');
+                    
+                    // Close all other dropdowns
+                    $('.card-menu-dropdown.show').not(dropdown).removeClass('show');
+                    
+                    dropdown.toggleClass('show');
+                });
+                
+                // Add menu item handlers
+                menu.find('.edit-card').on('click', function() {
+                    openEditCardModal(cardData.id);
+                });
+                
+                menu.find('.duplicate-card').on('click', function() {
+                    duplicateCard(cardData.id);
+                });
+                
+                menu.find('.delete-card').on('click', function() {
+                    deleteCard(cardData.id);
+                });
+                
+                header.append(title);
+                header.append(menu);
+                content.append(header);
+                
+                // Card text content
+                if (cardData.content) {
+                    const text = $('<div class="card-text">').text(cardData.content);
+                    content.append(text);
                 }
-            });
-        }
-        
-        // Extract YouTube ID from URL
-        function getYoutubeId(url) {
-            if (!url) return null;
-            const regExp = /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/;
-            const match = url.match(regExp);
-            return (match && match[7].length === 11) ? match[7] : null;
-        }
-        
-        // Save card
-        function saveCard() {
-            // Validate
-            if (!cardTitle.value.trim()) {
-                alert('Bitte gib einen Titel ein.');
-                return;
+                
+                // Card type-specific content
+                if (cardData.type === 'youtube' && cardData.youtubeId) {
+                    const youtubeContainer = $(`<div class="card-youtube" data-youtube-id="${cardData.youtubeId}">`);
+                    youtubeContainer.html(`
+                        <img src="https://img.youtube.com/vi/${cardData.youtubeId}/maxresdefault.jpg" alt="YouTube Thumbnail">
+                        <div class="play-button">
+                            <i class="fas fa-play"></i>
+                        </div>
+                    `);
+                    
+                    youtubeContainer.find('.play-button').on('click', function() {
+                        const youtubeId = youtubeContainer.data('youtube-id');
+                        youtubeContainer.html(`
+                            <iframe width="100%" height="100%" 
+                                src="https://www.youtube.com/embed/${youtubeId}?autoplay=1" 
+                                frameborder="0" allowfullscreen>
+                            </iframe>
+                        `);
+                    });
+                    
+                    content.append(youtubeContainer);
+                } else if (cardData.type === 'image' && cardData.imageUrl) {
+                    const imageContainer = $('<div class="card-image">');
+                    imageContainer.html(`<img src="${cardData.imageUrl}" alt="Bild">`);
+                    content.append(imageContainer);
+                } else if (cardData.type === 'link' && cardData.linkUrl) {
+                    const linkContainer = $('<div class="card-link">');
+                    linkContainer.html(`
+                        <a href="${cardData.linkUrl}" target="_blank" class="btn">
+                            <i class="fas fa-external-link-alt"></i> Link öffnen
+                        </a>
+                    `);
+                    content.append(linkContainer);
+                } else if (cardData.type === 'learningapp' && cardData.learningappId) {
+                    const learningappContainer = $('<div class="card-learningapp">');
+                    learningappContainer.html(`
+                        <iframe src="https://learningapps.org/watch?app=${cardData.learningappId}" 
+                            style="border:0px;width:100%;height:100%" allowfullscreen="true" 
+                            webkitallowfullscreen="true" mozallowfullscreen="true">
+                        </iframe>
+                    `);
+                    content.append(learningappContainer);
+                }
+                
+                card.append(content);
+                return card;
             }
             
-            // Create card data
-            const cardData = {
-                id: isEditMode ? currentCardId : `card-${Date.now()}`,
-                title: cardTitle.value.trim(),
-                content: cardContent.value.trim(),
-                type: currentCardType,
-                color: currentCardColor,
-                width: currentCardWidth
-            };
+            // Lighten a color (for card backgrounds)
+            function lightenColor(color, factor) {
+                // Convert hex to RGB
+                let r, g, b;
+                if (color.startsWith('#')) {
+                    const hex = color.substring(1);
+                    r = parseInt(hex.substring(0, 2), 16);
+                    g = parseInt(hex.substring(2, 4), 16);
+                    b = parseInt(hex.substring(4, 6), 16);
+                } else if (color.startsWith('rgb')) {
+                    const rgbMatch = color.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
+                    if (rgbMatch) {
+                        r = parseInt(rgbMatch[1]);
+                        g = parseInt(rgbMatch[2]);
+                        b = parseInt(rgbMatch[3]);
+                    } else {
+                        return color;
+                    }
+                } else {
+                    return color;
+                }
+                
+                // Lighten
+                r = Math.round(r + (255 - r) * factor);
+                g = Math.round(g + (255 - g) * factor);
+                b = Math.round(b + (255 - b) * factor);
+                
+                // Convert back to hex
+                return `rgb(${r}, ${g}, ${b})`;
+            }
             
-            // Add type-specific data
-            if (currentCardType === 'youtube') {
-                cardData.youtubeId = getYoutubeId(youtubeUrl.value);
-                if (!cardData.youtubeId) {
-                    alert('Bitte gib eine gültige YouTube-URL ein.');
-                    return;
+            // Open new card modal
+            function openNewCardModal() {
+                isEditMode = false;
+                currentCardId = null;
+                cardModalTitle.text('Neue Karte');
+                
+                // Reset form
+                cardTitle.val('');
+                cardContent.val('');
+                youtubeUrl.val('');
+                imageUrl.val('');
+                linkUrl.val('');
+                learningappUrl.val('');
+                
+                // Reset selections
+                currentCardType = 'text';
+                currentCardColor = 'blue';
+                currentCardCustomColor = '';
+                currentCardWidth = 1;
+                currentCardCategory = '';
+                
+                // Update UI
+                cardCategory.val('');
+                updateCardTypeSelection();
+                updateColorSelection();
+                updateWidthSelection();
+                
+                cardModal.show();
+            }
+            
+            // Open edit card modal
+            function openEditCardModal(cardId) {
+                const cardData = boardData.cards.find(card => card.id === cardId);
+                if (!cardData) return;
+                
+                isEditMode = true;
+                currentCardId = cardId;
+                cardModalTitle.text('Karte bearbeiten');
+                
+                // Fill form
+                cardTitle.val(cardData.title || '');
+                cardContent.val(cardData.content || '');
+                
+                if (cardData.type === 'youtube') {
+                    youtubeUrl.val(cardData.youtubeId ? `https://www.youtube.com/watch?v=${cardData.youtubeId}` : '');
+                } else if (cardData.type === 'image') {
+                    imageUrl.val(cardData.imageUrl || '');
+                } else if (cardData.type === 'link') {
+                    linkUrl.val(cardData.linkUrl || '');
+                } else if (cardData.type === 'learningapp') {
+                    learningappUrl.val(cardData.learningappId ? `https://learningapps.org/watch?app=${cardData.learningappId}` : '');
                 }
-            } else if (currentCardType === 'image') {
-                cardData.imageUrl = imageUrl.value.trim();
-                if (!cardData.imageUrl) {
-                    alert('Bitte gib eine Bild-URL ein.');
-                    return;
+                
+                // Set selections
+                currentCardType = cardData.type || 'text';
+                currentCardColor = cardData.color || 'blue';
+                currentCardCustomColor = cardData.customColor || '';
+                currentCardWidth = cardData.width || 1;
+                currentCardCategory = cardData.category || '';
+                
+                // Update UI
+                cardCategory.val(currentCardCategory);
+                updateCardTypeSelection();
+                
+                // Set correct color palette
+                if (currentCardColor === 'custom') {
+                    customColorPicker.val(currentCardCustomColor);
+                    customColorPreview.css('backgroundColor', currentCardCustomColor);
+                    changeColorPalette('custom');
+                } else if (['red', 'pink', 'purple', 'deep-purple', 'indigo', 'blue', 'light-blue', 
+                          'cyan', 'teal', 'green', 'light-green', 'lime', 'yellow', 'amber', 
+                          'orange', 'deep-orange', 'brown', 'grey', 'blue-grey'].includes(currentCardColor)) {
+                    changeColorPalette('material');
+                } else {
+                    changeColorPalette('custom');
                 }
-            } else if (currentCardType === 'link') {
-                cardData.linkUrl = linkUrl.value.trim();
-                if (!cardData.linkUrl) {
-                    alert('Bitte gib eine Link-URL ein.');
+                
+                updateColorSelection();
+                updateWidthSelection();
+                
+                cardModal.show();
+            }
+            
+            // Update card type selection
+            function updateCardTypeSelection() {
+                // Update active class
+                cardTypeOptions.removeClass('active');
+                $(`.card-type-option[data-type="${currentCardType}"]`).addClass('active');
+                
+                // Show/hide type-specific fields
+                youtubeFields.hide();
+                imageFields.hide();
+                linkFields.hide();
+                learningappFields.hide();
+                
+                if (currentCardType === 'youtube') youtubeFields.show();
+                else if (currentCardType === 'image') imageFields.show();
+                else if (currentCardType === 'link') linkFields.show();
+                else if (currentCardType === 'learningapp') learningappFields.show();
+            }
+            
+            // Change color palette
+            function changeColorPalette(palette) {
+                colorPalettes.removeClass('active');
+                $(`.color-palette[data-palette="${palette}"]`).addClass('active');
+                
+                materialColors.hide();
+                pastelColors.hide();
+                customColors.hide();
+                
+                if (palette === 'material') materialColors.show();
+                else if (palette === 'pastel') pastelColors.show();
+                else if (palette === 'custom') customColors.show();
+            }
+            
+            // Update color selection
+            function updateColorSelection() {
+                colorOptions.removeClass('active');
+                
+                if (currentCardColor === 'custom') {
+                    // For custom colors, we don't highlight any specific option
+                    customColorPreview.css('backgroundColor', currentCardCustomColor);
+                } else {
+                    // For predefined colors, highlight the selected option
+                    $(`.color-option[data-color="${currentCardColor}"]`).addClass('active');
+                }
+            }
+            
+            // Update width selection
+            function updateWidthSelection() {
+                widthButtons.removeClass('active');
+                $(`.width-btn[data-width="${currentCardWidth}"]`).addClass('active');
+            }
+            
+            // Extract YouTube ID from URL
+            function getYoutubeId(url) {
+                if (!url) return null;
+                const regExp = /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/;
+                const match = url.match(regExp);
+                return (match && match[7].length === 11) ? match[7] : null;
+            }
+            
+            // Extract LearningApp ID from URL
+            function getLearningappId(url) {
+                if (!url) return null;
+                
+                // If it's just the ID
+                if (/^[a-z0-9]+$/i.test(url)) {
+                    return url;
+                }
+                
+                // Try to extract ID from URL
+                const regExp = /watch\?(?:app|v)=([a-z0-9]+)/i;
+                const match = url.match(regExp);
+                return match ? match[1] : null;
+            }
+            
+            // Save card
+            function saveCard() {
+                // Validate
+                if (!cardTitle.val().trim()) {
+                    alert('Bitte gib einen Titel ein.');
                     return;
                 }
                 
-                // Add https:// if needed
-                if (!/^https?:\/\//i.test(cardData.linkUrl)) {
-                    cardData.linkUrl = 'https://' + cardData.linkUrl;
+                // Create card data
+                const cardData = {
+                    id: isEditMode ? currentCardId : `card-${Date.now()}`,
+                    title: cardTitle.val().trim(),
+                    content: cardContent.val().trim(),
+                    type: currentCardType,
+                    color: currentCardColor,
+                    width: currentCardWidth,
+                    category: cardCategory.val()
+                };
+                
+                // Add custom color if needed
+                if (currentCardColor === 'custom') {
+                    cardData.customColor = currentCardCustomColor;
                 }
+                
+                // Add type-specific data
+                if (currentCardType === 'youtube') {
+                    cardData.youtubeId = getYoutubeId(youtubeUrl.val());
+                    if (!cardData.youtubeId) {
+                        alert('Bitte gib eine gültige YouTube-URL ein.');
+                        return;
+                    }
+                } else if (currentCardType === 'image') {
+                    cardData.imageUrl = imageUrl.val().trim();
+                    if (!cardData.imageUrl) {
+                        alert('Bitte gib eine Bild-URL ein.');
+                        return;
+                    }
+                } else if (currentCardType === 'link') {
+                    cardData.linkUrl = linkUrl.val().trim();
+                    if (!cardData.linkUrl) {
+                        alert('Bitte gib eine Link-URL ein.');
+                        return;
+                    }
+                    
+                    // Add https:// if needed
+                    if (!/^https?:\/\//i.test(cardData.linkUrl)) {
+                        cardData.linkUrl = 'https://' + cardData.linkUrl;
+                    }
+                } else if (currentCardType === 'learningapp') {
+                    cardData.learningappId = getLearningappId(learningappUrl.val());
+                    if (!cardData.learningappId) {
+                        alert('Bitte gib eine gültige LearningApp-URL oder ID ein.');
+                        return;
+                    }
+                }
+                
+                // Copy position from existing card if in free mode
+                if (isEditMode && boardData.view === 'free') {
+                    const existingCard = boardData.cards.find(c => c.id === currentCardId);
+                    if (existingCard && existingCard.position) {
+                        cardData.position = existingCard.position;
+                    }
+                }
+                
+                // Update or add to board data
+                if (isEditMode) {
+                    const index = boardData.cards.findIndex(card => card.id === currentCardId);
+                    if (index !== -1) {
+                        boardData.cards[index] = cardData;
+                    }
+                } else {
+                    boardData.cards.push(cardData);
+                }
+                
+                // Save and render
+                saveBoardData();
+                renderBoard();
+                cardModal.hide();
             }
             
-            // Update or add to board data
-            if (isEditMode) {
-                const index = boardData.cards.findIndex(card => card.id === currentCardId);
-                if (index !== -1) {
-                    boardData.cards[index] = cardData;
+            // Duplicate card
+            function duplicateCard(cardId) {
+                const cardData = boardData.cards.find(card => card.id === cardId);
+                if (!cardData) return;
+                
+                // Create new card with same data but new ID
+                const newCard = {...cardData, id: `card-${Date.now()}`};
+                
+                // Add offset position if in free mode
+                if (boardData.view === 'free' && newCard.position) {
+                    newCard.position = {
+                        left: newCard.position.left + 20,
+                        top: newCard.position.top + 20
+                    };
                 }
-            } else {
-                boardData.cards.push(cardData);
-            }
-            
-            // Save and render
-            saveBoardData();
-            renderBoard();
-            closeModal();
-        }
-        
-        // Duplicate card
-        function duplicateCard(cardId) {
-            const cardData = boardData.cards.find(card => card.id === cardId);
-            if (!cardData) return;
-            
-            // Create new card with same data but new ID
-            const newCard = {...cardData, id: `card-${Date.now()}`};
-            boardData.cards.push(newCard);
-            
-            // Save and render
-            saveBoardData();
-            renderBoard();
-        }
-        
-        // Delete card
-        function deleteCard(cardId) {
-            if (confirm('Möchtest du diese Karte wirklich löschen?')) {
-                boardData.cards = boardData.cards.filter(card => card.id !== cardId);
+                
+                boardData.cards.push(newCard);
+                
+                // Save and render
                 saveBoardData();
                 renderBoard();
             }
-        }
-        
-        // Change layout
-        function changeLayout(columns) {
-            // Update board display
-            board.style.gridTemplateColumns = `repeat(${columns}, 1fr)`;
             
-            // Update active button
-            layoutButtons.forEach(btn => {
-                if (parseInt(btn.dataset.columns) === columns) {
-                    btn.classList.add('active');
-                } else {
-                    btn.classList.remove('active');
+            // Delete card
+            function deleteCard(cardId) {
+                if (confirm('Möchtest du diese Karte wirklich löschen?')) {
+                    boardData.cards = boardData.cards.filter(card => card.id !== cardId);
+                    saveBoardData();
+                    renderBoard();
                 }
-            });
-            
-            // Save layout
-            boardData.layout = columns;
-            saveBoardData();
-        }
-        
-        // Filter cards
-        function filterCards() {
-            const searchTerm = searchInput.value.toLowerCase();
-            const cards = document.querySelectorAll('.card:not(.add-card)');
-            
-            cards.forEach(card => {
-                const title = card.querySelector('.card-title').textContent.toLowerCase();
-                const content = card.querySelector('.card-text');
-                const contentText = content ? content.textContent.toLowerCase() : '';
-                
-                if (title.includes(searchTerm) || contentText.includes(searchTerm)) {
-                    card.style.display = '';
-                } else {
-                    card.style.display = 'none';
-                }
-            });
-        }
-        
-        // Toggle student mode
-        function toggleStudentMode() {
-            const isStudentMode = studentModeToggle.checked;
-            
-            // Update URL
-            const url = new URL(window.location.href);
-            if (isStudentMode) {
-                url.searchParams.set('mode', 'student');
-            } else {
-                url.searchParams.delete('mode');
             }
-            window.history.replaceState({}, '', url);
             
-            // Update UI
-            updateStudentModeVisibility();
+            // Filter cards
+            function filterCards() {
+                const searchTerm = searchInput.val().toLowerCase();
+                
+                if (boardData.view === 'grid' || boardData.view === 'free') {
+                    $('.card:not(.add-card)').each(function() {
+                        const title = $(this).find('.card-title').text().toLowerCase();
+                        const content = $(this).find('.card-text').text().toLowerCase();
+                        
+                        if (title.includes(searchTerm) || content.includes(searchTerm)) {
+                            $(this).show();
+                        } else {
+                            $(this).hide();
+                        }
+                    });
+                } else if (boardData.view === 'categories') {
+                    // First hide/show cards
+                    $('.card:not(.add-card)').each(function() {
+                        const title = $(this).find('.card-title').text().toLowerCase();
+                        const content = $(this).find('.card-text').text().toLowerCase();
+                        
+                        if (title.includes(searchTerm) || content.includes(searchTerm)) {
+                            $(this).show();
+                        } else {
+                            $(this).hide();
+                        }
+                    });
+                    
+                    // Then hide categories with no visible cards
+                    $('.category').each(function() {
+                        const visibleCards = $(this).find('.card:visible').length;
+                        if (visibleCards === 0) {
+                            $(this).hide();
+                        } else {
+                            $(this).show();
+                        }
+                    });
+                }
+            }
+            
+            // Toggle student mode
+            function toggleStudentMode() {
+                const isStudentMode = studentModeToggle.prop('checked');
+                
+                // Update URL
+                const url = new URL(window.location.href);
+                if (isStudentMode) {
+                    url.searchParams.set('mode', 'student');
+                } else {
+                    url.searchParams.delete('mode');
+                }
+                window.history.replaceState({}, '', url);
+                
+                // Update UI
+                updateStudentModeVisibility();
+                
+                // Update share link
+                updateShareLink();
+            }
+            
+            // Update student mode visibility
+            function updateStudentModeVisibility() {
+                const isStudentMode = studentModeToggle.prop('checked');
+                
+                // Hide/show editor elements
+                $('.editor-only').toggle(!isStudentMode);
+                
+                // Hide/show add buttons
+                if (isStudentMode) {
+                    addCardBtnGrid.hide();
+                    addCategoryBtn.hide();
+                } else {
+                    addCardBtnGrid.show();
+                    addCategoryBtn.show();
+                }
+                
+                // Re-render if in categories view to hide empty categories
+                if (boardData.view === 'categories') {
+                    renderCategoriesBoard();
+                }
+            }
+            
+            // Check URL for student mode
+            function checkUrlForStudentMode() {
+                const urlParams = new URLSearchParams(window.location.search);
+                const mode = urlParams.get('mode');
+                
+                if (mode === 'student') {
+                    studentModeToggle.prop('checked', true);
+                    updateStudentModeVisibility();
+                }
+            }
             
             // Update share link
-            updateShareLink();
-        }
-        
-        // Update student mode visibility
-        function updateStudentModeVisibility() {
-            const isStudentMode = studentModeToggle.checked;
-            
-            // Hide/show editor elements
-            document.querySelectorAll('.editor-only').forEach(el => {
-                el.style.display = isStudentMode ? 'none' : '';
-            });
-            
-            // Hide/show add card button
-            addCardBtn.style.display = isStudentMode ? 'none' : '';
-        }
-        
-        // Check URL for student mode
-        function checkUrlForStudentMode() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const mode = urlParams.get('mode');
-            
-            if (mode === 'student') {
-                studentModeToggle.checked = true;
-                updateStudentModeVisibility();
+            function updateShareLink() {
+                const url = new URL(window.location.href);
+                url.searchParams.set('mode', 'student');
+                shareLink.val(url.toString());
             }
-        }
-        
-        // Update share link
-        function updateShareLink() {
-            const url = new URL(window.location.href);
-            url.searchParams.set('mode', 'student');
-            shareLink.value = url.toString();
-        }
-        
-        // Open share modal
-        function openShareModal() {
-            updateShareLink();
-            shareModal.style.display = 'flex';
-        }
-        
-        // Copy share link
-        function copyShareLink() {
-            shareLink.select();
-            document.execCommand('copy');
             
-            // Show confirmation
-            copyLinkBtn.innerHTML = '<i class="fas fa-check"></i>';
-            setTimeout(() => {
-                copyLinkBtn.innerHTML = '<i class="fas fa-copy"></i>';
-            }, 2000);
-        }
-        
-        // Export board data
-        function exportBoardData() {
-            // Create file
-            const dataStr = JSON.stringify(boardData);
-            const dataBlob = new Blob([dataStr], {type: 'application/json'});
-            const url = URL.createObjectURL(dataBlob);
+            // Open share modal
+            function openShareModal() {
+                updateShareLink();
+                shareModal.show();
+            }
             
-            // Create download link
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `taskcard-board-${new Date().toISOString().slice(0, 10)}.json`;
-            document.body.appendChild(a);
-            a.click();
+            // Copy share link
+            function copyShareLink() {
+                shareLink.select();
+                document.execCommand('copy');
+                
+                // Show confirmation
+                copyLinkBtn.html('<i class="fas fa-check"></i>');
+                setTimeout(() => {
+                    copyLinkBtn.html('<i class="fas fa-copy"></i>');
+                }, 2000);
+            }
             
-            // Clean up
-            setTimeout(() => {
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-            }, 100);
-        }
-        
-        // Import board data
-        function importBoardData(event) {
-            const file = event.target.files[0];
-            if (!file) return;
+            // Export board data
+            function exportBoardData() {
+                // Create file
+                const dataStr = JSON.stringify(boardData, null, 2);
+                const dataBlob = new Blob([dataStr], {type: 'application/json'});
+                const url = URL.createObjectURL(dataBlob);
+                
+                // Create download link
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `taskcard-board-${new Date().toISOString().slice(0, 10)}.json`;
+                document.body.appendChild(a);
+                a.click();
+                
+                // Clean up
+                setTimeout(() => {
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                }, 100);
+            }
             
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const data = JSON.parse(e.target.result);
-                    
-                    // Validate data
-                    if (data && Array.isArray(data.cards)) {
-                        if (confirm('Möchtest du das aktuelle Board mit den importierten Daten ersetzen?')) {
-                            boardData = data;
-                            saveBoardData();
-                            renderBoard();
-                            changeLayout(data.layout || 3);
+            // Import board data
+            function importBoardData(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const data = JSON.parse(e.target.result);
+                        
+                        // Validate data
+                        if (data && Array.isArray(data.cards)) {
+                            if (confirm('Möchtest du das aktuelle Board mit den importierten Daten ersetzen?')) {
+                                // Ensure categories property exists
+                                data.categories = data.categories || [];
+                                
+                                boardData = data;
+                                saveBoardData();
+                                
+                                changeView(data.view || 'grid');
+                                changeLayout(data.layout || 3);
+                                updateCategorySelect();
+                                renderBoard();
+                            }
+                        } else {
+                            alert('Die Datei enthält keine gültigen Board-Daten.');
                         }
-                    } else {
-                        alert('Die Datei enthält keine gültigen Board-Daten.');
+                    } catch (error) {
+                        console.error('Import error:', error);
+                        alert('Fehler beim Importieren: Ungültiges Dateiformat.');
                     }
-                } catch (error) {
-                    console.error('Import error:', error);
-                    alert('Fehler beim Importieren: Ungültiges Dateiformat.');
-                }
-            };
-            reader.readAsText(file);
+                };
+                reader.readAsText(file);
+                
+                // Reset input to allow importing the same file again
+                $(this).val('');
+            }
             
-            // Reset input to allow importing the same file again
-            event.target.value = '';
-        }
-        
-        // Close all dropdowns when clicking outside
-        document.addEventListener('click', function(e) {
-            if (!e.target.closest('.card-menu')) {
-                document.querySelectorAll('.card-menu-dropdown.show').forEach(dropdown => {
-                    dropdown.classList.remove('show');
+            // Category Management
+            
+            // Open category modal
+            function openCategoryModal() {
+                // Clear category list
+                categoryList.empty();
+                
+                // Add categories
+                boardData.categories.forEach(category => {
+                    addCategoryToList(category);
+                });
+                
+                categoryModal.show();
+            }
+            
+            // Add category to list in modal
+            function addCategoryToList(category) {
+                const categoryItem = $(`
+                    <div class="category-item" data-id="${category.id}">
+                        <div class="category-item-title">${category.name}</div>
+                        <div class="category-item-actions">
+                            <button class="edit-category"><i class="fas fa-edit"></i></button>
+                            <button class="delete-category"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </div>
+                `);
+                
+                // Edit event
+                categoryItem.find('.edit-category').on('click', function() {
+                    const id = categoryItem.data('id');
+                    const category = boardData.categories.find(c => c.id === id);
+                    if (category) {
+                        const newName = prompt('Kategorie umbenennen:', category.name);
+                        if (newName && newName.trim()) {
+                            category.name = newName.trim();
+                            categoryItem.find('.category-item-title').text(newName.trim());
+                            saveBoardData();
+                            updateCategorySelect();
+                            renderBoard();
+                        }
+                    }
+                });
+                
+                // Delete event
+                categoryItem.find('.delete-category').on('click', function() {
+                    const id = categoryItem.data('id');
+                    if (confirm('Möchtest du diese Kategorie wirklich löschen?')) {
+                        // Remove category
+                        boardData.categories = boardData.categories.filter(c => c.id !== id);
+                        
+                        // Update cards that used this category
+                        boardData.cards.forEach(card => {
+                            if (card.category === id) {
+                                card.category = '';
+                            }
+                        });
+                        
+                        saveBoardData();
+                        updateCategorySelect();
+                        renderBoard();
+                        categoryItem.remove();
+                    }
+                });
+                
+                categoryList.append(categoryItem);
+            }
+            
+            // Add new category
+            function addNewCategory() {
+                const name = newCategoryInput.val().trim();
+                if (!name) return;
+                
+                const category = {
+                    id: `category-${Date.now()}`,
+                    name: name
+                };
+                
+                boardData.categories.push(category);
+                saveBoardData();
+                updateCategorySelect();
+                renderBoard();
+                
+                addCategoryToList(category);
+                newCategoryInput.val('');
+            }
+            
+            // Prompt to add category (from category view)
+            function promptAddCategory() {
+                const name = prompt('Name der neuen Kategorie:');
+                if (name && name.trim()) {
+                    const category = {
+                        id: `category-${Date.now()}`,
+                        name: name.trim()
+                    };
+                    
+                    boardData.categories.push(category);
+                    saveBoardData();
+                    updateCategorySelect();
+                    renderBoard();
+                }
+            }
+            
+            // Update category select dropdown
+            function updateCategorySelect() {
+                cardCategory.empty();
+                cardCategory.append('<option value="">Keine Kategorie</option>');
+                
+                boardData.categories.forEach(category => {
+                    cardCategory.append(`<option value="${category.id}">${category.name}</option>`);
                 });
             }
+            
+            // Close dropdowns when clicking outside
+            $(document).on('click', function(e) {
+                if (!$(e.target).closest('.card-menu').length) {
+                    $('.card-menu-dropdown.show').removeClass('show');
+                }
+            });
         });
     </script>
 </body>
