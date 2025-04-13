@@ -1,22 +1,40 @@
 /**
- * Views for Taskcard-Manager
+ * Views für PadCard-Manager
  * 
- * This file contains all the rendering logic for the application.
+ * Diese Datei enthält die gesamte Rendering-Logik für die Anwendung.
  */
 
 const Views = {
     /**
-     * Initialize all views
+     * Initialisiert alle Views
      */
     init: function() {
         this.initColorPickers();
+        this.initSidebar();
     },
     
     /**
-     * Initialize color pickers
+     * Initialisiert die Sidebar-Funktionalität
+     */
+    initSidebar: function() {
+        // Sidebar-Menü-Items Klick-Handler
+        $('#menuLatestActivity').on('click', () => this.renderLatestActivitiesView());
+        $('#menuMyPadcards').on('click', () => this.renderMyPadcardsView());
+        
+        // Sidebar-Toggle
+        $('#sidebarToggle').on('click', () => {
+            $('#sidebar').toggleClass('collapsed');
+        });
+        
+        // Folder-List initiieren
+        this.renderFolderList();
+    },
+    
+    /**
+     * Initialisiert die Farbauswahl
      */
     initColorPickers: function() {
-        // Folder color picker
+        // Ordner-Farbauswahl
         const folderColorPicker = $('#folderColorPicker');
         folderColorPicker.empty();
         
@@ -30,10 +48,10 @@ const Views = {
             });
         });
         
-        // Select first color by default
+        // Erste Farbe standardmäßig auswählen
         folderColorPicker.find('.color-option').first().addClass('active');
         
-        // Board color picker
+        // Board-Farbauswahl
         const boardColorPicker = $('#boardColorPicker');
         boardColorPicker.empty();
         
@@ -47,18 +65,18 @@ const Views = {
             });
         });
         
-        // Select first color by default
+        // Erste Farbe standardmäßig auswählen
         boardColorPicker.find('.color-option').first().addClass('active');
         
-        // Card color pickers
+        // Karten-Farbauswahl
         this.initCardColorPickers();
     },
     
     /**
-     * Initialize card color pickers
+     * Initialisiert die Karten-Farbauswahl
      */
     initCardColorPickers: function() {
-        // Predefined colors
+        // Vordefinierte Farben
         const materialColors = $('.material-colors');
         materialColors.empty();
         
@@ -89,7 +107,7 @@ const Views = {
             materialColors.append(colorOption);
         });
         
-        // Pastel colors
+        // Pastellfarben
         const pastelColors = $('.pastel-colors');
         pastelColors.empty();
         
@@ -116,7 +134,7 @@ const Views = {
             pastelColors.append(colorOption);
         });
         
-        // Custom colors
+        // Benutzerdefinierte Farben
         const customColors = $('.custom-colors');
         customColors.empty();
         
@@ -136,7 +154,7 @@ const Views = {
             customColors.append(colorOption);
         });
         
-        // Set up custom color picker and preview
+        // Farbauswahl und Vorschau einrichten
         const customColorPicker = $('#customColorPicker');
         const customColorPreview = $('#customColorPreview');
         
@@ -144,56 +162,368 @@ const Views = {
             customColorPreview.css('backgroundColor', $(this).val());
         });
         
-        // Initialize preview with default value
+        // Vorschau mit Standardwert initialisieren
         customColorPreview.css('backgroundColor', customColorPicker.val());
     },
     
     /**
-     * Render home view
+     * Rendert die Seitenleisten-Ordnerliste
      */
-    renderHomeView: function() {
-        // Hide other views and show home view
+    renderFolderList: function() {
+        const folderList = $('#folderList');
+        folderList.empty();
+        
+        // Alle Ordner abrufen
+        const folders = FolderDAO.getAll();
+        
+        // Alphabetisch sortieren
+        folders.sort((a, b) => a.name.localeCompare(b.name));
+        
+        // Ordnerelemente erstellen
+        folders.forEach(folder => {
+            const folderElement = $(`
+                <div class="folder-item" data-id="${folder.id}">
+                    <div class="folder-icon" style="color: ${folder.color};">
+                        <i class="fas fa-folder"></i>
+                    </div>
+                    <div class="folder-name">${folder.name}</div>
+                    <div class="folder-actions">
+                        <i class="fas fa-edit" data-action="edit"></i>
+                        <i class="fas fa-trash" data-action="delete"></i>
+                    </div>
+                </div>
+            `);
+            
+            // Ordner öffnen bei Klick
+            folderElement.on('click', function(e) {
+                if (!$(e.target).closest('.folder-actions').length) {
+                    const folderId = $(this).data('id');
+                    Controllers.openFolder(folderId);
+                    
+                    // Aktiv-Klasse setzen
+                    $('.folder-item').removeClass('active');
+                    $(this).addClass('active');
+                    
+                    // Menü-Items deaktivieren
+                    $('.sidebar-item').removeClass('active');
+                }
+            });
+            
+            // Ordner-Aktionen
+            folderElement.find('.folder-actions i').on('click', function(e) {
+                e.stopPropagation();
+                const action = $(this).data('action');
+                const folderId = $(this).closest('.folder-item').data('id');
+                
+                if (action === 'edit') {
+                    Controllers.editFolder(folderId);
+                } else if (action === 'delete') {
+                    Controllers.deleteFolder(folderId);
+                }
+            });
+            
+            folderList.append(folderElement);
+        });
+    },
+    
+    /**
+     * Rendert die "Neueste Aktivitäten"-Ansicht (Startseite)
+     */
+    renderLatestActivitiesView: function() {
+        // Andere Ansichten ausblenden und Home-Ansicht anzeigen
         $('#folder-view').addClass('hidden');
         $('#board-view').addClass('hidden');
-        $('#home-view').removeClass('hidden');
+        $('#latest-activities-view').removeClass('hidden');
         
-        // Update breadcrumb
-        $('.breadcrumb-current').text('Meine Boards');
+        // Seitentitel aktualisieren
+        $('#pageTitle').text('Neueste Aktivitäten');
         
-        // Render folders
-        this.renderFolders();
+        // Sidebar-Menü aktualisieren
+        $('.sidebar-item').removeClass('active');
+        $('#menuLatestActivity').addClass('active');
+        $('.folder-item').removeClass('active');
         
-        // Render boards not in folders
-        this.renderBoards(null);
+        // Aktivitäten-Container leeren
+        const activityContainer = $('#activityContainer');
+        activityContainer.empty();
+        
+        // "Neu erstellen"-Karte hinzufügen
+        if (!AppData.studentMode) {
+            const createCard = $(`
+                <div class="create-padlet-card">
+                    <div class="create-padlet-icon">
+                        <i class="fas fa-plus-circle"></i>
+                    </div>
+                    <div class="create-padlet-text">Ein Padlet erstellen</div>
+                </div>
+            `);
+            
+            createCard.on('click', function() {
+                Controllers.createBoard();
+            });
+            
+            activityContainer.append(createCard);
+        }
+        
+        // Alle Boards abrufen
+        const boards = BoardDAO.getAll();
+        
+        // Wenn keine Boards vorhanden sind
+        if (boards.length === 0) {
+            if (AppData.studentMode) {
+                activityContainer.append(`
+                    <div class="empty-state">
+                        <div class="empty-state-icon">
+                            <i class="fas fa-clipboard"></i>
+                        </div>
+                        <div class="empty-state-text">Keine Padlets vorhanden</div>
+                    </div>
+                `);
+            }
+            return;
+        }
+        
+        // Nach Datum sortieren (neueste zuerst)
+        boards.sort((a, b) => new Date(b.updated) - new Date(a.updated));
+        
+        // Boards als Karten rendern
+        boards.forEach(board => {
+            // Board-Karte erstellen
+            const boardCard = this.createPadletCard(board);
+            
+            // Klick-Handler hinzufügen
+            boardCard.on('click', function(e) {
+                if (!$(e.target).closest('.padlet-menu').length) {
+                    Controllers.openBoard(board.id);
+                }
+            });
+            
+            activityContainer.append(boardCard);
+        });
         
         AppData.view = 'home';
         AppData.currentFolder = null;
         AppData.currentBoard = null;
+        
+        // Event-Handler für Erstellen-Button
+        $('#createNewBtn').on('click', function() {
+            Controllers.createBoard();
+        });
     },
     
     /**
-     * Render folder view
-     * @param {string} folderId - Folder ID
+     * Rendert die "Von mir erstellt"-Ansicht
+     */
+    renderMyPadcardsView: function() {
+        // Andere Ansichten ausblenden und Home-Ansicht anzeigen
+        $('#folder-view').addClass('hidden');
+        $('#board-view').addClass('hidden');
+        $('#latest-activities-view').removeClass('hidden');
+        
+        // Seitentitel aktualisieren
+        $('#pageTitle').text('Von mir erstellt');
+        
+        // Sidebar-Menü aktualisieren
+        $('.sidebar-item').removeClass('active');
+        $('#menuMyPadcards').addClass('active');
+        $('.folder-item').removeClass('active');
+        
+        // Aktivitäten-Container leeren
+        const activityContainer = $('#activityContainer');
+        activityContainer.empty();
+        
+        // "Neu erstellen"-Karte hinzufügen
+        if (!AppData.studentMode) {
+            const createCard = $(`
+                <div class="create-padlet-card">
+                    <div class="create-padlet-icon">
+                        <i class="fas fa-plus-circle"></i>
+                    </div>
+                    <div class="create-padlet-text">Ein Padlet erstellen</div>
+                </div>
+            `);
+            
+            createCard.on('click', function() {
+                Controllers.createBoard();
+            });
+            
+            activityContainer.append(createCard);
+        }
+        
+        // Alle Boards abrufen, die nicht in einem Ordner sind
+        const boards = BoardDAO.getByFolderId(null);
+        
+        // Wenn keine Boards vorhanden sind
+        if (boards.length === 0) {
+            if (AppData.studentMode) {
+                activityContainer.append(`
+                    <div class="empty-state">
+                        <div class="empty-state-icon">
+                            <i class="fas fa-clipboard"></i>
+                        </div>
+                        <div class="empty-state-text">Keine Padlets vorhanden</div>
+                    </div>
+                `);
+            }
+            return;
+        }
+        
+        // Sortieren
+        const sortOrder = $('.sort-option.active').data('sort') || 'name';
+        this.sortBoards(boards, sortOrder);
+        
+        // Boards als Karten rendern
+        boards.forEach(board => {
+            // Board-Karte erstellen
+            const boardCard = this.createPadletCard(board);
+            
+            // Klick-Handler hinzufügen
+            boardCard.on('click', function(e) {
+                if (!$(e.target).closest('.padlet-menu').length) {
+                    Controllers.openBoard(board.id);
+                }
+            });
+            
+            activityContainer.append(boardCard);
+        });
+        
+        AppData.view = 'home';
+        AppData.currentFolder = null;
+        AppData.currentBoard = null;
+        
+        // Event-Handler für Erstellen-Button
+        $('#createNewBtn').on('click', function() {
+            Controllers.createBoard();
+        });
+    },
+    
+    /**
+     * Erstellt eine Padlet-Karte
+     * @param {Object} board - Board-Objekt
+     * @returns {jQuery} Die erstellte Padlet-Karte
+     */
+    createPadletCard: function(board) {
+        // Kartenanzahl
+        const cardCount = board.cards ? board.cards.length : 0;
+        
+        // Datum formatieren
+        const updatedDate = Utils.formatDate(board.updated);
+        
+        // Bestimmen, ob Board in einem Ordner ist
+        const folder = board.folderId ? FolderDAO.getById(board.folderId) : null;
+        
+        const padletCard = $(`
+            <div class="padlet-card" data-id="${board.id}">
+                <div class="padlet-preview" style="background-color: ${board.color}">
+                    <div class="padlet-preview-bg"></div>
+                </div>
+                <div class="padlet-content">
+                    <div class="padlet-header">
+                        <div class="padlet-title">${board.name}</div>
+                        <div class="padlet-menu">
+                            <div class="padlet-menu-trigger">
+                                <i class="fas fa-ellipsis-v"></i>
+                            </div>
+                            <div class="padlet-menu-dropdown">
+                                <div class="padlet-menu-item" data-action="edit">
+                                    <i class="fas fa-edit"></i> Bearbeiten
+                                </div>
+                                <div class="padlet-menu-item" data-action="move">
+                                    <i class="fas fa-folder"></i> In Ordner verschieben
+                                </div>
+                                <div class="padlet-menu-item" data-action="share">
+                                    <i class="fas fa-share-alt"></i> Teilen
+                                </div>
+                                <div class="padlet-menu-item" data-action="delete">
+                                    <i class="fas fa-trash"></i> Löschen
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="padlet-meta">
+                        <div class="padlet-meta-item">
+                            <i class="fas fa-sticky-note"></i> ${cardCount} Karten
+                        </div>
+                        <div class="padlet-meta-item">
+                            <i class="fas fa-clock"></i> Aktualisiert am ${updatedDate}
+                        </div>
+                        ${folder ? `
+                        <div class="padlet-meta-item">
+                            <i class="fas fa-folder"></i> In Ordner: ${folder.name}
+                        </div>
+                        ` : ''}
+                    </div>
+                    <div class="padlet-author">
+                        <div class="padlet-author-avatar">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div class="padlet-author-name">
+                            Du
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `);
+        
+        // Wenn Board einen Hintergrund hat, in der Vorschau anzeigen
+        if (board.background && (board.background.url || board.background.data)) {
+            const bgUrl = board.background.data || board.background.url;
+            padletCard.find('.padlet-preview-bg').css('backgroundImage', `url(${bgUrl})`);
+        }
+        
+        // Menü-Trigger Klick-Handler
+        padletCard.find('.padlet-menu-trigger').on('click', function(e) {
+            e.stopPropagation();
+            const dropdown = $(this).siblings('.padlet-menu-dropdown');
+            $('.padlet-menu-dropdown').not(dropdown).removeClass('show');
+            dropdown.toggleClass('show');
+        });
+        
+        // Menü-Aktionen
+        padletCard.find('.padlet-menu-item').on('click', function(e) {
+            e.stopPropagation();
+            const action = $(this).data('action');
+            const boardId = $(this).closest('.padlet-card').data('id');
+            
+            if (action === 'edit') {
+                Controllers.editBoard(boardId);
+            } else if (action === 'move') {
+                // TODO: Board in einen Ordner verschieben
+                Controllers.editBoard(boardId); // Vorerst Bearbeiten-Dialog öffnen
+            } else if (action === 'share') {
+                Controllers.openShareModal();
+            } else if (action === 'delete') {
+                Controllers.deleteBoard(boardId);
+            }
+        });
+        
+        return padletCard;
+    },
+    
+    /**
+     * Rendert die Ordner-Ansicht
+     * @param {string} folderId - Ordner-ID
      */
     renderFolderView: function(folderId) {
         const folder = FolderDAO.getById(folderId);
         if (!folder) {
-            this.renderHomeView();
+            this.renderLatestActivitiesView();
             return;
         }
         
-        // Hide other views and show folder view
-        $('#home-view').addClass('hidden');
+        // Andere Ansichten ausblenden und Ordner-Ansicht anzeigen
+        $('#latest-activities-view').addClass('hidden');
         $('#board-view').addClass('hidden');
         $('#folder-view').removeClass('hidden');
         
-        // Update breadcrumb
-        $('.breadcrumb-current').text(folder.name);
+        // Seitentitel aktualisieren
+        $('#pageTitle').text(folder.name);
         
-        // Update folder title
-        $('#folderTitle').text(folder.name);
+        // Sidebar-Menü aktualisieren
+        $('.sidebar-item').removeClass('active');
+        $(`.folder-item[data-id="${folderId}"]`).addClass('active');
         
-        // Render boards in this folder
+        // Boards in diesem Ordner rendern
         this.renderBoardsInFolder(folderId);
         
         AppData.view = 'folder';
@@ -202,37 +532,107 @@ const Views = {
     },
     
     /**
-     * Render board view
-     * @param {string} boardId - Board ID
+     * Rendert die Boards in einem Ordner
+     * @param {string} folderId - Ordner-ID
+     */
+    renderBoardsInFolder: function(folderId) {
+        const folderPadletsContainer = $('#folderPadletsContainer');
+        folderPadletsContainer.empty();
+        
+        // "Neu erstellen"-Karte hinzufügen
+        if (!AppData.studentMode) {
+            const createCard = $(`
+                <div class="create-padlet-card">
+                    <div class="create-padlet-icon">
+                        <i class="fas fa-plus-circle"></i>
+                    </div>
+                    <div class="create-padlet-text">Ein Padlet erstellen</div>
+                </div>
+            `);
+            
+            createCard.on('click', function() {
+                Controllers.createBoardInFolder(folderId);
+            });
+            
+            folderPadletsContainer.append(createCard);
+        }
+        
+        // Boards in diesem Ordner abrufen
+        const boards = BoardDAO.getByFolderId(folderId);
+        
+        // Wenn keine Boards vorhanden sind
+        if (boards.length === 0) {
+            folderPadletsContainer.append(`
+                <div class="empty-folder">
+                    <div class="empty-folder-icon">
+                        <i class="fas fa-folder-open"></i>
+                    </div>
+                    <div class="empty-folder-text">
+                        Dieser Ordner ist leer.
+                    </div>
+                </div>
+            `);
+            return;
+        }
+        
+        // Sortieren
+        const sortOrder = $('.sort-option.active').data('sort') || 'name';
+        this.sortBoards(boards, sortOrder);
+        
+        // Boards als Karten rendern
+        boards.forEach(board => {
+            // Board-Karte erstellen
+            const boardCard = this.createPadletCard(board);
+            
+            // Klick-Handler hinzufügen
+            boardCard.on('click', function(e) {
+                if (!$(e.target).closest('.padlet-menu').length) {
+                    Controllers.openBoard(board.id);
+                }
+            });
+            
+            folderPadletsContainer.append(boardCard);
+        });
+    },
+    
+    /**
+     * Rendert die Board-Ansicht
+     * @param {string} boardId - Board-ID
      */
     renderBoardView: function(boardId) {
         const board = BoardDAO.getById(boardId);
         if (!board) {
-            this.renderHomeView();
+            this.renderLatestActivitiesView();
             return;
         }
         
-        // Hide other views and show board view
-        $('#home-view').addClass('hidden');
+        // Andere Ansichten ausblenden und Board-Ansicht anzeigen
+        $('#latest-activities-view').addClass('hidden');
         $('#folder-view').addClass('hidden');
         $('#board-view').removeClass('hidden');
         
-        // Update breadcrumb
-        $('.breadcrumb-current').text(board.name);
+        // Seitentitel aktualisieren
+        $('#pageTitle').text(board.name);
         
-        // Update board title
+        // Board-Titel aktualisieren
         $('#boardTitle').text(board.name);
         
-        // Apply board background if exists
+        // Sidebar-Menü aktualisieren
+        $('.sidebar-item').removeClass('active');
+        if (board.folderId) {
+            $(`.folder-item[data-id="${board.folderId}"]`).addClass('active');
+        }
+        
+        // Board-Hintergrund anwenden, falls vorhanden
         this.applyBoardBackground(board);
         
-        // Change to the correct view
+        // Zur richtigen Ansicht wechseln
         this.changeCardView(board.view || 'grid');
         
-        // Update layout
+        // Layout aktualisieren
         this.updateBoardLayout(board.layout || 3);
         
-        // Render cards based on view
+        // Karten basierend auf der Ansicht rendern
         if (board.view === 'grid') {
             this.renderCardsGrid(board);
         } else if (board.view === 'free') {
@@ -241,7 +641,7 @@ const Views = {
             this.renderCardsCategories(board);
         }
         
-        // Update categories dropdown
+        // Kategorien-Dropdown aktualisieren
         this.updateCategoryDropdown(board);
         
         AppData.view = 'board';
@@ -249,11 +649,11 @@ const Views = {
     },
     
     /**
-     * Apply board background
-     * @param {Object} board - Board object
+     * Board-Hintergrund anwenden
+     * @param {Object} board - Board-Objekt
      */
     applyBoardBackground: function(board) {
-        // First remove any existing background
+        // Zuerst vorhandenen Hintergrund entfernen
         $('#board-view').css({
             backgroundImage: '',
             backgroundSize: '',
@@ -271,10 +671,10 @@ const Views = {
                     backgroundSize: bg.style === 'cover' ? 'cover' : (bg.style === 'contain' ? 'contain' : 'auto'),
                     backgroundPosition: 'center',
                     backgroundRepeat: bg.style === 'repeat' ? 'repeat' : 'no-repeat',
-                    backgroundColor: 'rgba(245, 245, 245, 0.8)', // Add a light background color
+                    backgroundColor: 'rgba(245, 245, 245, 0.8)', // Hellen Hintergrund hinzufügen
                 });
                 
-                // Apply opacity
+                // Deckkraft anwenden
                 const opacity = bg.opacity !== undefined ? bg.opacity / 100 : 1;
                 $('#board-view').css({
                     boxShadow: `inset 0 0 0 2000px rgba(255, 255, 255, ${1 - opacity})`
@@ -284,20 +684,20 @@ const Views = {
     },
     
     /**
-     * Change card view (grid, free, categories)
-     * @param {string} view - View name
+     * Kartenansicht ändern (Raster, Frei, Kategorien)
+     * @param {string} view - Ansichtsname
      */
     changeCardView: function(view) {
-        // Update view buttons
+        // Ansichtsbuttons aktualisieren
         $('.view-btn').removeClass('active');
         $(`.view-btn[data-view="${view}"]`).addClass('active');
         
-        // Hide all views
+        // Alle Ansichten ausblenden
         $('#boardGrid').addClass('hidden');
         $('#boardFree').addClass('hidden');
         $('#boardCategories').addClass('hidden');
         
-        // Show selected view
+        // Ausgewählte Ansicht anzeigen
         if (view === 'grid') {
             $('#boardGrid').removeClass('hidden');
             $('.grid-controls').show();
@@ -309,223 +709,34 @@ const Views = {
             $('.grid-controls').hide();
         }
         
-        // Update board data if this is a change
+        // Board-Daten aktualisieren, wenn dies eine Änderung ist
         if (AppData.currentBoard && AppData.currentBoard.view !== view) {
             BoardDAO.update(AppData.currentBoard.id, { view });
         }
     },
     
     /**
-     * Update board layout (grid columns)
-     * @param {number} columns - Number of columns
+     * Board-Layout aktualisieren (Rasterspalten)
+     * @param {number} columns - Anzahl der Spalten
      */
     updateBoardLayout: function(columns) {
-        // Update layout buttons
+        // Layout-Buttons aktualisieren
         $('.layout-btn').removeClass('active');
         $(`.layout-btn[data-columns="${columns}"]`).addClass('active');
         
-        // Update grid style
+        // Rasterstil aktualisieren
         $('#boardGrid').css('gridTemplateColumns', `repeat(${columns}, 1fr)`);
         
-        // Update board data if this is a change
+        // Board-Daten aktualisieren, wenn dies eine Änderung ist
         if (AppData.currentBoard && AppData.currentBoard.layout !== columns) {
             BoardDAO.update(AppData.currentBoard.id, { layout: columns });
         }
     },
     
     /**
-     * Render folders
-     */
-    renderFolders: function() {
-        const folderContainer = $('#folderContainer');
-        folderContainer.empty();
-        
-        // Get all folders
-        const folders = FolderDAO.getAll();
-        
-        // Sort alphabetically
-        folders.sort((a, b) => a.name.localeCompare(b.name));
-        
-        // Create folder elements
-        folders.forEach(folder => {
-            const folderElement = this.createFolderElement(folder);
-            folderContainer.append(folderElement);
-        });
-    },
-    
-    /**
-     * Create folder element
-     * @param {Object} folder - Folder object
-     * @returns {jQuery} Folder element
-     */
-    createFolderElement: function(folder) {
-        const folderElement = $(`
-            <div class="folder" data-id="${folder.id}">
-                <div class="folder-content">
-                    <div class="folder-icon" style="color: ${folder.color};">
-                        <i class="fas fa-folder"></i>
-                    </div>
-                    <div class="folder-title">${folder.name}</div>
-                    <div class="folder-menu editor-only">
-                        <div class="folder-menu-icon">
-                            <i class="fas fa-ellipsis-v"></i>
-                        </div>
-                        <div class="folder-menu-dropdown">
-                            <div class="folder-menu-item" data-action="edit">
-                                <i class="fas fa-edit"></i> Bearbeiten
-                            </div>
-                            <div class="folder-menu-item" data-action="delete">
-                                <i class="fas fa-trash"></i> Löschen
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `);
-        
-        // Open folder on click
-        folderElement.on('click', function(e) {
-            if (!$(e.target).closest('.folder-menu').length) {
-                const folderId = $(this).data('id');
-                Controllers.openFolder(folderId);
-            }
-        });
-        
-        // Folder menu toggle
-        folderElement.find('.folder-menu-icon').on('click', function(e) {
-            e.stopPropagation();
-            const dropdown = $(this).siblings('.folder-menu-dropdown');
-            $('.folder-menu-dropdown').not(dropdown).removeClass('show');
-            dropdown.toggleClass('show');
-        });
-        
-        // Folder menu actions
-        folderElement.find('.folder-menu-item').on('click', function(e) {
-            e.stopPropagation();
-            const action = $(this).data('action');
-            const folderId = $(this).closest('.folder').data('id');
-            
-            if (action === 'edit') {
-                Controllers.editFolder(folderId);
-            } else if (action === 'delete') {
-                Controllers.deleteFolder(folderId);
-            }
-        });
-        
-        return folderElement;
-    },
-    
-    /**
-     * Render boards not in folders
-     */
-    renderBoards: function() {
-        const boardContainer = $('#boardContainer');
-        boardContainer.empty();
-        
-        // Get boards not in folders
-        const boards = BoardDAO.getByFolderId(null);
-        
-        // Add the "Add board" button for non-student mode
-        if (!AppData.studentMode) {
-            const addBoardButton = $(`
-                <div class="board editor-only add-board">
-                    <div class="board-preview">
-                        <i class="fas fa-plus"></i>
-                    </div>
-                    <div class="board-info">
-                        <div class="board-title">Neue Pinnwand erstellen</div>
-                    </div>
-                </div>
-            `);
-            
-            addBoardButton.on('click', function() {
-                Controllers.createBoard();
-            });
-            
-            boardContainer.append(addBoardButton);
-        }
-        
-        // If no boards, show message
-        if (boards.length === 0) {
-            if (AppData.studentMode) {
-                boardContainer.append(`
-                    <div class="text-center" style="grid-column: 1/-1; padding: 20px;">
-                        <p>Keine Pinnwände vorhanden.</p>
-                    </div>
-                `);
-            }
-            return;
-        }
-        
-        // Sort boards
-        const sortOrder = $('.sort-option.active').data('sort') || 'name';
-        this.sortBoards(boards, sortOrder);
-        
-        // Create board elements
-        boards.forEach(board => {
-            const boardElement = this.createBoardElement(board);
-            boardContainer.append(boardElement);
-        });
-    },
-    
-    /**
-     * Render boards in folder
-     * @param {string} folderId - Folder ID
-     */
-    renderBoardsInFolder: function(folderId) {
-        const boardContainer = $('#folderBoardContainer');
-        boardContainer.empty();
-        
-        // Get boards in folder
-        const boards = BoardDAO.getByFolderId(folderId);
-        
-        // Add the "Add board" button for non-student mode
-        if (!AppData.studentMode) {
-            const addBoardButton = $(`
-                <div class="board editor-only add-board">
-                    <div class="board-preview">
-                        <i class="fas fa-plus"></i>
-                    </div>
-                    <div class="board-info">
-                        <div class="board-title">Neue Pinnwand erstellen</div>
-                    </div>
-                </div>
-            `);
-            
-            addBoardButton.on('click', function() {
-                Controllers.createBoardInFolder(folderId);
-            });
-            
-            boardContainer.append(addBoardButton);
-        }
-        
-        // If no boards, show message
-        if (boards.length === 0) {
-            if (AppData.studentMode) {
-                boardContainer.append(`
-                    <div class="text-center" style="grid-column: 1/-1; padding: 20px;">
-                        <p>Keine Pinnwände in diesem Ordner.</p>
-                    </div>
-                `);
-            }
-            return;
-        }
-        
-        // Sort boards
-        const sortOrder = $('.sort-option.active').data('sort') || 'name';
-        this.sortBoards(boards, sortOrder);
-        
-        // Create board elements
-        boards.forEach(board => {
-            const boardElement = this.createBoardElement(board);
-            boardContainer.append(boardElement);
-        });
-    },
-    
-    /**
-     * Sort boards by given order
-     * @param {Array} boards - Array of board objects
-     * @param {string} order - Sort order (name or date)
+     * Boards sortieren
+     * @param {Array} boards - Array mit Board-Objekten
+     * @param {string} order - Sortierreihenfolge (name oder date)
      */
     sortBoards: function(boards, order) {
         if (order === 'name') {
@@ -536,108 +747,22 @@ const Views = {
     },
     
     /**
-     * Create board element
-     * @param {Object} board - Board object
-     * @returns {jQuery} Board element
-     */
-    createBoardElement: function(board) {
-        // Get card count
-        const cardCount = board.cards ? board.cards.length : 0;
-        
-        // Format date
-        const updatedDate = Utils.formatDate(board.updated);
-        
-        const boardElement = $(`
-            <div class="board" data-id="${board.id}">
-                <div class="board-preview" style="background-color: ${board.color}">
-                    <i class="fas fa-thumbtack"></i>
-                </div>
-                <div class="board-info">
-                    <div class="board-header">
-                        <div class="board-title">${board.name}</div>
-                        <div class="board-menu editor-only">
-                            <div class="board-menu-icon">
-                                <i class="fas fa-ellipsis-v"></i>
-                            </div>
-                            <div class="board-menu-dropdown">
-                                <div class="board-menu-item" data-action="edit">
-                                    <i class="fas fa-edit"></i> Bearbeiten
-                                </div>
-                                <div class="board-menu-item" data-action="delete">
-                                    <i class="fas fa-trash"></i> Löschen
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="board-meta">
-                        <div class="board-meta-item">
-                            <i class="fas fa-sticky-note"></i> ${cardCount} Karten
-                        </div>
-                        <div class="board-meta-item">
-                            <i class="fas fa-clock"></i> ${updatedDate}
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `);
-        
-        // If board has a background, add it to preview
-        if (board.background && (board.background.url || board.background.data)) {
-            const bgUrl = board.background.data || board.background.url;
-            boardElement.find('.board-preview').append(`
-                <img src="${bgUrl}" class="board-preview-image" alt="${board.name}">
-            `);
-        }
-        
-        // Open board on click
-        boardElement.on('click', function(e) {
-            if (!$(e.target).closest('.board-menu').length) {
-                const boardId = $(this).data('id');
-                Controllers.openBoard(boardId);
-            }
-        });
-        
-        // Board menu toggle
-        boardElement.find('.board-menu-icon').on('click', function(e) {
-            e.stopPropagation();
-            const dropdown = $(this).siblings('.board-menu-dropdown');
-            $('.board-menu-dropdown').not(dropdown).removeClass('show');
-            dropdown.toggleClass('show');
-        });
-        
-        // Board menu actions
-        boardElement.find('.board-menu-item').on('click', function(e) {
-            e.stopPropagation();
-            const action = $(this).data('action');
-            const boardId = $(this).closest('.board').data('id');
-            
-            if (action === 'edit') {
-                Controllers.editBoard(boardId);
-            } else if (action === 'delete') {
-                Controllers.deleteBoard(boardId);
-            }
-        });
-        
-        return boardElement;
-    },
-    
-    /**
-     * Render cards in grid view
-     * @param {Object} board - Board object
+     * Karten im Rasteransicht rendern
+     * @param {Object} board - Board-Objekt
      */
     renderCardsGrid: function(board) {
         const boardGrid = $('#boardGrid');
         
-        // Remove all cards except add button
+        // Alle Karten außer dem Hinzufügen-Button entfernen
         boardGrid.find('.card:not(.add-card)').remove();
         
         if (!board.cards || board.cards.length === 0) {
             return;
         }
         
-        // Create card elements
+        // Kartenelemente erstellen
         board.cards.forEach(card => {
-            // Skip cards that belong to a category in grid view
+            // Karten, die zu einer Kategorie gehören, in der Rasteransicht überspringen
             if (card.category) return;
             
             const cardElement = this.createCardElement(card, board.id);
@@ -646,8 +771,8 @@ const Views = {
     },
     
     /**
-     * Render cards in free position view
-     * @param {Object} board - Board object
+     * Karten in freier Positionsansicht rendern
+     * @param {Object} board - Board-Objekt
      */
     renderCardsFree: function(board) {
         const boardFree = $('#boardFree');
@@ -657,25 +782,25 @@ const Views = {
             return;
         }
         
-        // Create card elements with absolute positioning
+        // Kartenelemente mit absoluter Positionierung erstellen
         board.cards.forEach(card => {
             const cardElement = this.createCardElement(card, board.id);
             
-            // Apply absolute positioning
+            // Absolute Positionierung anwenden
             cardElement.css({
                 position: 'absolute',
                 width: card.width === 3 ? '600px' : (card.width === 2 ? '450px' : '300px'),
                 height: card.height === 3 ? '600px' : (card.height === 2 ? '400px' : '200px')
             });
             
-            // Apply saved position if available
+            // Gespeicherte Position anwenden, falls vorhanden
             if (card.position) {
                 cardElement.css({
                     left: card.position.left,
                     top: card.position.top
                 });
             } else {
-                // Default random position if none saved
+                // Standardmäßig zufällige Position, wenn keine gespeichert ist
                 const randomLeft = Math.floor(Math.random() * 300);
                 const randomTop = Math.floor(Math.random() * 300);
                 cardElement.css({
@@ -684,7 +809,7 @@ const Views = {
                 });
             }
             
-            // Add resize handle
+            // Größenänderungshandle hinzufügen
             cardElement.append(`
                 <div class="resize-handle">
                     <i class="fas fa-grip-lines-diagonal"></i>
@@ -694,15 +819,15 @@ const Views = {
             boardFree.append(cardElement);
         });
         
-        // Make cards draggable and resizable
+        // Karten ziehbar und größenänderbar machen
         this.initDraggableCards();
     },
     
     /**
-     * Initialize draggable and resizable cards
+     * Initialisiert ziehbare und größenänderbare Karten
      */
     initDraggableCards: function() {
-        // Make cards draggable
+        // Karten ziehbar machen
         $('#boardFree .card').draggable({
             containment: 'parent',
             handle: '.card-header',
@@ -711,7 +836,7 @@ const Views = {
                 const cardId = $(this).data('id');
                 const boardId = AppData.currentBoard.id;
                 
-                // Update card position in the database
+                // Kartenposition in der Datenbank aktualisieren
                 BoardDAO.updateCard(boardId, cardId, {
                     position: {
                         left: ui.position.left,
@@ -721,7 +846,7 @@ const Views = {
             }
         });
         
-        // Make cards resizable
+        // Karten größenänderbar machen
         $('#boardFree .card').resizable({
             handles: {
                 se: '.resize-handle'
@@ -734,7 +859,7 @@ const Views = {
                 const cardId = $(this).data('id');
                 const boardId = AppData.currentBoard.id;
                 
-                // Update card size in the database
+                // Kartengröße in der Datenbank aktualisieren
                 BoardDAO.updateCard(boardId, cardId, {
                     size: {
                         width: ui.size.width,
@@ -746,16 +871,16 @@ const Views = {
     },
     
     /**
-     * Render cards in categories view
-     * @param {Object} board - Board object
+     * Karten in Kategorienansicht rendern
+     * @param {Object} board - Board-Objekt
      */
     renderCardsCategories: function(board) {
         const boardCategories = $('#boardCategories');
         
-        // Remove all categories except add button
+        // Alle Kategorien außer dem Hinzufügen-Button entfernen
         boardCategories.find('.category').remove();
         
-        // Create "Uncategorized" section
+        // "Nicht kategorisiert"-Bereich erstellen
         const uncategorizedCards = board.cards ? board.cards.filter(card => !card.category) : [];
         if (uncategorizedCards.length > 0 || !AppData.studentMode) {
             const uncategorizedElement = $(`
@@ -774,7 +899,7 @@ const Views = {
                 categoryCards.append(cardElement);
             });
             
-            // Add placeholder if empty
+            // Platzhalter hinzufügen, wenn leer
             if (uncategorizedCards.length === 0) {
                 categoryCards.append(`
                     <div class="category-placeholder">Keine Karten in dieser Kategorie</div>
@@ -784,12 +909,12 @@ const Views = {
             uncategorizedElement.insertBefore($('#addCategoryBtn'));
         }
         
-        // Add defined categories
+        // Definierte Kategorien hinzufügen
         if (board.categories && board.categories.length > 0) {
             board.categories.forEach(category => {
                 const categoryCards = board.cards ? board.cards.filter(card => card.category === category.id) : [];
                 
-                // Skip empty categories in student mode
+                // Leere Kategorien im Schülermodus überspringen
                 if (categoryCards.length === 0 && AppData.studentMode) return;
                 
                 const categoryElement = $(`
@@ -812,14 +937,14 @@ const Views = {
                     categoryCardsContainer.append(cardElement);
                 });
                 
-                // Add placeholder if empty
+                // Platzhalter hinzufügen, wenn leer
                 if (categoryCards.length === 0) {
                     categoryCardsContainer.append(`
                         <div class="category-placeholder">Keine Karten in dieser Kategorie</div>
                     `);
                 }
                 
-                // Category actions
+                // Kategorie-Aktionen
                 categoryElement.find('.category-actions button').on('click', function() {
                     const action = $(this).data('action');
                     const categoryId = $(this).closest('.category').data('id');
@@ -835,12 +960,12 @@ const Views = {
             });
         }
         
-        // Initialize sortable for category cards
+        // Sortierbar für Kategorie-Karten initialisieren
         this.initSortableCategories();
     },
     
     /**
-     * Initialize sortable for category cards
+     * Initialisiert Sortierbarkeit für Kategorie-Karten
      */
     initSortableCategories: function() {
         if (AppData.studentMode) return;
@@ -856,7 +981,7 @@ const Views = {
                 const categoryId = ui.item.closest('.category').data('id') || '';
                 const boardId = AppData.currentBoard.id;
                 
-                // Update card category in the database
+                // Kartenkategorie in der Datenbank aktualisieren
                 BoardDAO.updateCard(boardId, cardId, {
                     category: categoryId
                 });
@@ -865,13 +990,13 @@ const Views = {
     },
     
     /**
-     * Create card element
-     * @param {Object} card - Card data
-     * @param {string} boardId - Board ID
-     * @returns {jQuery} Card element
+     * Kartenelement erstellen
+     * @param {Object} card - Kartendaten
+     * @param {string} boardId - Board-ID
+     * @returns {jQuery} Kartenelement
      */
     createCardElement: function(card, boardId) {
-        // Create base card element
+        // Basis-Kartenelement erstellen
         const cardElement = $(`
             <div class="card card-${card.color}" data-id="${card.id}">
                 <div class="card-content">
@@ -898,7 +1023,7 @@ const Views = {
         
         const cardContent = cardElement.find('.card-content');
         
-        // Apply custom color if set
+        // Benutzerdefinierte Farbe anwenden, falls gesetzt
         if (card.color === 'custom' && card.customColor) {
             cardElement.css({
                 'background-color': Utils.lightenColor(card.customColor, 0.9),
@@ -906,17 +1031,17 @@ const Views = {
             });
         }
         
-        // Apply width in grid view
+        // Breite in Rasteransicht anwenden
         if (AppData.view !== 'free' && card.width > 1) {
             cardElement.css('grid-column', `span ${card.width}`);
         }
         
-        // Apply height
+        // Höhe anwenden
         if (card.height > 1) {
             cardContent.css('min-height', card.height === 3 ? '400px' : '300px');
         }
         
-        // Apply custom size if available (in free view)
+        // Benutzerdefinierte Größe anwenden, falls vorhanden (in freier Ansicht)
         if (AppData.view === 'free' && card.size) {
             cardElement.css({
                 width: card.size.width,
@@ -924,12 +1049,12 @@ const Views = {
             });
         }
         
-        // Add card text content
+        // Kartentext-Inhalt hinzufügen
         if (card.content) {
             cardContent.append(`<div class="card-text">${card.content}</div>`);
         }
         
-        // Add type-specific content
+        // Typenspezifischen Inhalt hinzufügen
         if (card.type === 'youtube' && card.youtubeId) {
             cardContent.append(`
                 <div class="card-youtube" data-youtube-id="${card.youtubeId}">
@@ -940,12 +1065,12 @@ const Views = {
                 </div>
             `);
             
-            // Add click handler for play button
+            // Klick-Handler für Wiedergabe-Button hinzufügen
             cardElement.find('.play-button').on('click', function() {
                 const youtubeId = $(this).parent().data('youtube-id');
                 const youtubeContainer = $(this).parent();
                 
-                // Replace thumbnail with iframe
+                // Thumbnail durch iframe ersetzen
                 youtubeContainer.html(`
                     <iframe width="100%" height="100%" 
                         src="https://www.youtube.com/embed/${youtubeId}?autoplay=1" 
@@ -989,18 +1114,18 @@ const Views = {
             `);
         }
         
-        // Card menu toggle
+        // Karten-Menü-Toggle
         cardElement.find('.card-menu i').on('click', function(e) {
             e.stopPropagation();
             const dropdown = $(this).siblings('.card-menu-dropdown');
             
-            // Close all other dropdowns
+            // Alle anderen Dropdowns schließen
             $('.card-menu-dropdown.show').not(dropdown).removeClass('show');
             
             dropdown.toggleClass('show');
         });
         
-        // Card menu actions
+        // Karten-Menü-Aktionen
         cardElement.find('.card-menu-item').on('click', function(e) {
             e.stopPropagation();
             const action = $(this).data('action');
@@ -1019,17 +1144,17 @@ const Views = {
     },
     
     /**
-     * Update category dropdown in card modal
-     * @param {Object} board - Board object
+     * Kategorie-Dropdown in Karten-Modal aktualisieren
+     * @param {Object} board - Board-Objekt
      */
     updateCategoryDropdown: function(board) {
         const categorySelect = $('#cardCategory');
         categorySelect.empty();
         
-        // Add "No category" option
+        // "Keine Kategorie"-Option hinzufügen
         categorySelect.append('<option value="">Keine Kategorie</option>');
         
-        // Add categories
+        // Kategorien hinzufügen
         if (board.categories && board.categories.length > 0) {
             board.categories.forEach(category => {
                 categorySelect.append(`<option value="${category.id}">${category.name}</option>`);
@@ -1038,16 +1163,16 @@ const Views = {
     },
     
     /**
-     * Update folder select dropdown in board modal
+     * Ordner-Auswahlmenü im Board-Modal aktualisieren
      */
     updateFolderSelect: function() {
         const folderSelect = $('#boardFolderSelect');
         folderSelect.empty();
         
-        // Add "No folder" option
+        // "Kein Ordner"-Option hinzufügen
         folderSelect.append('<option value="">Kein Ordner</option>');
         
-        // Add folders
+        // Ordner hinzufügen
         const folders = FolderDAO.getAll();
         folders.forEach(folder => {
             folderSelect.append(`<option value="${folder.id}">${folder.name}</option>`);
@@ -1055,8 +1180,8 @@ const Views = {
     },
     
     /**
-     * Render categories list in category modal
-     * @param {Object} board - Board object
+     * Kategorieliste im Kategorie-Modal rendern
+     * @param {Object} board - Board-Objekt
      */
     renderCategoriesList: function(board) {
         const categoryList = $('#categoryList');
@@ -1078,12 +1203,12 @@ const Views = {
                 </div>
             `);
             
-            // Edit event
+            // Bearbeiten-Event
             categoryItem.find('button[data-action="edit"]').on('click', function() {
                 Controllers.editCategory(category.id);
             });
             
-            // Delete event
+            // Löschen-Event
             categoryItem.find('button[data-action="delete"]').on('click', function() {
                 Controllers.deleteCategory(category.id);
             });
@@ -1093,17 +1218,17 @@ const Views = {
     },
     
     /**
-     * Show confirmation modal
-     * @param {string} title - Modal title
-     * @param {string} message - Confirmation message
-     * @param {Function} callback - Function to call when confirmed
+     * Bestätigungsmodal anzeigen
+     * @param {string} title - Modal-Titel
+     * @param {string} message - Bestätigungsnachricht
+     * @param {Function} callback - Funktion, die bei Bestätigung aufgerufen wird
      */
     showConfirmModal: function(title, message, callback) {
-        // Set title and message
+        // Titel und Nachricht setzen
         $('#confirmTitle').text(title);
         $('#confirmMessage').text(message);
         
-        // Set confirm button action
+        // Bestätigungsbutton-Aktion setzen
         $('#confirmBtn').off('click').on('click', function() {
             $('#confirmModal').hide();
             if (typeof callback === 'function') {
@@ -1111,7 +1236,7 @@ const Views = {
             }
         });
         
-        // Show modal
+        // Modal anzeigen
         $('#confirmModal').show();
     }
 };

@@ -1,98 +1,98 @@
 /**
- * Main application initialization for Taskcard-Manager
+ * Hauptinitialisierung für PadCard-Manager
  */
 
-// Initialize application when document is ready
+// Anwendung initialisieren, wenn das Dokument bereit ist
 $(document).ready(function() {
-    // Initialize views
+    // Views initialisieren
     Views.init();
     
-    // Initialize controllers
+    // Controller initialisieren
     Controllers.init();
     
-    // Load data from localStorage or create default data
+    // Daten aus localStorage laden oder Standarddaten erstellen
     if (!StorageService.loadAppData()) {
         StorageService.initDefaultData();
     }
     
-    // Check URL parameters for student mode, board or folder
+    // URL-Parameter für Schülermodus, Board oder Ordner prüfen
     Controllers.checkUrlParams();
     
-    // Render initial view (home by default)
-    Views.renderHomeView();
+    // Initialer View rendern (Startseite standardmäßig)
+    Views.renderLatestActivitiesView();
     
-    // Prevent accidental navigation away
+    // Versehentliche Navigation verhindern
     window.addEventListener('beforeunload', function(e) {
-        // Skip confirmation in student mode
+        // Bestätigung im Schülermodus überspringen
         if (AppData.studentMode) return;
         
-        // Only show confirmation if we're in a board and editing
+        // Bestätigungsdialog nur anzeigen, wenn wir in einem Board und im Bearbeitungsmodus sind
         if (AppData.view === 'board' && !AppData.studentMode) {
-            // Show confirmation dialog
+            // Bestätigungsdialog anzeigen
             e.preventDefault();
             e.returnValue = '';
             return '';
         }
     });
     
-    // Handle keyboard shortcuts
+    // Tastenkombinationen behandeln
     $(document).on('keydown', function(e) {
-        // ESC to close modals
+        // ESC zum Schließen von Modals
         if (e.key === 'Escape') {
             $('.modal-overlay').hide();
         }
         
-        // Only process other shortcuts if not in input/textarea
+        // Andere Tastenkombinationen nur verarbeiten, wenn nicht in input/textarea
         if ($(e.target).is('input, textarea, select')) return;
         
-        // CTRL+N to create new card in board view
+        // STRG+N zum Erstellen einer neuen Karte in Board-Ansicht
         if (e.ctrlKey && e.key === 'n' && AppData.view === 'board' && !AppData.studentMode) {
             e.preventDefault();
             Controllers.createCard();
         }
         
-        // CTRL+B to toggle student mode
+        // STRG+B zum Umschalten des Schülermodus
         if (e.ctrlKey && e.key === 'b') {
             e.preventDefault();
             $('#studentModeToggle').prop('checked', !$('#studentModeToggle').prop('checked')).trigger('change');
         }
         
-        // CTRL+F to focus search
+        // STRG+F zum Fokussieren der Suche
         if (e.ctrlKey && e.key === 'f' && AppData.view === 'board') {
             e.preventDefault();
             $('#searchInput').focus();
         }
         
-        // CTRL+S to share
+        // STRG+S zum Teilen
         if (e.ctrlKey && e.key === 's') {
             e.preventDefault();
             Controllers.openShareModal();
         }
     });
     
-    // Show welcome message for first-time users
-    if (localStorage.getItem('taskcard-first-visit') !== 'false') {
+    // Willkommensnachricht für Erstbenutzer anzeigen
+    if (localStorage.getItem('padcard-first-visit') !== 'false') {
         showWelcomeMessage();
-        localStorage.setItem('taskcard-first-visit', 'false');
+        localStorage.setItem('padcard-first-visit', 'false');
     }
 });
 
 /**
- * Show welcome message for first-time users
+ * Willkommensnachricht für Erstbenutzer anzeigen
  */
 function showWelcomeMessage() {
-    // Create welcome modal
+    // Willkommens-Modal erstellen
     const welcomeModal = $(`
         <div class="modal-overlay" id="welcomeModal" style="display: flex;">
             <div class="modal">
                 <div class="modal-header">
-                    <div class="modal-title">Willkommen beim Taskcard-Manager!</div>
+                    <div class="modal-title">Willkommen beim PadCard-Manager!</div>
                     <button class="modal-close" id="closeWelcomeModal">&times;</button>
                 </div>
                 <div class="modal-body">
-                    <p>Herzlich willkommen beim neuen Taskcard-Manager! Mit dieser Anwendung kannst du:</p>
+                    <p>Herzlich willkommen beim neuen PadCard-Manager! Mit dieser Anwendung kannst du:</p>
                     <ul style="margin-left: 20px; margin-bottom: 15px;">
-                        <li>Ordner und Pinnwände erstellen, um deine Inhalte zu organisieren</li>
+                        <li>Ordner und Padlets erstellen, um deine Inhalte zu organisieren</li>
                         <li>Verschiedene Arten von Karten erstellen (Text, YouTube, Bilder, Links, LearningApps, Audio)</li>
                         <li>Karten in verschiedenen Ansichten anzeigen (Raster, Frei positionierbar, Kategorien)</li>
                         <li>Inhalte im Schülermodus teilen</li>
@@ -100,11 +100,11 @@ function showWelcomeMessage() {
                     
                     <p>Hier sind einige Tipps, um schnell loszulegen:</p>
                     <ol style="margin-left: 20px; margin-bottom: 15px;">
-                        <li>Erstelle einen Ordner, um Pinnwände zu gruppieren</li>
-                        <li>Erstelle eine Pinnwand und füge Karten hinzu</li>
+                        <li>Erstelle einen Ordner in der Seitenleiste, um deine Padlets zu gruppieren</li>
+                        <li>Erstelle ein Padlet und füge Karten hinzu</li>
                         <li>Wechsle zwischen verschiedenen Ansichten (Raster, Frei, Kategorien)</li>
                         <li>Aktiviere den Schülermodus, um zu sehen, wie deine Inhalte für Schüler aussehen</li>
-                        <li>Teile deine Pinnwände mit dem Teilen-Button</li>
+                        <li>Teile deine Padlets mit dem Teilen-Button</li>
                     </ol>
                     
                     <p>Tastenkombinationen:</p>
@@ -123,10 +123,10 @@ function showWelcomeMessage() {
         </div>
     `);
     
-    // Append to body
+    // Zum Body hinzufügen
     $('body').append(welcomeModal);
     
-    // Close button event
+    // Schließen-Button-Event
     $('#closeWelcomeModal, #startUsingAppBtn').on('click', function() {
         $('#welcomeModal').remove();
     });

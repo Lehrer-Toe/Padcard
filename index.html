@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Taskcard-Manager</title>
+    <title>PadCard-Manager</title>
     
     <!-- Externe Bibliotheken -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
@@ -17,167 +17,208 @@
 </head>
 <body>
     <div id="app">
-        <!-- Navigation Bereich -->
-        <div id="nav-container">
-            <div class="breadcrumb">
-                <span class="breadcrumb-home" data-id="home"><i class="fas fa-home"></i></span>
-                <span class="breadcrumb-separator">/</span>
-                <span class="breadcrumb-current">Meine Boards</span>
+        <!-- Sidebar -->
+        <div id="sidebar">
+            <div class="sidebar-header">
+                <img src="padcard-logo.png" alt="PadCard" class="logo">
+                <h1>PadCard</h1>
             </div>
-            <div class="right-controls">
-                <div class="toggle-container">
-                    <span class="toggle-label">Schülermodus</span>
-                    <label class="toggle">
-                        <input type="checkbox" id="studentModeToggle">
-                        <span class="toggle-slider"></span>
-                    </label>
+            
+            <div class="sidebar-search">
+                <div class="search-container">
+                    <i class="fas fa-search"></i>
+                    <input type="text" placeholder="Padlets suchen" id="sidebarSearch">
                 </div>
-                <button class="btn" id="shareBtn">
-                    <i class="fas fa-share-alt"></i> Teilen
-                </button>
-                <div class="dropdown">
-                    <button class="btn dropdown-toggle">
-                        <i class="fas fa-cog"></i> Einstellungen
+            </div>
+            
+            <div class="sidebar-menu">
+                <div class="sidebar-item active" id="menuLatestActivity">
+                    <i class="fas fa-clock"></i>
+                    <span>Neueste Aktivitäten</span>
+                </div>
+                
+                <div class="sidebar-item" id="menuMyPadcards">
+                    <i class="fas fa-user"></i>
+                    <span>Von mir erstellt</span>
+                </div>
+                
+                <div class="sidebar-item" id="menuFavorites">
+                    <i class="fas fa-star"></i>
+                    <span>Favoriten</span>
+                </div>
+                
+                <div class="sidebar-item" id="menuTrash">
+                    <i class="fas fa-trash"></i>
+                    <span>In den Papierkorb verschoben</span>
+                </div>
+            </div>
+            
+            <div class="sidebar-divider">
+                <span>Lesezeichen</span>
+            </div>
+            
+            <div class="sidebar-folders" id="folderList">
+                <!-- Dynamisch gefüllte Ordnerliste -->
+            </div>
+            
+            <div class="sidebar-item new-folder" id="newFolderBtn">
+                <i class="fas fa-folder-plus"></i>
+                <span>Neuer Ordner</span>
+            </div>
+            
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <div class="user-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="user-name">Mein Account</div>
+                </div>
+                
+                <div class="sidebar-toggle" id="sidebarToggle">
+                    <i class="fas fa-chevron-left"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div id="main-content">
+            <!-- Header Area -->
+            <div id="header">
+                <div class="page-title" id="pageTitle">Neueste Aktivitäten</div>
+                <div class="header-controls">
+                    <div class="toggle-container">
+                        <span class="toggle-label">Schülermodus</span>
+                        <label class="toggle">
+                            <input type="checkbox" id="studentModeToggle">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    <button class="btn" id="shareBtn">
+                        <i class="fas fa-share-alt"></i> Teilen
                     </button>
-                    <div class="dropdown-menu">
-                        <a href="#" id="exportBtn"><i class="fas fa-download"></i> Exportieren</a>
-                        <label for="importFile"><i class="fas fa-upload"></i> Importieren</label>
-                        <input type="file" id="importFile" style="display: none;" accept=".json">
-                        <a href="#" id="backgroundBtn"><i class="fas fa-image"></i> Hintergrundbild</a>
-                        <a href="#" id="settingsBtn"><i class="fas fa-sliders-h"></i> Einstellungen</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Home View (Ordner und Pinnwände) -->
-        <div id="home-view">
-            <!-- Ordner Sektion -->
-            <div class="section-container">
-                <div class="section-header">
-                    <h2><i class="fas fa-folder"></i> Ordner</h2>
-                    <div class="section-controls editor-only">
-                        <button class="btn btn-primary" id="newFolderBtn">
-                            <i class="fas fa-plus"></i> Neuer Ordner
+                    <div class="dropdown">
+                        <button class="btn dropdown-toggle">
+                            <i class="fas fa-cog"></i>
                         </button>
+                        <div class="dropdown-menu">
+                            <a href="#" id="exportBtn"><i class="fas fa-download"></i> Exportieren</a>
+                            <label for="importFile"><i class="fas fa-upload"></i> Importieren</label>
+                            <input type="file" id="importFile" style="display: none;" accept=".json">
+                            <a href="#" id="settingsBtn"><i class="fas fa-sliders-h"></i> Einstellungen</a>
+                        </div>
                     </div>
                 </div>
-                <div class="folder-container" id="folderContainer">
-                    <!-- Ordner werden dynamisch hinzugefügt -->
-                </div>
             </div>
-
-            <!-- Pinnwände Sektion -->
-            <div class="section-container">
-                <div class="section-header">
-                    <h2><i class="fas fa-thumbtack"></i> Pinnwände</h2>
-                    <div class="section-controls editor-only">
-                        <div class="sort-controls">
-                            <span>Sortieren nach:</span>
-                            <a href="#" class="sort-option active" data-sort="name">Name</a>
-                            <span class="separator">|</span>
-                            <a href="#" class="sort-option" data-sort="date">Datum</a>
-                        </div>
-                        <button class="btn btn-primary" id="newBoardBtn">
-                            <i class="fas fa-plus"></i> Neue Pinnwand
-                        </button>
+            
+            <!-- Latest Activities View (Home) -->
+            <div id="latest-activities-view">
+                <!-- Container für die Sortieroptionen und den Erstellen-Button -->
+                <div class="view-controls">
+                    <div class="view-sorting">
+                        <span>Sortieren nach:</span>
+                        <a href="#" class="sort-option active" data-sort="name">Name</a>
+                        <span class="separator">|</span>
+                        <a href="#" class="sort-option" data-sort="date">Datum</a>
                     </div>
+                    <button class="btn btn-primary" id="createNewBtn">
+                        <i class="fas fa-plus"></i> Ein Padlet erstellen
+                    </button>
                 </div>
-                <div class="board-container" id="boardContainer">
-                    <!-- Pinnwände werden dynamisch hinzugefügt -->
+                
+                <!-- Container für Karten -->
+                <div class="activity-container" id="activityContainer">
+                    <!-- Karten werden dynamisch eingefügt -->
                 </div>
             </div>
-        </div>
-
-        <!-- Folder View (Zeigt Pinnwände innerhalb eines Ordners) -->
-        <div id="folder-view" class="hidden">
-            <div class="section-container">
-                <div class="section-header">
-                    <h2 id="folderTitle"></h2>
-                    <div class="section-controls editor-only">
-                        <div class="sort-controls">
-                            <span>Sortieren nach:</span>
-                            <a href="#" class="sort-option active" data-sort="name">Name</a>
-                            <span class="separator">|</span>
-                            <a href="#" class="sort-option" data-sort="date">Datum</a>
-                        </div>
+            
+            <!-- Folder View -->
+            <div id="folder-view" class="hidden">
+                <div class="view-controls">
+                    <div class="view-sorting">
+                        <span>Sortieren nach:</span>
+                        <a href="#" class="sort-option active" data-sort="name">Name</a>
+                        <span class="separator">|</span>
+                        <a href="#" class="sort-option" data-sort="date">Datum</a>
+                    </div>
+                    <div class="folder-controls">
                         <button class="btn btn-secondary" id="editFolderBtn">
                             <i class="fas fa-edit"></i> Ordner bearbeiten
                         </button>
                         <button class="btn btn-primary" id="newBoardInFolderBtn">
-                            <i class="fas fa-plus"></i> Neue Pinnwand
+                            <i class="fas fa-plus"></i> Neues Padlet
                         </button>
                     </div>
-                </div>
-                <div class="board-container" id="folderBoardContainer">
-                    <!-- Pinnwände werden dynamisch hinzugefügt -->
-                </div>
-            </div>
-        </div>
-
-        <!-- Board View (Pinnwand mit Karten) -->
-        <div id="board-view" class="hidden">
-            <div class="board-header">
-                <div class="board-title-container">
-                    <h2 id="boardTitle"></h2>
-                    <button class="btn editor-only" id="editBoardTitleBtn">
-                        <i class="fas fa-edit"></i>
-                    </button>
                 </div>
                 
-                <div class="board-controls">
-                    <div class="view-selector editor-only">
-                        <button class="view-btn active" data-view="grid">
-                            <i class="fas fa-th"></i> Raster
-                        </button>
-                        <button class="view-btn" data-view="free">
-                            <i class="fas fa-expand"></i> Frei
-                        </button>
-                        <button class="view-btn" data-view="categories">
-                            <i class="fas fa-folder-open"></i> Kategorien
-                        </button>
-                    </div>
-                    <div class="grid-controls">
-                        <button class="layout-btn active" data-columns="3">
-                            <i class="fas fa-grip-vertical"></i>
-                        </button>
-                        <button class="layout-btn" data-columns="2">
-                            <i class="fas fa-grip-horizontal"></i>
-                        </button>
-                        <button class="layout-btn" data-columns="1">
-                            <i class="fas fa-list"></i>
-                        </button>
-                    </div>
-                    <div class="search-bar">
-                        <i class="fas fa-search"></i>
-                        <input type="text" placeholder="Suchen..." id="searchInput">
-                    </div>
-                    <button class="btn btn-primary editor-only" id="newCardBtn">
-                        <i class="fas fa-plus"></i> Neue Karte
-                    </button>
+                <div class="folder-padlets" id="folderPadletsContainer">
+                    <!-- Padlets im Ordner werden dynamisch eingefügt -->
                 </div>
             </div>
-
-            <!-- Grid board -->
-            <div class="board-grid active" id="boardGrid">
-                <!-- Karten werden dynamisch hinzugefügt -->
-                <div class="add-card editor-only" id="addCardBtnGrid">
-                    <i class="fas fa-plus"></i>
-                    <div class="add-card-text">Neue Karte hinzufügen</div>
+            
+            <!-- Board View -->
+            <div id="board-view" class="hidden">
+                <div class="board-header">
+                    <div class="board-title-container">
+                        <h2 id="boardTitle"></h2>
+                        <button class="btn editor-only" id="editBoardTitleBtn">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="board-controls">
+                        <div class="view-selector editor-only">
+                            <button class="view-btn active" data-view="grid">
+                                <i class="fas fa-th"></i> Raster
+                            </button>
+                            <button class="view-btn" data-view="free">
+                                <i class="fas fa-expand"></i> Frei
+                            </button>
+                            <button class="view-btn" data-view="categories">
+                                <i class="fas fa-folder-open"></i> Kategorien
+                            </button>
+                        </div>
+                        <div class="grid-controls">
+                            <button class="layout-btn active" data-columns="3">
+                                <i class="fas fa-grip-vertical"></i>
+                            </button>
+                            <button class="layout-btn" data-columns="2">
+                                <i class="fas fa-grip-horizontal"></i>
+                            </button>
+                            <button class="layout-btn" data-columns="1">
+                                <i class="fas fa-list"></i>
+                            </button>
+                        </div>
+                        <div class="search-bar">
+                            <i class="fas fa-search"></i>
+                            <input type="text" placeholder="Suchen..." id="searchInput">
+                        </div>
+                        <button class="btn btn-primary editor-only" id="newCardBtn">
+                            <i class="fas fa-plus"></i> Neue Karte
+                        </button>
+                    </div>
                 </div>
-            </div>
 
-            <!-- Free position board -->
-            <div class="board-free hidden" id="boardFree">
-                <!-- Karten werden dynamisch hinzugefügt mit absoluter Positionierung -->
-            </div>
+                <!-- Grid board -->
+                <div class="board-grid active" id="boardGrid">
+                    <!-- Karten werden dynamisch hinzugefügt -->
+                    <div class="add-card editor-only" id="addCardBtnGrid">
+                        <i class="fas fa-plus"></i>
+                        <div class="add-card-text">Neue Karte hinzufügen</div>
+                    </div>
+                </div>
 
-            <!-- Categories board -->
-            <div class="board-categories hidden" id="boardCategories">
-                <!-- Kategorien werden dynamisch hinzugefügt -->
-                <div class="add-category editor-only" id="addCategoryBtn">
-                    <i class="fas fa-plus"></i>
-                    <div class="add-category-text">Neue Kategorie hinzufügen</div>
+                <!-- Free position board -->
+                <div class="board-free hidden" id="boardFree">
+                    <!-- Karten werden dynamisch hinzugefügt mit absoluter Positionierung -->
+                </div>
+
+                <!-- Categories board -->
+                <div class="board-categories hidden" id="boardCategories">
+                    <!-- Kategorien werden dynamisch hinzugefügt -->
+                    <div class="add-category editor-only" id="addCategoryBtn">
+                        <i class="fas fa-plus"></i>
+                        <div class="add-category-text">Neue Kategorie hinzufügen</div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -213,13 +254,13 @@
         <div class="modal-overlay" id="boardModal">
             <div class="modal">
                 <div class="modal-header">
-                    <div class="modal-title" id="boardModalTitle">Neue Pinnwand</div>
+                    <div class="modal-title" id="boardModalTitle">Neues Padlet</div>
                     <button class="modal-close" id="closeBoardModal">&times;</button>
                 </div>
                 <div class="modal-body">
                     <div class="form-group">
                         <label for="boardTitleInput">Titel</label>
-                        <input type="text" class="form-control" id="boardTitleInput" placeholder="Pinnwand-Titel">
+                        <input type="text" class="form-control" id="boardTitleInput" placeholder="Padlet-Titel">
                     </div>
                     <div class="form-group">
                         <label>Farbe</label>
