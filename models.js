@@ -1,5 +1,5 @@
 /**
- * Data Models and Storage for Taskcard-Manager
+ * Data Models and Storage for snapWall
  * 
  * This file contains the data structures and storage logic for the application.
  */
@@ -40,10 +40,11 @@ const DefaultColors = {
 
 // Data Models
 class Folder {
-    constructor(id, name, color) {
+    constructor(id, name, color, parentId) {
         this.id = id || `folder-${Date.now()}`;
         this.name = name || 'Neuer Ordner';
         this.color = color || '#2196F3';
+        this.parentId = parentId || null; // Übergeordneter Ordner
         this.created = new Date().toISOString();
         this.updated = this.created;
     }
@@ -52,7 +53,7 @@ class Folder {
 class Board {
     constructor(id, name, color, folderId) {
         this.id = id || `board-${Date.now()}`;
-        this.name = name || 'Neue Pinnwand';
+        this.name = name || 'Neuer Snap';
         this.color = color || '#4CAF50';
         this.folderId = folderId || null;
         this.cards = [];
@@ -60,6 +61,7 @@ class Board {
         this.layout = 3;
         this.view = 'grid';
         this.background = null;
+        this.previewImage = null; // Für Vorschaubild
         this.created = new Date().toISOString();
         this.updated = this.created;
     }
@@ -70,6 +72,9 @@ class Card {
         this.id = options.id || `card-${Date.now()}`;
         this.title = options.title || 'Neue Karte';
         this.content = options.content || '';
+        this.textAlignment = options.textAlignment || 'left'; // 'left', 'center', 'right'
+        this.fontSize = options.fontSize || 'normal'; // 'small', 'normal', 'large'
+        this.textColors = options.textColors || {}; // { textPart: color }
         this.type = options.type || 'text';
         this.color = options.color || 'blue';
         this.customColor = options.customColor || '';
@@ -123,7 +128,7 @@ const StorageService = {
      * Save all application data to localStorage
      */
     saveAppData: function() {
-        localStorage.setItem('taskcard-manager-data', JSON.stringify({
+        localStorage.setItem('snapwall-data', JSON.stringify({
             folders: AppData.folders,
             boards: AppData.boards,
             studentMode: AppData.studentMode
@@ -134,7 +139,7 @@ const StorageService = {
      * Load application data from localStorage
      */
     loadAppData: function() {
-        const savedData = localStorage.getItem('taskcard-manager-data');
+        const savedData = localStorage.getItem('snapwall-data') || localStorage.getItem('taskcard-manager-data');
         if (savedData) {
             try {
                 const parsedData = JSON.parse(savedData);
@@ -143,6 +148,24 @@ const StorageService = {
                 AppData.folders = parsedData.folders || [];
                 AppData.boards = parsedData.boards || [];
                 AppData.studentMode = parsedData.studentMode || false;
+                
+                // Upgrade folder model with parentId if not exists
+                AppData.folders.forEach(folder => {
+                    if (folder.parentId === undefined) {
+                        folder.parentId = null;
+                    }
+                });
+                
+                // Upgrade card model with text formatting if not exists
+                AppData.boards.forEach(board => {
+                    if (board.cards) {
+                        board.cards.forEach(card => {
+                            if (card.textAlignment === undefined) card.textAlignment = 'left';
+                            if (card.fontSize === undefined) card.fontSize = 'normal';
+                            if (card.textColors === undefined) card.textColors = {};
+                        });
+                    }
+                });
                 
                 return true;
             } catch (error) {
@@ -160,7 +183,8 @@ const StorageService = {
         // Create default folders
         AppData.folders = [
             new Folder('folder-1', 'Fächer', '#9c27b0'),
-            new Folder('folder-2', 'Projekte', '#2196F3')
+            new Folder('folder-2', 'Projekte', '#2196F3'),
+            new Folder('folder-3', 'Unterordner', '#4CAF50', 'folder-2')
         ];
         
         // Create default boards
@@ -189,7 +213,7 @@ const StorageService = {
         
         const a = document.createElement('a');
         a.href = url;
-        a.download = `taskcard-manager-export-${new Date().toISOString().slice(0, 10)}.json`;
+        a.download = `snapwall-export-${new Date().toISOString().slice(0, 10)}.json`;
         document.body.appendChild(a);
         a.click();
         
@@ -212,6 +236,24 @@ const StorageService = {
         AppData.folders = data.folders;
         AppData.boards = data.boards;
         
+        // Upgrade folder model with parentId if not exists
+        AppData.folders.forEach(folder => {
+            if (folder.parentId === undefined) {
+                folder.parentId = null;
+            }
+        });
+        
+        // Upgrade card model with text formatting if not exists
+        AppData.boards.forEach(board => {
+            if (board.cards) {
+                board.cards.forEach(card => {
+                    if (card.textAlignment === undefined) card.textAlignment = 'left';
+                    if (card.fontSize === undefined) card.fontSize = 'normal';
+                    if (card.textColors === undefined) card.textColors = {};
+                });
+            }
+        });
+        
         this.saveAppData();
         return true;
     }
@@ -230,6 +272,23 @@ const FolderDAO = {
     },
     
     /**
+     * Get all root folders (without parent)
+     * @returns {Array} Array of root folder objects
+     */
+    getRootFolders: function() {
+        return AppData.folders.filter(folder => !folder.parentId);
+    },
+    
+    /**
+     * Get child folders by parent ID
+     * @param {string} parentId - Parent folder ID
+     * @returns {Array} Array of child folder objects
+     */
+    getChildFolders: function(parentId) {
+        return AppData.folders.filter(folder => folder.parentId === parentId);
+    },
+    
+    /**
      * Get folder by ID
      * @param {string} id - Folder ID
      * @returns {Object|null} Folder object or null if not found
@@ -242,10 +301,11 @@ const FolderDAO = {
      * Create new folder
      * @param {string} name - Folder name
      * @param {string} color - Folder color
+     * @param {string|null} parentId - Parent folder ID or null
      * @returns {Object} Created folder object
      */
-    create: function(name, color) {
-        const folder = new Folder(null, name, color);
+    create: function(name, color, parentId) {
+        const folder = new Folder(null, name, color, parentId);
         AppData.folders.push(folder);
         StorageService.saveAppData();
         return folder;
@@ -277,6 +337,9 @@ const FolderDAO = {
         const index = AppData.folders.findIndex(folder => folder.id === id);
         if (index === -1) return false;
         
+        // Get folder children
+        const childFolders = this.getChildFolders(id);
+        
         // Remove folder
         AppData.folders.splice(index, 1);
         
@@ -287,8 +350,30 @@ const FolderDAO = {
             }
         });
         
+        // Update child folders (set parentId to null or parent's parent)
+        const deletedFolder = AppData.folders[index];
+        childFolders.forEach(child => {
+            this.update(child.id, { parentId: deletedFolder ? deletedFolder.parentId : null });
+        });
+        
         StorageService.saveAppData();
         return true;
+    },
+    
+    /**
+     * Prüft, ob ein Ordner ein Vorfahre eines anderen Ordners ist
+     * @param {string} folderId - Zu prüfender Ordner
+     * @param {string} potentialAncestorId - Potenzieller Vorfahre
+     * @returns {boolean} True wenn potentialAncestorId ein Vorfahre von folderId ist
+     */
+    isAncestor: function(folderId, potentialAncestorId) {
+        if (!folderId || !potentialAncestorId) return false;
+        if (folderId === potentialAncestorId) return true;
+        
+        const folder = this.getById(folderId);
+        if (!folder || !folder.parentId) return false;
+        
+        return this.isAncestor(folder.parentId, potentialAncestorId);
     }
 };
 
@@ -327,10 +412,20 @@ const BoardDAO = {
      * @param {string} name - Board name
      * @param {string} color - Board color
      * @param {string|null} folderId - Folder ID or null
+     * @param {Object} options - Additional options like background and previewImage
      * @returns {Object} Created board object
      */
-    create: function(name, color, folderId) {
+    create: function(name, color, folderId, options = {}) {
         const board = new Board(null, name, color, folderId);
+        
+        if (options.background) {
+            board.background = options.background;
+        }
+        
+        if (options.previewImage) {
+            board.previewImage = options.previewImage;
+        }
+        
         AppData.boards.push(board);
         StorageService.saveAppData();
         return board;
@@ -360,6 +455,11 @@ const BoardDAO = {
         if (updates.background !== undefined) {
             board.background = updates.background;
             delete updates.background;
+        }
+        
+        if (updates.previewImage !== undefined) {
+            board.previewImage = updates.previewImage;
+            delete updates.previewImage;
         }
         
         Object.assign(board, updates);
@@ -541,6 +641,23 @@ const BoardDAO = {
         
         StorageService.saveAppData();
         return true;
+    },
+    
+    /**
+     * Set preview image for board
+     * @param {string} boardId - Board ID
+     * @param {string} imageData - Base64 image data
+     * @returns {boolean} Success status
+     */
+    setPreviewImage: function(boardId, imageData) {
+        const board = this.getById(boardId);
+        if (!board) return false;
+        
+        board.previewImage = imageData;
+        board.updated = new Date().toISOString();
+        
+        StorageService.saveAppData();
+        return true;
     }
 };
 
@@ -660,5 +777,57 @@ const Utils = {
         
         // Convert back to hex
         return `rgb(${r}, ${g}, ${b})`;
+    },
+    
+    /**
+     * Holt alle Vorfahren eines Ordners
+     * @param {string} folderId - Ordner-ID 
+     * @returns {Array} Array aller Vorfahren, beginnend mit dem unmittelbaren Elternteil
+     */
+    getFolderAncestors: function(folderId) {
+        const ancestors = [];
+        let folder = FolderDAO.getById(folderId);
+        
+        while (folder && folder.parentId) {
+            const parent = FolderDAO.getById(folder.parentId);
+            if (parent) {
+                ancestors.push(parent);
+                folder = parent;
+            } else {
+                break;
+            }
+        }
+        
+        return ancestors;
+    },
+    
+    /**
+     * Formatiert Text mit den angegebenen Formatierungen
+     * @param {string} text - Der zu formatierende Text
+     * @param {string} align - Textausrichtung ('left', 'center', 'right')
+     * @param {string} size - Textgröße ('small', 'normal', 'large')
+     * @param {Object} colors - Objekt mit Textteilen und Farben
+     * @returns {string} Formatierter HTML-Text
+     */
+    formatText: function(text, align, size, colors) {
+        if (!text) return '';
+        
+        let formattedText = text;
+        
+        // Textteil-Farben anwenden
+        if (colors && Object.keys(colors).length > 0) {
+            for (const [textPart, color] of Object.entries(colors)) {
+                const regex = new RegExp(textPart.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g');
+                formattedText = formattedText.replace(regex, `<span style="color:${color}">${textPart}</span>`);
+            }
+        }
+        
+        // Größen-Klassen definieren
+        const sizeClass = 
+            size === 'small' ? 'text-small' : 
+            size === 'large' ? 'text-large' : '';
+        
+        // HTML generieren
+        return `<div class="${sizeClass}" style="text-align:${align}">${formattedText}</div>`;
     }
 };

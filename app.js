@@ -1,5 +1,5 @@
 /**
- * Hauptinitialisierung für PadCard-Manager
+ * Hauptinitialisierung für snapWall
  */
 
 // Anwendung initialisieren, wenn das Dokument bereit ist
@@ -71,9 +71,9 @@ $(document).ready(function() {
     });
     
     // Willkommensnachricht für Erstbenutzer anzeigen
-    if (localStorage.getItem('padcard-first-visit') !== 'false') {
+    if (localStorage.getItem('snapwall-first-visit') !== 'false') {
         showWelcomeMessage();
-        localStorage.setItem('padcard-first-visit', 'false');
+        localStorage.setItem('snapwall-first-visit', 'false');
     }
 });
 
@@ -86,13 +86,13 @@ function showWelcomeMessage() {
         <div class="modal-overlay" id="welcomeModal" style="display: flex;">
             <div class="modal">
                 <div class="modal-header">
-                    <div class="modal-title">Willkommen beim PadCard-Manager!</div>
+                    <div class="modal-title">Willkommen bei snapWall!</div>
                     <button class="modal-close" id="closeWelcomeModal">&times;</button>
                 </div>
                 <div class="modal-body">
-                    <p>Herzlich willkommen beim neuen PadCard-Manager! Mit dieser Anwendung kannst du:</p>
+                    <p>Herzlich willkommen bei snapWall! Mit dieser Anwendung kannst du:</p>
                     <ul style="margin-left: 20px; margin-bottom: 15px;">
-                        <li>Ordner und Padlets erstellen, um deine Inhalte zu organisieren</li>
+                        <li>Ordner und Snaps erstellen, um deine Inhalte zu organisieren</li>
                         <li>Verschiedene Arten von Karten erstellen (Text, YouTube, Bilder, Links, LearningApps, Audio)</li>
                         <li>Karten in verschiedenen Ansichten anzeigen (Raster, Frei positionierbar, Kategorien)</li>
                         <li>Inhalte im Schülermodus teilen</li>
@@ -100,11 +100,11 @@ function showWelcomeMessage() {
                     
                     <p>Hier sind einige Tipps, um schnell loszulegen:</p>
                     <ol style="margin-left: 20px; margin-bottom: 15px;">
-                        <li>Erstelle einen Ordner in der Seitenleiste, um deine Padlets zu gruppieren</li>
-                        <li>Erstelle ein Padlet und füge Karten hinzu</li>
+                        <li>Erstelle einen Ordner in der Seitenleiste, um deine Snaps zu gruppieren</li>
+                        <li>Erstelle einen Snap und füge Karten hinzu</li>
                         <li>Wechsle zwischen verschiedenen Ansichten (Raster, Frei, Kategorien)</li>
                         <li>Aktiviere den Schülermodus, um zu sehen, wie deine Inhalte für Schüler aussehen</li>
-                        <li>Teile deine Padlets mit dem Teilen-Button</li>
+                        <li>Teile deine Snaps mit dem Teilen-Button</li>
                     </ol>
                     
                     <p>Tastenkombinationen:</p>

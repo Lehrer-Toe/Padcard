@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PadCard-Manager</title>
+    <title>snapWall</title>
     
     <!-- Externe Bibliotheken -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
@@ -20,14 +20,14 @@
         <!-- Sidebar -->
         <div id="sidebar">
             <div class="sidebar-header">
-                <img src="padcard-logo.png" alt="PadCard" class="logo">
-                <h1>PadCard</h1>
+                <img src="snapwall-logo.png" alt="snapWall" class="logo">
+                <h1>snapWall</h1>
             </div>
             
             <div class="sidebar-search">
                 <div class="search-container">
                     <i class="fas fa-search"></i>
-                    <input type="text" placeholder="Padlets suchen" id="sidebarSearch">
+                    <input type="text" placeholder="Snaps suchen" id="sidebarSearch">
                 </div>
             </div>
             
@@ -37,7 +37,7 @@
                     <span>Neueste Aktivitäten</span>
                 </div>
                 
-                <div class="sidebar-item" id="menuMyPadcards">
+                <div class="sidebar-item" id="menuMySnaps">
                     <i class="fas fa-user"></i>
                     <span>Von mir erstellt</span>
                 </div>
@@ -121,7 +121,7 @@
                         <a href="#" class="sort-option" data-sort="date">Datum</a>
                     </div>
                     <button class="btn btn-primary" id="createNewBtn">
-                        <i class="fas fa-plus"></i> Ein Padlet erstellen
+                        <i class="fas fa-plus"></i> Einen Snap erstellen
                     </button>
                 </div>
                 
@@ -145,7 +145,7 @@
                             <i class="fas fa-edit"></i> Ordner bearbeiten
                         </button>
                         <button class="btn btn-primary" id="newBoardInFolderBtn">
-                            <i class="fas fa-plus"></i> Neues Padlet
+                            <i class="fas fa-plus"></i> Neuer Snap
                         </button>
                     </div>
                 </div>
@@ -237,6 +237,13 @@
                         <input type="text" class="form-control" id="folderTitle" placeholder="Ordner-Titel">
                     </div>
                     <div class="form-group">
+                        <label for="parentFolderSelect">Übergeordneter Ordner</label>
+                        <select class="form-control" id="parentFolderSelect">
+                            <option value="">Kein übergeordneter Ordner</option>
+                            <!-- Ordner werden dynamisch hinzugefügt -->
+                        </select>
+                    </div>
+                    <div class="form-group">
                         <label>Farbe</label>
                         <div class="color-picker" id="folderColorPicker">
                             <!-- Farben werden dynamisch hinzugefügt -->
@@ -254,18 +261,22 @@
         <div class="modal-overlay" id="boardModal">
             <div class="modal">
                 <div class="modal-header">
-                    <div class="modal-title" id="boardModalTitle">Neues Padlet</div>
+                    <div class="modal-title" id="boardModalTitle">Neuer Snap</div>
                     <button class="modal-close" id="closeBoardModal">&times;</button>
                 </div>
                 <div class="modal-body">
                     <div class="form-group">
                         <label for="boardTitleInput">Titel</label>
-                        <input type="text" class="form-control" id="boardTitleInput" placeholder="Padlet-Titel">
+                        <input type="text" class="form-control" id="boardTitleInput" placeholder="Snap-Titel">
                     </div>
                     <div class="form-group">
                         <label>Farbe</label>
-                        <div class="color-picker" id="boardColorPicker">
-                            <!-- Farben werden dynamisch hinzugefügt -->
+                        <div class="color-picker-row" id="boardColorPickerRow">
+                            <!-- Farben werden als Zeile angezeigt -->
+                        </div>
+                        <div class="color-picker-rgb">
+                            <label for="customRgbColor">Benutzerdefinierte Farbe (RGB)</label>
+                            <input type="color" id="customRgbColor" class="form-control">
                         </div>
                     </div>
                     <div class="form-group">
@@ -274,6 +285,28 @@
                             <option value="">Kein Ordner</option>
                             <!-- Ordner werden dynamisch hinzugefügt -->
                         </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="boardBackgroundUpload">Hintergrundbild</label>
+                        <div class="file-upload-container">
+                            <label for="boardBackgroundUpload" class="btn">
+                                <i class="fas fa-upload"></i> Durchsuchen...
+                            </label>
+                            <span id="boardBackgroundFileName">Keine Datei ausgewählt</span>
+                            <input type="file" id="boardBackgroundUpload" style="display: none;" accept="image/*">
+                        </div>
+                        <div id="boardBackgroundPreview" class="image-preview mt-2"></div>
+                    </div>
+                    <div class="form-group">
+                        <label for="boardPreviewUpload">Vorschaubild</label>
+                        <div class="file-upload-container">
+                            <label for="boardPreviewUpload" class="btn">
+                                <i class="fas fa-upload"></i> Durchsuchen...
+                            </label>
+                            <span id="boardPreviewFileName">Keine Datei ausgewählt</span>
+                            <input type="file" id="boardPreviewUpload" style="display: none;" accept="image/*">
+                        </div>
+                        <div id="boardPreviewImagePreview" class="image-preview mt-2"></div>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -307,6 +340,36 @@
 
                     <div class="form-group">
                         <label for="cardContent">Inhalt</label>
+                        <div class="text-formatting-toolbar">
+                            <div class="format-group">
+                                <button type="button" class="format-btn" data-align="left" title="Linksbündig">
+                                    <i class="fas fa-align-left"></i>
+                                </button>
+                                <button type="button" class="format-btn" data-align="center" title="Zentriert">
+                                    <i class="fas fa-align-center"></i>
+                                </button>
+                                <button type="button" class="format-btn" data-align="right" title="Rechtsbündig">
+                                    <i class="fas fa-align-right"></i>
+                                </button>
+                            </div>
+                            <div class="format-group">
+                                <button type="button" class="format-btn" data-size="small" title="Klein">
+                                    <i class="fas fa-text-height fa-xs"></i>
+                                </button>
+                                <button type="button" class="format-btn" data-size="normal" title="Normal">
+                                    <i class="fas fa-text-height"></i>
+                                </button>
+                                <button type="button" class="format-btn" data-size="large" title="Groß">
+                                    <i class="fas fa-text-height fa-lg"></i>
+                                </button>
+                            </div>
+                            <div class="format-group">
+                                <input type="color" id="textColorPicker" title="Textfarbe">
+                                <button type="button" class="format-btn" id="applyTextColor" title="Textfarbe anwenden">
+                                    <i class="fas fa-paint-brush"></i>
+                                </button>
+                            </div>
+                        </div>
                         <textarea class="form-control" id="cardContent" placeholder="Inhalt der Karte"></textarea>
                     </div>
 
@@ -358,47 +421,13 @@
 
                     <div class="form-group">
                         <label>Kartenfarbe</label>
-                        <div class="color-options">
-                            <div class="color-palettes">
-                                <div class="color-palette active" data-palette="material">
-                                    <div class="color-samples">
-                                        <div class="color-sample" style="background-color: #f44336;"></div>
-                                        <div class="color-sample" style="background-color: #2196F3;"></div>
-                                        <div class="color-sample" style="background-color: #4CAF50;"></div>
-                                        <div class="color-sample" style="background-color: #FFC107;"></div>
-                                    </div>
-                                    <div class="color-palette-name">Material</div>
-                                </div>
-                                <div class="color-palette" data-palette="pastel">
-                                    <div class="color-samples">
-                                        <div class="color-sample" style="background-color: #FFB6C1;"></div>
-                                        <div class="color-sample" style="background-color: #ADD8E6;"></div>
-                                        <div class="color-sample" style="background-color: #98FB98;"></div>
-                                        <div class="color-sample" style="background-color: #FFFACD;"></div>
-                                    </div>
-                                    <div class="color-palette-name">Pastell</div>
-                                </div>
-                                <div class="color-palette" data-palette="custom">
-                                    <div class="color-samples">
-                                        <div class="color-sample" style="background-color: #D4A5A5;"></div>
-                                        <div class="color-sample" style="background-color: #392F5A;"></div>
-                                        <div class="color-sample" style="background-color: #31A2AC;"></div>
-                                        <div class="color-sample" style="background-color: #F0E100;"></div>
-                                    </div>
-                                    <div class="color-palette-name">Benutzerdefiniert</div>
-                                </div>
-                            </div>
-
-                            <div class="card-color-pickers">
-                                <!-- Color pickers werden dynamisch hinzugefügt -->
-                            </div>
-
-                            <div class="custom-color">
-                                <label for="customColorPicker">Eigene Farbe:</label>
-                                <input type="color" id="customColorPicker" value="#2196F3">
-                                <div class="custom-color-preview" id="customColorPreview"></div>
-                                <button class="btn" id="applyCustomColorBtn">Anwenden</button>
-                            </div>
+                        <div class="color-picker-row" id="cardColorPickerRow">
+                            <!-- Farben werden als Zeile angezeigt -->
+                        </div>
+                        <div class="color-picker-rgb">
+                            <label for="cardRgbColor">Benutzerdefinierte Farbe (RGB)</label>
+                            <input type="color" id="cardRgbColor" class="form-control">
+                            <div class="custom-color-preview" id="cardColorPreview"></div>
                         </div>
                     </div>
 
@@ -439,6 +468,8 @@
             </div>
         </div>
 
+        <!-- Weitere Modals (Category, Background, Share, Confirm) bleiben größtenteils unverändert -->
+        
         <!-- Category Modal -->
         <div class="modal-overlay" id="categoryModal">
             <div class="modal">
