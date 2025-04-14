@@ -520,7 +520,13 @@ const Views = {
             if (action === 'edit') {
                 Controllers.editBoard(boardId);
             } else if (action === 'delete') {
-                Controllers.deleteBoard(boardId);
+                // Bestätigungsdialog anzeigen
+                const board = BoardDAO.getById(boardId);
+                Views.showConfirmModal(
+                    'Snap löschen',
+                    `Möchtest du den Snap "${board.name}" wirklich löschen? Alle Karten werden ebenfalls gelöscht.`,
+                    () => Controllers.deleteBoard(boardId)
+                );
             } else if (action === 'share') {
                 // Erst das Board öffnen, dann teilen
                 AppData.currentBoard = BoardDAO.getById(boardId);
@@ -735,6 +741,19 @@ const Views = {
             this.renderCardsGrid(AppData.currentBoard);
         } else if (view === 'free') {
             $('#boardFree').removeClass('hidden');
+            // Im Schülermodus den grau-transparenten Hintergrund entfernen
+            if (AppData.studentMode) {
+                $('#boardFree').css({
+                    'background-color': 'transparent',
+                    'border': 'none'
+                });
+            } else {
+                // Im Bearbeitungsmodus den Standardstil wiederherstellen
+                $('#boardFree').css({
+                    'background-color': 'rgba(255, 255, 255, 0.5)',
+                    'border': '2px dashed #ddd'
+                });
+            }
             this.renderCardsFree(AppData.currentBoard);
         } else if (view === 'categories') {
             $('#boardCategories').removeClass('hidden');
@@ -837,16 +856,7 @@ const Views = {
             boardGrid.append(addCard);
         }
         
-        // Wenn keine Karten vorhanden sind
-        if (!board.cards || board.cards.length === 0) {
-            return;
-        }
-        
-        // Karten in Raster anordnen
-        board.cards.forEach(card => {
-            const cardElement = this.createCardElement(board.id, card);
-            boardGrid.append(cardElement);
-        });
+        // Code zum Anzeigen von Karten wurde nach oben verschoben
     },
     
     /**
@@ -857,10 +867,10 @@ const Views = {
         const boardFree = $('#boardFree');
         boardFree.empty();
         
-        // "Karte hinzufügen"-Button erstellen
+        // "Karte hinzufügen"-Button erstellen und RECHTS positionieren
         if (!AppData.studentMode) {
             const addCard = $(`
-                <div class="add-card" id="addCardBtnFree" style="position: absolute; top: 10px; left: 10px; width: 200px;">
+                <div class="add-card" id="addCardBtnFree" style="position: absolute; top: 10px; right: 10px; width: 200px;">
                     <i class="fas fa-plus"></i>
                     <div class="add-card-text">Neue Karte hinzufügen</div>
                 </div>
