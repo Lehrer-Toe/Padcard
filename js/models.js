@@ -221,6 +221,233 @@ const StorageService = {
         
         this.saveAppData();
         return true;
+    },
+
+    /**
+     * Exportiert eine Offline-Version eines Boards
+     * @param {string} boardId - Board-ID
+     * @returns {boolean} Erfolg
+     */
+    exportOfflineVersion: function(boardId) {
+        const board = BoardDAO.getById(boardId);
+        if (!board) return null;
+        
+        // Erstelle ein eigenständiges JSON-Objekt mit allen notwendigen Daten
+        const exportData = {
+            board: board,
+            studentMode: true,
+            exportDate: new Date().toISOString(),
+            version: AppConfig.version
+        };
+        
+        // JSON in String umwandeln
+        const jsonData = JSON.stringify(exportData, null, 2);
+        
+        // HTML-Template für Offline-Version erstellen
+        const htmlTemplate = `
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${board.name} - snapWall Offline</title>
+    
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        /* Basis-Styles */
+        body, html {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            background-color: white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .logo {
+            font-weight: bold;
+            color: #2196F3;
+            font-size: 24px;
+        }
+        
+        .board-title {
+            font-size: 28px;
+            margin-bottom: 20px;
+        }
+        
+        .cards-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .card {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+            border: 1px solid #e0e0e0;
+        }
+        
+        .card-content {
+            padding: 15px;
+        }
+        
+        .card-title {
+            font-weight: bold;
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+        
+        .card-text {
+            line-height: 1.5;
+        }
+        
+        /* Kartentypen */
+        .card-image img {
+            max-width: 100%;
+            display: block;
+        }
+        
+        .card-youtube iframe {
+            width: 100%;
+            height: 200px;
+            border: none;
+        }
+        
+        /* Farbklassen für Karten */
+        .card-red { background-color: #ffebee; border-color: #f44336; border-width: 2px; }
+        .card-blue { background-color: #e3f2fd; border-color: #2196F3; border-width: 2px; }
+        .card-green { background-color: #e8f5e9; border-color: #4CAF50; border-width: 2px; }
+        .card-yellow { background-color: #fffde7; border-color: #FFEB3B; border-width: 2px; }
+        .card-orange { background-color: #fff3e0; border-color: #FF9800; border-width: 2px; }
+        .card-purple { background-color: #f3e5f5; border-color: #9C27B0; border-width: 2px; }
+        .card-pink { background-color: #FCE4EC; border-color: #E91E63; border-width: 2px; }
+        
+        /* Offline-Hinweis */
+        .offline-notice {
+            background-color: #e0f7fa;
+            padding: 10px 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">snapWall Offline</div>
+        <div>Schülermodus</div>
+    </div>
+    
+    <div class="container">
+        <div class="offline-notice">
+            <i class="fas fa-info-circle"></i>
+            <span>Dies ist eine Offline-Version des Boards "${board.name}". Einige Funktionen sind möglicherweise eingeschränkt.</span>
+        </div>
+        
+        <h1 class="board-title">${board.name}</h1>
+        
+        <div class="cards-container" id="cardsContainer">
+            <!-- Karten werden per JavaScript eingefügt -->
+        </div>
+    </div>
+
+    <script>
+        // Board-Daten aus JSON laden
+        const boardData = ${jsonData};
+        
+        // Dokument laden
+        document.addEventListener('DOMContentLoaded', function() {
+            renderCards();
+        });
+        
+        // Karten rendern
+        function renderCards() {
+            const container = document.getElementById('cardsContainer');
+            const cards = boardData.board.cards || [];
+            
+            cards.forEach(card => {
+                // Kartenklassen bestimmen
+                let cardClasses = 'card';
+                if (card.color) {
+                    cardClasses += ' card-' + card.color;
+                }
+                
+                // Karten-HTML erstellen
+                let cardHTML = \`
+                    <div class="\${cardClasses}">
+                        <div class="card-content">
+                            <div class="card-title">\${card.title}</div>
+                            <div class="card-text">\${card.content || ''}</div>
+                \`;
+                
+                // Kartentyp-spezifischen Inhalt hinzufügen
+                if (card.type === 'image' && (card.imageUrl || card.imageData)) {
+                    const imgSrc = card.imageData || card.imageUrl;
+                    cardHTML += \`
+                        <div class="card-image">
+                            <img src="\${imgSrc}" alt="\${card.title}">
+                        </div>
+                    \`;
+                } else if (card.type === 'youtube' && card.youtubeId) {
+                    cardHTML += \`
+                        <div class="card-youtube">
+                            <iframe src="https://www.youtube.com/embed/\${card.youtubeId}" 
+                                    allowfullscreen="true"
+                                    frameborder="0">
+                            </iframe>
+                        </div>
+                    \`;
+                }
+                
+                // Karte abschließen
+                cardHTML += \`
+                        </div>
+                    </div>
+                \`;
+                
+                // Zur Container hinzufügen
+                container.innerHTML += cardHTML;
+            });
+        }
+    </script>
+</body>
+</html>`;
+
+        // Blob erstellen und als Datei herunterladen
+        const blob = new Blob([htmlTemplate], { type: 'text/html' });
+        const url = URL.createObjectURL(blob);
+        
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${board.name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_offline.html`;
+        document.body.appendChild(a);
+        a.click();
+        
+        setTimeout(() => {
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }, 100);
+        
+        return true;
     }
 };
 

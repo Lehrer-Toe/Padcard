@@ -1,7 +1,7 @@
 /**
- * Controllers fÃ¼r snapWall
+ * Controllers für snapWall
  * 
- * Diese Datei enthÃ¤lt die Controller-Logik, die Benutzerinteraktionen verarbeitet
+ * Diese Datei enthält die Controller-Logik, die Benutzerinteraktionen verarbeitet
  * und die Modelle mit den Views verbindet.
  */
 
@@ -82,7 +82,7 @@ const Controllers = {
                 const end = textarea.selectionEnd;
                 const selectedText = textarea.value.substring(start, end);
                 
-                // Merken fÃ¼r spÃ¤tere Speicherung
+                // Merken für spätere Speicherung
                 $(textarea).data('textColors', $(textarea).data('textColors') || {});
                 $(textarea).data('textColors')[selectedText] = color;
                 
@@ -102,11 +102,11 @@ const Controllers = {
             // Alle typenspezifischen Felder ausblenden
             $('.youtube-fields, .image-fields, .link-fields, .learningapp-fields, .audio-fields').hide();
             
-            // AusgewÃ¤hlte Typenfelder anzeigen
+            // Ausgewählte Typenfelder anzeigen
             $(`.${type}-fields`).show();
         });
         
-        // Farbauswahl fÃ¼r Karten
+        // Farbauswahl für Karten
         $(document).on('click', '.color-option', function() {
             const container = $(this).closest('.color-picker-row');
             container.find('.color-option').removeClass('active');
@@ -123,14 +123,14 @@ const Controllers = {
             $('#cardColorPreview').css('backgroundColor', color);
         });
         
-        // RGB-Farbauswahl fÃ¼r Board
+        // RGB-Farbauswahl für Board
         $('#customRgbColor').on('change', function() {
             const color = $(this).val();
             // Markierung von der farbpalette entfernen
             $('#boardColorPickerRow .color-option').removeClass('active');
         });
         
-        // KartengrÃ¶ÃŸen-Auswahl
+        // Kartengrößen-Auswahl
         $('.width-btn').on('click', function() {
             $('.width-btn').removeClass('active');
             $(this).addClass('active');
@@ -194,7 +194,7 @@ const Controllers = {
             }
         });
         
-        // Bild-Upload fÃ¼r Karten
+        // Bild-Upload für Karten
         $('#imageUpload').on('change', function() {
             const file = this.files[0];
             if (file) {
@@ -206,7 +206,7 @@ const Controllers = {
             }
         });
         
-        // Audio-Upload fÃ¼r Karten
+        // Audio-Upload für Karten
         $('#audioUpload').on('change', function() {
             const file = this.files[0];
             if (file) {
@@ -215,7 +215,7 @@ const Controllers = {
                     $('#audioPreview').show().html(`
                         <audio controls>
                             <source src="${e.target.result}" type="audio/mpeg">
-                            Dein Browser unterstÃ¼tzt kein Audio-Element.
+                            Dein Browser unterstützt kein Audio-Element.
                         </audio>
                     `);
                 };
@@ -223,13 +223,13 @@ const Controllers = {
             }
         });
         
-        // Platzhalter fÃ¼r Bildkarten
+        // Platzhalter für Bildkarten
         $('#placeholderBtn').on('click', () => {
             $('#imageUrl').val('https://placehold.co/600x400/e3f2fd/2196F3?text=Bildinhalt');
             $('#imagePreview').show().html(`<img src="https://placehold.co/600x400/e3f2fd/2196F3?text=Bildinhalt" alt="Vorschau">`);
         });
         
-        // SchÃ¼lermodus-Toggle
+        // Schülermodus-Toggle
         $('#studentModeToggle').on('change', () => this.toggleStudentMode());
         
         // Teilen-Button
@@ -254,10 +254,10 @@ const Controllers = {
             }
         });
         
-        // BestÃ¤tigungsmodal schlieÃŸen
+        // Bestätigungsmodal schließen
         $('#closeConfirmModal, #cancelConfirmBtn').on('click', () => $('#confirmModal').hide());
         
-        // Dropdowns schlieÃŸen, wenn auÃŸerhalb geklickt wird
+        // Dropdowns schließen, wenn außerhalb geklickt wird
         $(document).on('click', function(e) {
             if (!$(e.target).closest('.folder-menu, .board-menu, .card-menu, .dropdown, .padlet-menu').length) {
                 $('.folder-menu-dropdown, .board-menu-dropdown, .card-menu-dropdown, .dropdown-menu, .padlet-menu-dropdown').removeClass('show');
@@ -271,7 +271,7 @@ const Controllers = {
     },
     
     /**
-     * Einen Ordner Ã¶ffnen
+     * Einen Ordner öffnen
      * @param {string} folderId - Ordner-ID
      */
     openFolder: function(folderId) {
@@ -279,7 +279,7 @@ const Controllers = {
     },
     
     /**
-     * Ein Board Ã¶ffnen
+     * Ein Board öffnen
      * @param {string} boardId - Board-ID
      */
     openBoard: function(boardId) {
@@ -290,14 +290,14 @@ const Controllers = {
      * Einen neuen Ordner erstellen
      */
     createFolder: function() {
-        // Formular zurÃ¼cksetzen
+        // Formular zurücksetzen
         $('#folderModalTitle').text('Neuer Ordner');
         $('#folderTitle').val('');
         
         // Elternordner-Dropdown aktualisieren
         this.updateParentFolderSelect();
         
-        // Farbauswahl zurÃ¼cksetzen
+        // Farbauswahl zurücksetzen
         $('#folderColorPicker .color-option').removeClass('active');
         $('#folderColorPicker .color-option').first().addClass('active');
         
@@ -313,8 +313,8 @@ const Controllers = {
         const parentSelect = $('#parentFolderSelect');
         parentSelect.empty();
         
-        // "Kein Elternordner"-Option hinzufÃ¼gen
-        parentSelect.append('<option value="">Kein Ã¼bergeordneter Ordner</option>');
+        // "Kein Elternordner"-Option hinzufügen
+        parentSelect.append('<option value="">Kein übergeordneter Ordner</option>');
         
         // Rekursiv Ordnerstruktur bauen
         const buildFolderTree = (parentId, level) => {
@@ -346,7 +346,7 @@ const Controllers = {
         $('#folderModalTitle').text('Ordner bearbeiten');
         $('#folderTitle').val(folder.name);
         
-        // Elternordner auswÃ¤hlen, aber nicht sich selbst oder Unterordner erlauben
+        // Elternordner auswählen, aber nicht sich selbst oder Unterordner erlauben
         this.updateParentFolderSelect(folderId);
         $('#parentFolderSelect').val(folder.parentId || '');
         
@@ -389,9 +389,9 @@ const Controllers = {
         const parentId = $('#parentFolderSelect').val();
         const folderId = $('#folderModal').data('id');
         
-        // PrÃ¼fen, ob der ausgewÃ¤hlte Elternordner kein Kind des zu bearbeitenden Ordners ist
+        // Prüfen, ob der ausgewählte Elternordner kein Kind des zu bearbeitenden Ordners ist
         if (folderId && parentId && FolderDAO.isAncestor(parentId, folderId)) {
-            alert('Der ausgewÃ¤hlte Ã¼bergeordnete Ordner kann nicht ein Unterordner des aktuellen Ordners sein.');
+            alert('Der ausgewählte übergeordnete Ordner kann nicht ein Unterordner des aktuellen Ordners sein.');
             return;
         }
         
@@ -421,7 +421,7 @@ const Controllers = {
     },
     
     /**
-     * Einen Ordner lÃ¶schen
+     * Einen Ordner löschen
      * @param {string} folderId - Ordner-ID
      */
     deleteFolder: function(folderId) {
@@ -429,12 +429,12 @@ const Controllers = {
         if (!folder) return;
         
         Views.showConfirmModal(
-            'Ordner lÃ¶schen',
-            `MÃ¶chtest du den Ordner "${folder.name}" wirklich lÃ¶schen? Die Snaps bleiben erhalten.`,
+            'Ordner löschen',
+            `Möchtest du den Ordner "${folder.name}" wirklich löschen? Die Snaps bleiben erhalten.`,
             () => {
                 FolderDAO.delete(folderId);
                 
-                // Wenn wir im gelÃ¶schten Ordner sind, zurÃ¼ck zur Startseite
+                // Wenn wir im gelöschten Ordner sind, zurück zur Startseite
                 if (AppData.view === 'folder' && AppData.currentFolder && AppData.currentFolder.id === folderId) {
                     Views.renderLatestActivitiesView();
                 } else {
@@ -448,16 +448,16 @@ const Controllers = {
      * Ein neues Board erstellen
      */
     createBoard: function() {
-        // Formular zurÃ¼cksetzen
+        // Formular zurücksetzen
         $('#boardModalTitle').text('Neuer Snap');
         $('#boardTitleInput').val('');
         
-        // Farbauswahl zurÃ¼cksetzen
+        // Farbauswahl zurücksetzen
         $('#boardColorPickerRow .color-option').removeClass('active');
         $('#boardColorPickerRow .color-option').first().addClass('active');
         $('#customRgbColor').val('#2196F3');
         
-        // Ordner-AuswahlmenÃ¼ aktualisieren
+        // Ordner-Auswahlmenü aktualisieren
         Views.updateFolderSelect();
         
         // Aktuellen Ordner festlegen, wenn in Ordner-Ansicht
@@ -467,9 +467,9 @@ const Controllers = {
             $('#boardFolderSelect').val('');
         }
         
-        // Bild-Vorschauen zurÃ¼cksetzen
-        $('#boardBackgroundFileName').text('Keine Datei ausgewÃ¤hlt');
-        $('#boardPreviewFileName').text('Keine Datei ausgewÃ¤hlt');
+        // Bild-Vorschauen zurücksetzen
+        $('#boardBackgroundFileName').text('Keine Datei ausgewählt');
+        $('#boardPreviewFileName').text('Keine Datei ausgewählt');
         $('#boardBackgroundPreview, #boardPreviewImagePreview').empty().hide();
         
         // Modal anzeigen
@@ -507,13 +507,13 @@ const Controllers = {
             $('#customRgbColor').val(board.color);
         }
         
-        // Ordner-AuswahlmenÃ¼ aktualisieren
+        // Ordner-Auswahlmenü aktualisieren
         Views.updateFolderSelect();
         $('#boardFolderSelect').val(board.folderId || '');
         
-        // Bild-Vorschauen zurÃ¼cksetzen und bestehende laden
-        $('#boardBackgroundFileName').text('Keine Datei ausgewÃ¤hlt');
-        $('#boardPreviewFileName').text('Keine Datei ausgewÃ¤hlt');
+        // Bild-Vorschauen zurücksetzen und bestehende laden
+        $('#boardBackgroundFileName').text('Keine Datei ausgewählt');
+        $('#boardPreviewFileName').text('Keine Datei ausgewählt');
         $('#boardBackgroundPreview, #boardPreviewImagePreview').empty().hide();
         
         // Bestehende Bilder anzeigen, falls vorhanden
@@ -630,7 +630,7 @@ const Controllers = {
                 Views.renderLatestActivitiesView();
             }
         } else {
-            // Optionen fÃ¼r das neue Board zusammenstellen
+            // Optionen für das neue Board zusammenstellen
             const options = {};
             
             if (backgroundData) {
@@ -662,7 +662,7 @@ const Controllers = {
     },
     
     /**
-     * Ein Board lÃ¶schen
+     * Ein Board löschen
      * @param {string} boardId - Board-ID
      */
     deleteBoard: function(boardId) {
@@ -670,12 +670,12 @@ const Controllers = {
         if (!board) return;
         
         Views.showConfirmModal(
-            'Snap lÃ¶schen',
-            `MÃ¶chtest du den Snap "${board.name}" wirklich lÃ¶schen? Alle Karten werden ebenfalls gelÃ¶scht.`,
+            'Snap löschen',
+            `Möchtest du den Snap "${board.name}" wirklich löschen? Alle Karten werden ebenfalls gelöscht.`,
             () => {
                 BoardDAO.delete(boardId);
                 
-                // Wenn wir im gelÃ¶schten Board sind, zurÃ¼ck zur vorherigen Ansicht
+                // Wenn wir im gelöschten Board sind, zurück zur vorherigen Ansicht
                 if (AppData.view === 'board' && AppData.currentBoard && AppData.currentBoard.id === boardId) {
                     if (AppData.currentBoard.folderId) {
                         Views.renderFolderView(AppData.currentBoard.folderId);
@@ -697,7 +697,7 @@ const Controllers = {
     createCard: function() {
         if (!AppData.currentBoard) return;
         
-        // Formular zurÃ¼cksetzen
+        // Formular zurücksetzen
         $('#cardModalTitle').text('Neue Karte');
         $('#cardTitle').val('');
         $('#cardContent').val('');
@@ -706,7 +706,7 @@ const Controllers = {
         $('#linkUrl').val('');
         $('#learningappUrl').val('');
         
-        // Textformatierungen zurÃ¼cksetzen
+        // Textformatierungen zurücksetzen
         $('.format-btn[data-align]').removeClass('active');
         $('.format-btn[data-align="left"]').addClass('active');
         
@@ -716,28 +716,28 @@ const Controllers = {
         $('#textColorPicker').val('#000000');
         $('#cardContent').data('textColors', {});
         
-        // Kartentyp zurÃ¼cksetzen
+        // Kartentyp zurücksetzen
         $('.card-type-option').removeClass('active');
         $('.card-type-option[data-type="text"]').addClass('active');
         $('.youtube-fields, .image-fields, .link-fields, .learningapp-fields, .audio-fields').hide();
         
-        // Farbauswahl zurÃ¼cksetzen
+        // Farbauswahl zurücksetzen
         $('#cardColorPickerRow .color-option').removeClass('active');
         $('#cardColorPickerRow .color-option[data-color="blue"]').addClass('active');
         $('#cardRgbColor').val('#2196F3');
         $('#cardColorPreview').css('backgroundColor', '#2196F3');
         
-        // GrÃ¶ÃŸenauswahl zurÃ¼cksetzen
+        // Größenauswahl zurücksetzen
         $('.width-btn, .height-btn').removeClass('active');
         $('.width-btn[data-width="1"], .height-btn[data-height="1"]').addClass('active');
         
-        // Kategorieauswahl zurÃ¼cksetzen
+        // Kategorieauswahl zurücksetzen
         $('#cardCategory').val('');
         
-        // Bild- und Audio-Vorschau zurÃ¼cksetzen
+        // Bild- und Audio-Vorschau zurücksetzen
         $('#imagePreview, #audioPreview').hide().empty();
         
-        // Karten-ID lÃ¶schen
+        // Karten-ID löschen
         $('#cardModal').removeData('id');
         
         // Modal anzeigen
@@ -778,7 +778,7 @@ const Controllers = {
         // Alle typenspezifischen Felder ausblenden
         $('.youtube-fields, .image-fields, .link-fields, .learningapp-fields, .audio-fields').hide();
         
-        // Typenspezifische Felder anzeigen und fÃ¼llen
+        // Typenspezifische Felder anzeigen und füllen
         if (card.type === 'youtube') {
             $('.youtube-fields').show();
             $('#youtubeUrl').val(card.youtubeId ? `https://www.youtube.com/watch?v=${card.youtubeId}` : '');
@@ -809,7 +809,7 @@ const Controllers = {
                 $('#audioPreview').show().html(`
                     <audio controls>
                         <source src="${audioUrl}" type="audio/mpeg">
-                        Dein Browser unterstÃ¼tzt kein Audio-Element.
+                        Dein Browser unterstützt kein Audio-Element.
                     </audio>
                 `);
             } else {
@@ -830,13 +830,13 @@ const Controllers = {
                 colorOption.addClass('active');
                 $('#cardColorPreview').css('backgroundColor', colorOption.css('backgroundColor'));
             } else {
-                // StandardmÃ¤ÃŸig Blau, wenn keine Ãœbereinstimmung
+                // Standardmäßig Blau, wenn keine Übereinstimmung
                 $(`#cardColorPickerRow .color-option[data-color="blue"]`).addClass('active');
                 $('#cardColorPreview').css('backgroundColor', '#2196F3');
             }
         }
         
-        // GrÃ¶ÃŸe festlegen
+        // Größe festlegen
         $('.width-btn').removeClass('active');
         $(`.width-btn[data-width="${card.width || 1}"]`).addClass('active');
         
@@ -869,7 +869,7 @@ const Controllers = {
             return;
         }
         
-        // AusgewÃ¤hlten Kartentyp abrufen
+        // Ausgewählten Kartentyp abrufen
         const cardType = $('.card-type-option.active').data('type') || 'text';
         
         // Textformatierungen abrufen
@@ -877,7 +877,7 @@ const Controllers = {
         const fontSize = $('.format-btn[data-size].active').data('size') || 'normal';
         const textColors = $('#cardContent').data('textColors') || {};
         
-        // AusgewÃ¤hlte Farbe abrufen
+        // Ausgewählte Farbe abrufen
         let cardColor = 'blue';
         let customColor = '';
         
@@ -889,11 +889,11 @@ const Controllers = {
             customColor = $('#cardRgbColor').val();
         }
         
-        // AusgewÃ¤hlte GrÃ¶ÃŸe abrufen
+        // Ausgewählte Größe abrufen
         const cardWidth = parseInt($('.width-btn.active').data('width') || 1);
         const cardHeight = parseInt($('.height-btn.active').data('height') || 1);
         
-        // AusgewÃ¤hlte Kategorie abrufen
+        // Ausgewählte Kategorie abrufen
         const cardCategory = $('#cardCategory').val();
         
         // Kartendaten vorbereiten
@@ -911,16 +911,16 @@ const Controllers = {
             category: cardCategory
         };
         
-        // Typenspezifische Daten hinzufÃ¼gen
+        // Typenspezifische Daten hinzufügen
         if (cardType === 'youtube') {
             const youtubeId = Utils.getYoutubeId($('#youtubeUrl').val().trim());
             if (!youtubeId) {
-                alert('Bitte gib eine gÃ¼ltige YouTube-URL ein.');
+                alert('Bitte gib eine gültige YouTube-URL ein.');
                 return;
             }
             cardData.youtubeId = youtubeId;
         } else if (cardType === 'image') {
-            // Zuerst auf hochgeladenes Bild prÃ¼fen
+            // Zuerst auf hochgeladenes Bild prüfen
             const imageFile = $('#imageUpload')[0].files[0];
             if (imageFile) {
                 try {
@@ -945,7 +945,7 @@ const Controllers = {
                 return;
             }
             
-            // https:// hinzufÃ¼gen, falls es fehlt
+            // https:// hinzufügen, falls es fehlt
             if (!/^https?:\/\//i.test(linkUrl)) {
                 cardData.linkUrl = 'https://' + linkUrl;
             } else {
@@ -954,12 +954,12 @@ const Controllers = {
         } else if (cardType === 'learningapp') {
             const learningappId = Utils.getLearningappId($('#learningappUrl').val().trim());
             if (!learningappId) {
-                alert('Bitte gib eine gÃ¼ltige LearningApp-URL oder ID ein.');
+                alert('Bitte gib eine gültige LearningApp-URL oder ID ein.');
                 return;
             }
             cardData.learningappId = learningappId;
         } else if (cardType === 'audio') {
-            // Zuerst auf hochgeladenes Audio prÃ¼fen
+            // Zuerst auf hochgeladenes Audio prüfen
             const audioFile = $('#audioUpload')[0].files[0];
             if (audioFile) {
                 try {
@@ -1012,7 +1012,7 @@ const Controllers = {
         const newCardData = { ...card };
         delete newCardData.id; // ID entfernen, damit eine neue generiert wird
         
-        // "(Kopie)" zum Titel hinzufÃ¼gen
+        // "(Kopie)" zum Titel hinzufügen
         newCardData.title = `${newCardData.title} (Kopie)`;
         
         // In der freien Ansicht die Position leicht versetzen
@@ -1023,7 +1023,7 @@ const Controllers = {
             };
         }
         
-        // Die neue Karte hinzufÃ¼gen
+        // Die neue Karte hinzufügen
         BoardDAO.addCard(boardId, newCardData);
         
         // Ansicht aktualisieren
@@ -1031,14 +1031,14 @@ const Controllers = {
     },
     
     /**
-     * Eine Karte lÃ¶schen
+     * Eine Karte löschen
      * @param {string} boardId - Board-ID
      * @param {string} cardId - Karten-ID
      */
     deleteCard: function(boardId, cardId) {
         Views.showConfirmModal(
-            'Karte lÃ¶schen',
-            'MÃ¶chtest du diese Karte wirklich lÃ¶schen?',
+            'Karte löschen',
+            'Möchtest du diese Karte wirklich löschen?',
             () => {
                 BoardDAO.deleteCard(boardId, cardId);
                 this.refreshBoardView();
@@ -1108,7 +1108,7 @@ const Controllers = {
     },
     
     /**
-     * Das Kategorie-Modal Ã¶ffnen
+     * Das Kategorie-Modal öffnen
      */
     openCategoryModal: function() {
         if (!AppData.currentBoard) return;
@@ -1116,7 +1116,7 @@ const Controllers = {
         // Kategorieliste rendern
         Views.renderCategoriesList(AppData.currentBoard);
         
-        // Neue Kategorie-Eingabe zurÃ¼cksetzen
+        // Neue Kategorie-Eingabe zurücksetzen
         $('#newCategoryInput').val('');
         
         // Modal anzeigen
@@ -1129,7 +1129,7 @@ const Controllers = {
     createCategory: function() {
         if (!AppData.currentBoard) return;
         
-        // Das Modal mit Aufforderung Ã¶ffnen
+        // Das Modal mit Aufforderung öffnen
         $('#categoryModal').show();
         $('#newCategoryInput').focus();
     },
@@ -1142,11 +1142,11 @@ const Controllers = {
         
         const categoryName = $('#newCategoryInput').val().trim();
         if (!categoryName) {
-            alert('Bitte gib einen Namen fÃ¼r die Kategorie ein.');
+            alert('Bitte gib einen Namen für die Kategorie ein.');
             return;
         }
         
-        // Die Kategorie hinzufÃ¼gen
+        // Die Kategorie hinzufügen
         BoardDAO.addCategory(AppData.currentBoard.id, categoryName);
         
         // Ansichten aktualisieren
@@ -1157,7 +1157,7 @@ const Controllers = {
             Views.renderCardsCategories(AppData.currentBoard);
         }
         
-        // Eingabe zurÃ¼cksetzen
+        // Eingabe zurücksetzen
         $('#newCategoryInput').val('');
     },
     
@@ -1187,7 +1187,7 @@ const Controllers = {
     },
     
     /**
-     * Eine Kategorie lÃ¶schen
+     * Eine Kategorie löschen
      * @param {string} categoryId - Kategorie-ID
      */
     deleteCategory: function(categoryId) {
@@ -1197,10 +1197,10 @@ const Controllers = {
         if (!category) return;
         
         Views.showConfirmModal(
-            'Kategorie lÃ¶schen',
-            `MÃ¶chtest du die Kategorie "${category.name}" wirklich lÃ¶schen? Die Karten werden nicht gelÃ¶scht, sondern nur aus der Kategorie entfernt.`,
+            'Kategorie löschen',
+            `Möchtest du die Kategorie "${category.name}" wirklich löschen? Die Karten werden nicht gelöscht, sondern nur aus der Kategorie entfernt.`,
             () => {
-                // Die Kategorie lÃ¶schen
+                // Die Kategorie löschen
                 BoardDAO.deleteCategory(AppData.currentBoard.id, categoryId);
                 
                 // Ansichten aktualisieren
@@ -1215,17 +1215,17 @@ const Controllers = {
     },
     
     /**
-     * Das Hintergrund-Modal Ã¶ffnen
+     * Das Hintergrund-Modal öffnen
      */
     openBackgroundModal: function() {
         if (!AppData.currentBoard) return;
         
-        // Formular zurÃ¼cksetzen
+        // Formular zurücksetzen
         $('#backgroundUrl').val('');
         $('#backgroundUpload').val('');
-        $('#backgroundFileName').text('Keine Datei ausgewÃ¤hlt');
+        $('#backgroundFileName').text('Keine Datei ausgewählt');
         
-        // Vorschaubilder zurÃ¼cksetzen
+        // Vorschaubilder zurücksetzen
         $('.bg-preview').css('backgroundImage', '');
         
         // Standardwerte aus aktuellem Hintergrund setzen, falls vorhanden
@@ -1267,19 +1267,19 @@ const Controllers = {
             opacity: parseInt($('#backgroundOpacity').val()) || 100
         };
         
-        // Auf hochgeladene Datei prÃ¼fen
+        // Auf hochgeladene Datei prüfen
         const backgroundFile = $('#backgroundUpload')[0].files[0];
         if (backgroundFile) {
             try {
                 const backgroundImage = await Utils.fileToBase64(backgroundFile);
                 backgroundData.data = backgroundImage;
-                backgroundData.url = ''; // URL lÃ¶schen, wenn wir eine Daten-URI haben
+                backgroundData.url = ''; // URL löschen, wenn wir eine Daten-URI haben
             } catch (error) {
                 console.error('Fehler beim Konvertieren des Hintergrunds zu base64:', error);
             }
         }
         
-        // ÃœberprÃ¼fen, ob wir entweder URL oder Daten haben
+        // Überprüfen, ob wir entweder URL oder Daten haben
         if (!backgroundData.url && !backgroundData.data) {
             alert('Bitte gib eine URL ein oder lade ein Bild hoch.');
             return;
@@ -1311,7 +1311,7 @@ const Controllers = {
     },
     
     /**
-     * SchÃ¼lermodus umschalten
+     * Schülermodus umschalten
      */
     toggleStudentMode: function() {
         AppData.studentMode = $('#studentModeToggle').prop('checked');
@@ -1328,7 +1328,7 @@ const Controllers = {
         // Sichtbarkeit der Editor-Elemente aktualisieren
         $('.editor-only').toggle(!AppData.studentMode);
         
-        // Sichtbarkeit der HinzufÃ¼gen-Buttons aktualisieren
+        // Sichtbarkeit der Hinzufügen-Buttons aktualisieren
         if (AppData.studentMode) {
             $('#addCardBtnGrid, #addCategoryBtn').hide();
         } else {
@@ -1348,7 +1348,7 @@ const Controllers = {
     },
     
     /**
-     * Share-Modal Ã¶ffnen
+     * Share-Modal öffnen
      */
     openShareModal: function() {
         this.updateShareLink();
@@ -1372,7 +1372,7 @@ const Controllers = {
         shareLink.select();
         document.execCommand('copy');
         
-        // Visuelle RÃ¼ckmeldung
+        // Visuelle Rückmeldung
         const copyBtn = $('#copyLinkBtn');
         const originalHtml = copyBtn.html();
         copyBtn.html('<i class="fas fa-check"></i>');
@@ -1380,6 +1380,11 @@ const Controllers = {
         setTimeout(() => {
             copyBtn.html(originalHtml);
         }, 2000);
+        
+        // Offline-Version erstellen (für Tests)
+        if (AppData.currentBoard) {
+            this.exportOfflineVersion();
+        }
     },
     
     /**
@@ -1399,7 +1404,7 @@ const Controllers = {
                 if (importedData && Array.isArray(importedData.folders) && Array.isArray(importedData.boards)) {
                     Views.showConfirmModal(
                         'Daten importieren',
-                        'MÃ¶chtest du die aktuellen Daten mit den importierten ersetzen? Alle vorhandenen Daten werden Ã¼berschrieben.',
+                        'Möchtest du die aktuellen Daten mit den importierten ersetzen? Alle vorhandenen Daten werden überschrieben.',
                         () => {
                             if (StorageService.importData(importedData)) {
                                 // Ansicht aktualisieren
@@ -1411,32 +1416,32 @@ const Controllers = {
                         }
                     );
                 } else {
-                    alert('Die importierte Datei enthÃ¤lt keine gÃ¼ltigen Daten.');
+                    alert('Die importierte Datei enthält keine gültigen Daten.');
                 }
             } catch (error) {
                 console.error('Import-Fehler:', error);
-                alert('Fehler beim Importieren: UngÃ¼ltiges Dateiformat.');
+                alert('Fehler beim Importieren: Ungültiges Dateiformat.');
             }
         };
         reader.readAsText(file);
         
-        // Eingabewert zurÃ¼cksetzen, um die gleiche Datei erneut importieren zu kÃ¶nnen
+        // Eingabewert zurücksetzen, um die gleiche Datei erneut importieren zu können
         event.target.value = '';
     },
     
     /**
-     * URL-Parameter beim Laden Ã¼berprÃ¼fen
+     * URL-Parameter beim Laden überprüfen
      */
     checkUrlParams: function() {
         const urlParams = new URLSearchParams(window.location.search);
         
-        // Auf SchÃ¼lermodus prÃ¼fen
+        // Auf Schülermodus prüfen
         if (urlParams.get('mode') === 'student') {
             $('#studentModeToggle').prop('checked', true);
             this.toggleStudentMode();
         }
         
-        // Auf spezifisches Board oder Ordner prÃ¼fen
+        // Auf spezifisches Board oder Ordner prüfen
         const boardId = urlParams.get('board');
         const folderId = urlParams.get('folder');
         
@@ -1445,5 +1450,17 @@ const Controllers = {
         } else if (folderId) {
             this.openFolder(folderId);
         }
+    },
+
+    /**
+     * Exportiert die aktuelle Board-Ansicht als Offline-HTML-Datei
+     */
+    exportOfflineVersion: function() {
+        if (!AppData.currentBoard) {
+            alert('Bitte öffne zuerst ein Board, bevor du eine Offline-Version erstellst.');
+            return;
+        }
+        
+        StorageService.exportOfflineVersion(AppData.currentBoard.id);
     }
 };

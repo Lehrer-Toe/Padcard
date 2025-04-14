@@ -37,6 +37,7 @@ body {
 #app {
     display: flex;
     min-height: 100vh;
+    position: relative;
 }
 
 /* Allgemeine Stile */
@@ -120,6 +121,7 @@ a:hover {
     position: relative;
     overflow-y: auto;
     overflow-x: hidden;
+    z-index: 100;
 }
 
 #sidebar.collapsed {
@@ -255,6 +257,8 @@ a:hover {
 .folder-actions {
     opacity: 0;
     transition: opacity 0.2s;
+    display: flex;
+    gap: 5px;
 }
 
 .folder-item:hover .folder-actions {
@@ -351,6 +355,12 @@ a:hover {
     overflow-y: auto;
     padding: 20px;
     transition: margin-left 0.3s ease;
+    height: 100vh;
+    width: calc(100% - var(--sidebar-width));
+}
+
+#sidebar.collapsed + #main-content {
+    width: calc(100% - var(--sidebar-collapsed-width));
 }
 
 /* Header Area */
@@ -540,6 +550,7 @@ input:checked + .toggle-slider:before {
     cursor: pointer;
     display: flex;
     flex-direction: column;
+    height: 100%;
 }
 
 .padlet-card:hover {
@@ -734,6 +745,7 @@ input:checked + .toggle-slider:before {
     display: flex;
     flex-direction: column;
     gap: 20px;
+    height: calc(100vh - 110px); /* Abzüglich Header und Padding */
 }
 
 .board-header {
@@ -746,6 +758,7 @@ input:checked + .toggle-slider:before {
     box-shadow: var(--card-shadow);
     flex-wrap: wrap;
     gap: 15px;
+    z-index: 5;
 }
 
 .board-title-container {
@@ -838,10 +851,12 @@ input:checked + .toggle-slider:before {
 /* Board Grid */
 .board-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    grid-template-columns: repeat(3, 1fr); /* Standardmäßig 3 Spalten */
     gap: 20px;
-    margin-top: 20px;
-    min-height: 400px;
+    padding: 20px;
+    overflow-y: auto;
+    height: 100%;
+    background-color: transparent;
 }
 
 /* Free Board */
@@ -849,9 +864,12 @@ input:checked + .toggle-slider:before {
     position: relative;
     margin-top: 20px;
     min-height: 600px;
+    height: 100%;
+    padding: 20px;
+    overflow: auto;
     background-color: rgba(255, 255, 255, 0.5);
-    border-radius: 10px;
     border: 2px dashed #ddd;
+    border-radius: 10px;
 }
 
 /* Categories Board */
@@ -860,6 +878,9 @@ input:checked + .toggle-slider:before {
     flex-direction: column;
     gap: 30px;
     margin-top: 20px;
+    padding: 20px;
+    overflow-y: auto;
+    height: 100%;
 }
 
 .category {
@@ -881,6 +902,11 @@ input:checked + .toggle-slider:before {
 .category-title {
     font-weight: bold;
     font-size: 18px;
+}
+
+.category-actions {
+    display: flex;
+    gap: 5px;
 }
 
 .category-cards {
@@ -909,6 +935,12 @@ input:checked + .toggle-slider:before {
     border-radius: 10px;
     border: 2px dashed #ddd;
     cursor: pointer;
+    margin-bottom: 20px;
+}
+
+.add-category:hover {
+    border-color: var(--primary-color);
+    background-color: var(--hover-bg);
 }
 
 .add-category i {
@@ -932,6 +964,8 @@ input:checked + .toggle-slider:before {
     overflow: hidden;
     position: relative;
     transition: transform 0.2s ease, box-shadow 0.3s ease;
+    display: flex;
+    flex-direction: column;
 }
 
 .card:hover {
@@ -967,6 +1001,8 @@ input:checked + .toggle-slider:before {
 .card-title {
     font-weight: bold;
     font-size: 16px;
+    flex-grow: 1;
+    margin-right: 10px;
 }
 
 .card-menu {
@@ -1293,6 +1329,8 @@ input:checked + .toggle-slider:before {
     max-height: 90vh;
     overflow-y: auto;
     box-shadow: var(--modal-shadow);
+    display: flex;
+    flex-direction: column;
 }
 
 .confirm-modal {
@@ -1326,6 +1364,8 @@ input:checked + .toggle-slider:before {
 
 .modal-body {
     padding: 20px;
+    overflow-y: auto;
+    flex-grow: 1;
 }
 
 .modal-footer {
@@ -1437,6 +1477,13 @@ textarea.form-control {
 }
 
 /* Color picker */
+.color-picker {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 10px;
+}
+
 .color-picker-row {
     display: flex;
     flex-wrap: wrap;
@@ -1612,6 +1659,11 @@ textarea.form-control {
     font-weight: 500;
 }
 
+.category-item-meta {
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
 .category-item-actions {
     display: flex;
     gap: 10px;
@@ -1633,6 +1685,42 @@ textarea.form-control {
 .share-link-container {
     display: flex;
     margin: 15px 0;
+}
+
+.share-link-container input {
+    flex-grow: 1;
+    margin-right: 10px;
+}
+
+/* Drag & Drop für Kategorien */
+.ui-sortable-placeholder {
+    border: 1px dashed #ccc;
+    background-color: #f9f9f9;
+    height: 100px;
+    visibility: visible !important;
+    border-radius: var(--card-border-radius);
+}
+
+.ui-sortable-helper {
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.card-placeholder {
+    border: 2px dashed #ddd;
+    border-radius: var(--card-border-radius);
+    height: 150px;
+    background-color: rgba(33, 150, 243, 0.05);
+}
+
+/* Welcome Message */
+#welcomeModal .modal {
+    max-width: 700px;
+}
+
+#welcomeModal ul, 
+#welcomeModal ol {
+    margin-left: 20px;
+    margin-bottom: 15px;
 }
 
 /* Responsive Styles */
@@ -1658,6 +1746,7 @@ textarea.form-control {
     
     #sidebar:hover {
         width: var(--sidebar-width);
+        z-index: 200;
     }
     
     #sidebar:hover .sidebar-header h1,
@@ -1673,6 +1762,10 @@ textarea.form-control {
     #sidebar:hover .sidebar-item {
         padding: 12px 20px;
         justify-content: flex-start;
+    }
+    
+    #main-content {
+        width: calc(100% - var(--sidebar-collapsed-width));
     }
 }
 
@@ -1690,6 +1783,7 @@ textarea.form-control {
         align-items: center;
         padding: 10px;
         overflow-x: auto;
+        height: auto;
     }
     
     .sidebar-header {
@@ -1717,6 +1811,8 @@ textarea.form-control {
     
     #main-content {
         padding: 10px;
+        width: 100%;
+        height: calc(100vh - 60px); /* Abzüglich Sidebar-Höhe */
     }
     
     .activity-container,
@@ -1775,6 +1871,10 @@ textarea.form-control {
     .size-controls {
         flex-direction: column;
         gap: 10px;
+    }
+    
+    .background-style-options {
+        flex-wrap: wrap;
     }
 }
 

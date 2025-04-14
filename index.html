@@ -554,18 +554,25 @@
         <div class="modal-overlay" id="shareModal">
             <div class="modal">
                 <div class="modal-header">
-                    <div class="modal-title">Teilen</div>
+                    <div class="modal-title">Teilen (Offline-Testversion)</div>
                     <button class="modal-close" id="closeShareModal">&times;</button>
                 </div>
                 <div class="modal-body">
-                    <p>Kopiere diesen Link, um die Seite im Schülermodus zu teilen:</p>
+                    <p>Hier ist eine Offline-URL für Testzwecke:</p>
                     <div class="share-link-container">
                         <input type="text" class="form-control" id="shareLink" readonly>
                         <button class="btn btn-primary" id="copyLinkBtn">
                             <i class="fas fa-copy"></i>
                         </button>
                     </div>
-                    <p class="info-text">Im Schülermodus können die Inhalte angesehen, aber nicht bearbeitet werden.</p>
+                    <p class="info-text">Diese URL ist für Testzwecke gedacht und funktioniert nur lokal.</p>
+                    
+                    <div style="margin-top: 20px; padding: 10px; background-color: #f8f9fa; border-radius: 5px;">
+                        <p><strong>Offline-Nutzung:</strong></p>
+                        <p>1. Kopiere diese URL</p>
+                        <p>2. Die Boards werden im Browser-Speicher gespeichert</p>
+                        <p>3. Im Schülermodus können die Inhalte angesehen, aber nicht bearbeitet werden</p>
+                    </div>
                 </div>
             </div>
         </div>

@@ -833,14 +833,24 @@ const Views = {
     },
     
     /**
-     * Karten im Raster-Layout rendern
+     * Rendert die Karten im Raster-Layout
      * @param {Object} board - Das Board-Objekt
      */
     renderCardsGrid: function(board) {
         const boardGrid = $('#boardGrid');
         boardGrid.empty();
         
-        // "Karte hinzufügen"-Button erstellen
+        // Zuerst alle vorhandenen Karten hinzufügen und dann erst den "Neue Karte"-Button
+        // Wenn keine Karten vorhanden sind
+        if (board.cards && board.cards.length > 0) {
+            // Karten in Raster anordnen
+            board.cards.forEach(card => {
+                const cardElement = this.createCardElement(board.id, card);
+                boardGrid.append(cardElement);
+            });
+        }
+        
+        // "Karte hinzufügen"-Button erstellen und RECHTS anhängen
         if (!AppData.studentMode) {
             const addCard = $(`
                 <div class="add-card" id="addCardBtnGrid">
@@ -855,8 +865,6 @@ const Views = {
             
             boardGrid.append(addCard);
         }
-        
-        // Code zum Anzeigen von Karten wurde nach oben verschoben
     },
     
     /**
@@ -866,6 +874,12 @@ const Views = {
     renderCardsFree: function(board) {
         const boardFree = $('#boardFree');
         boardFree.empty();
+        
+        // Grauer Hintergrund immer entfernen, unabhängig vom Modus
+        boardFree.css({
+            'background-color': 'transparent',
+            'border': 'none'
+        });
         
         // "Karte hinzufügen"-Button erstellen und RECHTS positionieren
         if (!AppData.studentMode) {
@@ -1379,6 +1393,101 @@ const Views = {
                     <em>Keine Kategorien vorhanden</em>
                 </div>
             `);
+        }
+    },
+    
+    /**
+     * Schülermodus umschalten
+     */
+    toggleStudentMode: function() {
+        AppData.studentMode = $('#studentModeToggle').prop('checked');
+        
+        // URL mit Modusparameter aktualisieren
+        const url = new URL(window.location.href);
+        if (AppData.studentMode) {
+            url.searchParams.set('mode', 'student');
+        } else {
+            url.searchParams.delete('mode');
+        }
+        window.history.replaceState({}, '', url);
+        
+        // Sichtbarkeit der Editor-Elemente aktualisieren
+        $('.editor-only').toggle(!AppData.studentMode);
+        
+        // Sichtbarkeit der Hinzufügen-Buttons aktualisieren
+        if (AppData.studentMode) {
+            $('#addCardBtnGrid, #addCategoryBtn').hide();
+        } else {
+            $('#addCardBtnGrid, #addCategoryBtn').show();
+        }
+        
+        // Ansicht aktualisieren, je nach aktuellem View
+        if (AppData.currentBoard) {
+            if (AppData.currentBoard.view === 'categories') {
+                Views.renderCardsCategories(AppData.currentBoard);
+            } else if (AppData.currentBoard.view === 'free') {
+                // Im Schülermodus den grau-transparenten Hintergrund entfernen
+                if (AppData.studentMode) {
+                    $('#boardFree').css({
+                        'background-color': 'transparent',
+                        'border': 'none'
+                    });
+                } else {
+                    // Im Bearbeitungsmodus den Standardstil wiederherstellen
+                    $('#boardFree').css({
+                        'background-color': 'rgba(255, 255, 255, 0.5)',
+                        'border': '2px dashed #ddd'
+                    });
+                }
+            }
+        }
+        
+        // In localStorage speichern
+        StorageService.saveAppData();
+        
+        // Freigabe-Link aktualisieren
+        this.updateShareLink();
+    },
+    
+    /**
+     * Freigabe-Link aktualisieren (Offline-Version für Tests)
+     */
+    updateShareLink: function() {
+        // Aktuelles Board-ID holen
+        const boardId = AppData.currentBoard ? AppData.currentBoard.id : '';
+        
+        // Eine lokale Datei-URL generieren (für Offline-Tests)
+        const offlineUrl = 'file:///snapwall-offline/' + boardId + '.html';
+        
+        // Alternativ könnte man auch eine data-URL erstellen
+        // const jsonData = JSON.stringify(AppData.currentBoard);
+        // const encodedData = encodeURIComponent(jsonData);
+        // const dataUrl = `data:application/json;charset=utf-8,${encodedData}`;
+        
+        // URL im Textfeld anzeigen
+        $('#shareLink').val(offlineUrl);
+    },
+    
+    /**
+     * Freigabe-Link in die Zwischenablage kopieren
+     */
+    copyShareLink: function() {
+        const shareLink = $('#shareLink')[0];
+        shareLink.select();
+        document.execCommand('copy');
+        
+        // Visuelle Rückmeldung
+        const copyBtn = $('#copyLinkBtn');
+        const originalHtml = copyBtn.html();
+        copyBtn.html('<i class="fas fa-check"></i>');
+        
+        setTimeout(() => {
+            copyBtn.html(originalHtml);
+        }, 2000);
+        
+        // Offline-Version erstellen (für Tests)
+        if (AppData.currentBoard) {
+            Controllers.exportOfflineVersion();
         }
     },
     
