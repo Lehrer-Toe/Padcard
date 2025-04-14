@@ -1,529 +1,330 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>snapWall</title>
-    
-    <!-- Favicon -->
-    <link rel="icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAC1ElEQVRYR+2XT2sTQRiHn3d2N4ltbKEeRKSKCBVPngQP/gFPHhQEL4IXD6IgHgQRbx48+yH8BHryJIhYFRFEPIhYqRYrIq1NTNPd2ZF3ZbekaVKSNcSD7mV335n3N8+87zuzwn+e5HvfP3jGhYEE1tTt/G7tVvfTj6BVe9/tXL25I4L8D4EV4LrV12VdCIiZg0wEkMHJwQS2Bne7uSOLTDUeQ9rXPYMUwu2eDCKWJnf3AugLMLRFLr5eRlmfEIkQmIBdx0fZfihP2NJEGCyjNRgLGJsGozFGE6HZe/ooo9mhfHlzD4BPK+5xevEmqKfYhS7oPDicY+bYGFprjNGsVGOu3K1g/1miMxZiO9hTk1y6vbdNjR0BSj+8k+Wlhf4K2EYGHQrD5Qpvl224AjhFwkuXuDFTbA+DdQFePV44LC/f7bP6dsJNFTk7NcLhYg7HscqEOPxMxlQ+1Xi5+JXq+h6iEzMEly7z8FSRHfOA7QDlhdvYx9ZaFLAV+zlHdmxsLCAMQ7TWrc91q5Wvq6ydP4k1doADU2dYPlnYnoDaajg1cYjpvbUWQEEYWQAj9XLF5UZVYQVON8Xfmtf5shwyeWyc4/kaa7Vd4AW4mCWy+WAghcmxHGGUgGy9dZmUzopPrWEnxM/6rFYj3Hod13EJqt9wnQwnCxFflr4TLb1tFqOBObA9DHBiB9uuJ/uuSrXfkQSN3w0C18V1MwRxjK38wGrW83ErFT4++oCoFgidW7hXZgcXogLf/eB4tfoNrZoK+E1ACGKjaWo1lHcft1ImuP+YuOphtC90bk5fGgzAJqG2/v7pMGM5icdHm4XaUcr17QVBBSo+Yhw3dILP3oOFxGQGpBTDf+KdT1xzIxsrpcTbFKARWpnrQyP8e3cgd+BPCKSVcOj9wHYAA91MLhdYI9LZXzYUYL83ZLvP+y++ffr0u4/ePQAAAABJRU5ErkJggg==" type="image/png">
-    
-    <!-- Externe Bibliotheken -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.13.2/themes/base/jquery-ui.min.css">
-    
-    <!-- Projekt-Dateien -->
-    <link rel="stylesheet" href="css/styles.css">
-    
-    <!-- jQuery und jQuery UI einbinden -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.13.2/jquery-ui.min.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>snapWall</title>
+  
+  <!-- Favicon -->
+  <link rel="icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAC1ElEQVRYR+2XT2sTQRiHn3d2N4ltbKEeRKSKCBVPngQP/gFPHhQEL4IXD6IgHgQRbx48+yH8BHryJIhYFRFEPIhYqRYrIq1NTNPd2ZF3ZbekaVKSNcSD7mV335n3N8+87zuzwn+e5HvfP3jGhYEE1tTt/G7tVvfTj6BVe9/tXL25I4L8D4EV4LrV12VdCIiZg0wEkMHJwQS2Bne7uSOLTDUeQ9rXPYMUwu2eDCKWJnf3AugLMLRFLr5eRlmfEIkQmIBdx0fZfihP2NJEGCyjNRgLGJsGozFGE6HZe/ooo9mhfHlzD4BPK+5xevEmqKfYhS7oPDicY+bYGFprjNGsVGOu3K1g/1miMxZiO9hTk1y6vbdNjR0BSj+8k+Wlhf4K2EYGHQrD5Qpvl224AjhFwkuXuDFTbA+DdQFePV44LC/f7bP6dsJNFTk7NcLhYg7HscqEOPxMxlQ+1Xi5+JXq+h6iEzMEly7z8FSRHfOA7QDlhdvYx9ZaFLAV+zlHdmxsLCAMQ7TWrc91q5Wvq6ydP4k1doADU2dYPlnYnoDaajg1cYjpvbUWQEEYWQAj9XLF5UZVYQVON8Xfmtf5shwyeWyc4/kaa7Vd4AW4mCWy+WAghcmxHGGUgGy9dZmUzopPrWEnxM/6rFYj3Hod13EJqt9wnQwnCxFflr4TLb1tFqOBObA9DHBiB9uuJ/uuSrXfkQSN3w0C18V1MwRxjK38wGrW83ErFT4++oCoFgidW7hXZgcXogLf/eB4tfoNrZoK+E1ACGKjaWo1lHcft1ImuP+YuOphtC90bk5fGgzAJqG2/v7pMGM5icdHm4XaUcr17QVBBSo+Yhw3dILP3oOFxGQGpBTDf+KdT1xzIxsrpcTbFKARWpnrQyP8e3cgd+BPCKSVcOj9wHYAA91MLhdYI9LZXzYUYL83ZLvP+y++ffr0u4/ePQAAAABJRU5ErkJggg==" type="image/png">
+  
+  <!-- Externe Bibliotheken -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.13.2/themes/base/jquery-ui.min.css">
+  
+  <!-- Projekt-Dateien -->
+  <link rel="stylesheet" href="css/styles.css">
+  
+  <!-- jQuery und jQuery UI einbinden -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.13.2/jquery-ui.min.js"></script>
 </head>
 <body>
-    <div id="app">
-        <!-- Sidebar -->
-        <div id="sidebar">
-            <div class="sidebar-header">
-                <img src="img/snapwall-logo.png" alt="snapWall" class="logo" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB4PSIxMCIgeT0iMTAiIHdpZHRoPSI4MCIgaGVpZ2h0PSI4MCIgZmlsbD0iIzIxOTZGMyIgcng9IjEwIiByeT0iMTAiLz48dGV4dCB4PSI1MCIgeT0iNjUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSI0MCIgZmlsbD0id2hpdGUiIHRleHQtYW5jaG9yPSJtaWRkbGUiPlM8L3RleHQ+PC9zdmc+'">
-                <h1>snapWall</h1>
-            </div>
-            
-            <div class="sidebar-search">
-                <div class="search-container">
-                    <i class="fas fa-search"></i>
-                    <input type="text" placeholder="Snaps suchen" id="sidebarSearch">
-                </div>
-            </div>
-            
-            <div class="sidebar-menu">
-                <div class="sidebar-item active" id="menuLatestActivity">
-                    <i class="fas fa-clock"></i>
-                    <span>Neueste Aktivitäten</span>
-                </div>
-                
-                <div class="sidebar-item" id="menuMySnaps">
-                    <i class="fas fa-user"></i>
-                    <span>Von mir erstellt</span>
-                </div>
-                
-                <div class="sidebar-item" id="menuFavorites">
-                    <i class="fas fa-star"></i>
-                    <span>Favoriten</span>
-                </div>
-                
-                <div class="sidebar-item" id="menuTrash">
-                    <i class="fas fa-trash"></i>
-                    <span>In den Papierkorb verschoben</span>
-                </div>
-            </div>
-            
-            <div class="sidebar-divider">
-                <span>Lesezeichen</span>
-            </div>
-            
-            <div class="sidebar-folders" id="folderList">
-                <!-- Dynamisch gefüllte Ordnerliste -->
-            </div>
-            
-            <div class="sidebar-item new-folder" id="newFolderBtn">
-                <i class="fas fa-folder-plus"></i>
-                <span>Neuer Ordner</span>
-            </div>
-            
-            <div class="sidebar-footer">
-                <div class="user-info">
-                    <div class="user-avatar">
-                        <i class="fas fa-user"></i>
-                    </div>
-                    <div class="user-name">Mein Account</div>
-                </div>
-                
-                <div class="sidebar-toggle" id="sidebarToggle">
-                    <i class="fas fa-chevron-left"></i>
-                </div>
-            </div>
+  <div id="app">
+    <!-- Sidebar -->
+    <div id="sidebar">
+      <div class="sidebar-header">
+        <img src="img/snapwall-logo.png" alt="snapWall" class="logo" onerror="this.onerror = null; this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB4PSIxMCIgeT0iMTAiIHdpZHRoPSI4MCIgaGVpZ2h0PSI4MCIgZmlsbD0iIzIxOTZGMyIgcng9IjEwIiByeT0iMTAiLz48dGV4dCB4PSI1MCIgeT0iNjUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSI0MCIgZmlsbD0id2hpdGUiIHRleHQtYW5jaG9yPSJtaWRkbGUiPlM8L3RleHQ+PC9zdmc+'">
+        <h1>snapWall</h1>
+      </div>
+      
+      <div class="sidebar-search">
+        <div class="search-container">
+          <i class="fas fa-search"></i>
+          <input type="text" placeholder="Snaps suchen" id="sidebarSearch">
         </div>
-
-        <!-- Main Content -->
-        <div id="main-content">
-            <!-- Header Area -->
-            <div id="header">
-                <div class="page-title" id="pageTitle">Neueste Aktivitäten</div>
-                <div class="header-controls">
-                    <div class="toggle-container">
-                        <span class="toggle-label">Schülermodus</span>
-                        <label class="toggle">
-                            <input type="checkbox" id="studentModeToggle">
-                            <span class="toggle-slider"></span>
-                        </label>
-                    </div>
-                    <button class="btn" id="shareBtn">
-                        <i class="fas fa-share-alt"></i> Teilen
-                    </button>
-                    <div class="dropdown">
-                        <button class="btn dropdown-toggle">
-                            <i class="fas fa-cog"></i>
-                        </button>
-                        <div class="dropdown-menu">
-                            <a href="#" id="exportBtn"><i class="fas fa-download"></i> Exportieren</a>
-                            <label for="importFile"><i class="fas fa-upload"></i> Importieren</label>
-                            <input type="file" id="importFile" style="display: none;" accept=".json">
-                            <a href="#" id="settingsBtn"><i class="fas fa-sliders-h"></i> Einstellungen</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Hauptinhalt (Container für verschiedene Views) -->
-            <div id="main-container">
-                <!-- Latest Activities View (Home) -->
-                <div id="latest-activities-view">
-                    <div class="view-controls">
-                        <div class="view-sorting">
-                            <span>Sortieren nach:</span>
-                            <a href="#" class="sort-option active" data-sort="name">Name</a>
-                            <span class="separator">|</span>
-                            <a href="#" class="sort-option" data-sort="date">Datum</a>
-                        </div>
-                        <button class="btn btn-primary" id="createNewBtn">
-                            <i class="fas fa-plus"></i> Einen Snap erstellen
-                        </button>
-                    </div>
-                    
-                    <div class="activity-container" id="activityContainer">
-                        <!-- Hier werden Snaps dynamisch eingefügt -->
-                        <div class="create-padlet-card">
-                            <div class="create-padlet-icon">
-                                <i class="fas fa-plus-circle"></i>
-                            </div>
-                            <div class="create-padlet-text">Einen Snap erstellen</div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Folder View (versteckt) -->
-                <div id="folder-view" class="hidden">
-                    <!-- Ordnerinhalte werden hier dynamisch eingefügt -->
-                </div>
-                
-                <!-- Board View (versteckt) -->
-                <div id="board-view" class="hidden">
-                    <div class="board-header">
-                        <div class="board-title" id="boardTitle">Board-Titel</div>
-                        <div class="board-controls">
-                            <div class="view-selector">
-                                <button class="view-btn active" data-view="grid"><i class="fas fa-th"></i></button>
-                                <button class="view-btn" data-view="free"><i class="fas fa-expand"></i></button>
-                                <button class="view-btn" data-view="categories"><i class="fas fa-list-ul"></i></button>
-                            </div>
-                            <div class="grid-controls">
-                                <div class="layout-selector">
-                                    <button class="layout-btn" data-columns="2"><i class="fas fa-columns"></i> 2</button>
-                                    <button class="layout-btn active" data-columns="3"><i class="fas fa-columns"></i> 3</button>
-                                    <button class="layout-btn" data-columns="4"><i class="fas fa-columns"></i> 4</button>
-                                </div>
-                            </div>
-                            <div class="search-container">
-                                <i class="fas fa-search"></i>
-                                <input type="text" id="searchInput" placeholder="Suchen...">
-                            </div>
-                            <button class="btn" id="backgroundBtn">
-                                <i class="fas fa-image"></i> Hintergrund
-                            </button>
-                            <button class="btn" id="categoriesBtn">
-                                <i class="fas fa-tags"></i> Kategorien
-                            </button>
-                            <button class="btn btn-primary" id="editBoardTitleBtn">
-                                <i class="fas fa-edit"></i> Bearbeiten
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <!-- Grid View -->
-                    <div id="boardGrid">
-                        <!-- Karten werden dynamisch eingefügt -->
-                        <div class="card add-card" id="addCardBtnGrid">
-                            <div class="card-content">
-                                <div class="add-card-icon">
-                                    <i class="fas fa-plus"></i>
-                                </div>
-                                <div class="add-card-text">Neue Karte hinzufügen</div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Free Positioning View -->
-                    <div id="boardFree" class="hidden">
-                        <!-- Karten werden dynamisch eingefügt -->
-                    </div>
-                    
-                    <!-- Categories View -->
-                    <div id="boardCategories" class="hidden">
-                        <!-- Kategorien werden dynamisch eingefügt -->
-                        <div class="add-category" id="addCategoryBtn">
-                            <div class="add-category-icon">
-                                <i class="fas fa-plus"></i>
-                            </div>
-                            <div class="add-category-text">Neue Kategorie hinzufügen</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Modals -->
-        <!-- Folder Modal -->
-        <div class="modal-overlay" id="folderModal">
-            <div class="modal">
-                <div class="modal-header">
-                    <div class="modal-title" id="folderModalTitle">Neuer Ordner</div>
-                    <button class="modal-close" id="closeFolderModal">&times;</button>
-                </div>
-                <div class="modal-body">
-                    <div class="form-group">
-                        <label for="folderTitle">Titel</label>
-                        <input type="text" class="form-control" id="folderTitle" placeholder="Ordner-Titel">
-                    </div>
-                    <div class="form-group">
-                        <label for="parentFolderSelect">Übergeordneter Ordner</label>
-                        <select class="form-control" id="parentFolderSelect">
-                            <option value="">Kein übergeordneter Ordner</option>
-                            <!-- Ordner werden dynamisch hinzugefügt -->
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Farbe</label>
-                        <div class="color-picker" id="folderColorPicker">
-                            <!-- Farben werden dynamisch hinzugefügt -->
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button class="btn" id="cancelFolderBtn">Abbrechen</button>
-                    <button class="btn btn-primary" id="saveFolderBtn">Speichern</button>
-                </div>
-            </div>
+      </div>
+      
+      <div class="sidebar-menu">
+        <div class="sidebar-item active" id="menuLatestActivity">
+          <i class="fas fa-clock"></i>
+          <span>Neueste Aktivitäten</span>
         </div>
         
-        <!-- Board Modal -->
-        <div class="modal-overlay" id="boardModal">
-            <div class="modal">
-                <div class="modal-header">
-                    <div class="modal-title" id="boardModalTitle">Neuer Snap</div>
-                    <button class="modal-close" id="closeBoardModal">&times;</button>
-                </div>
-                <div class="modal-body">
-                    <div class="form-group">
-                        <label for="boardTitleInput">Titel</label>
-                        <input type="text" class="form-control" id="boardTitleInput" placeholder="Titel des Snaps">
-                    </div>
-                    <div class="form-group">
-                        <label for="boardFolderSelect">Ordner</label>
-                        <select class="form-control" id="boardFolderSelect">
-                            <option value="">Kein Ordner</option>
-                            <!-- Ordner werden dynamisch hinzugefügt -->
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Farbe</label>
-                        <div class="color-picker" id="boardColorPicker">
-                            <!-- Farben werden dynamisch hinzugefügt -->
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button class="btn" id="cancelBoardBtn">Abbrechen</button>
-                    <button class="btn btn-primary" id="saveBoardBtn">Speichern</button>
-                </div>
-            </div>
+        <div class="sidebar-item" id="menuMySnaps">
+          <i class="fas fa-user"></i>
+          <span>Von mir erstellt</span>
         </div>
-
-        <!-- Card Modal -->
-        <div class="modal-overlay" id="cardModal">
-            <div class="modal">
-                <div class="modal-header">
-                    <div class="modal-title" id="cardModalTitle">Neue Karte</div>
-                    <button class="modal-close" id="closeCardModal">&times;</button>
-                </div>
-                <div class="modal-body">
-                    <div class="form-group">
-                        <label for="cardTitle">Titel</label>
-                        <input type="text" class="form-control" id="cardTitle" placeholder="Titel der Karte">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Kartentyp</label>
-                        <div class="card-type-selector">
-                            <div class="card-type-option active" data-type="text">
-                                <i class="fas fa-file-alt"></i>
-                                <span>Text</span>
-                            </div>
-                            <div class="card-type-option" data-type="youtube">
-                                <i class="fab fa-youtube"></i>
-                                <span>YouTube</span>
-                            </div>
-                            <div class="card-type-option" data-type="image">
-                                <i class="fas fa-image"></i>
-                                <span>Bild</span>
-                            </div>
-                            <div class="card-type-option" data-type="link">
-                                <i class="fas fa-link"></i>
-                                <span>Link</span>
-                            </div>
-                            <div class="card-type-option" data-type="learningapp">
-                                <i class="fas fa-graduation-cap"></i>
-                                <span>LearningApp</span>
-                            </div>
-                            <div class="card-type-option" data-type="audio">
-                                <i class="fas fa-volume-up"></i>
-                                <span>Audio</span>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Text-Felder (standardmäßig sichtbar) -->
-                    <div class="form-group">
-                        <label for="cardContent">Inhalt</label>
-                        <textarea class="form-control" id="cardContent" rows="4" placeholder="Text eingeben..."></textarea>
-                    </div>
-                    
-                    <!-- YouTube-Felder (versteckt) -->
-                    <div class="form-group youtube-fields" style="display: none;">
-                        <label for="youtubeUrl">YouTube-URL</label>
-                        <input type="text" class="form-control" id="youtubeUrl" placeholder="https://www.youtube.com/watch?v=...">
-                    </div>
-                    
-                    <!-- Bild-Felder (versteckt) -->
-                    <div class="form-group image-fields" style="display: none;">
-                        <label for="imageUrl">Bild-URL</label>
-                        <input type="text" class="form-control" id="imageUrl" placeholder="https://example.com/image.jpg">
-                        <div class="form-group mt-2">
-                            <label for="imageUpload">Oder Bild hochladen:</label>
-                            <input type="file" id="imageUpload" accept="image/*">
-                        </div>
-                        <div id="imagePreview" class="mt-2" style="display: none;"></div>
-                        <button class="btn mt-2" id="placeholderBtn">Platzhalter verwenden</button>
-                    </div>
-                    
-                    <!-- Link-Felder (versteckt) -->
-                    <div class="form-group link-fields" style="display: none;">
-                        <label for="linkUrl">Link-URL</label>
-                        <input type="text" class="form-control" id="linkUrl" placeholder="https://example.com">
-                    </div>
-                    
-                    <!-- LearningApp-Felder (versteckt) -->
-                    <div class="form-group learningapp-fields" style="display: none;">
-                        <label for="learningappUrl">LearningApp-URL oder ID</label>
-                        <input type="text" class="form-control" id="learningappUrl" placeholder="https://learningapps.org/display?v=...">
-                    </div>
-                    
-                    <!-- Audio-Felder (versteckt) -->
-                    <div class="form-group audio-fields" style="display: none;">
-                        <label for="audioUrl">Audio-URL</label>
-                        <input type="text" class="form-control" id="audioUrl" placeholder="https://example.com/audio.mp3">
-                        <div class="form-group mt-2">
-                            <label for="audioUpload">Oder Audio hochladen:</label>
-                            <input type="file" id="audioUpload" accept="audio/*">
-                        </div>
-                        <div id="audioPreview" class="mt-2" style="display: none;"></div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Farbe</label>
-                        <div class="color-palette-selector">
-                            <div class="color-palette active" data-palette="material">Material</div>
-                            <div class="color-palette" data-palette="pastel">Pastell</div>
-                            <div class="color-palette" data-palette="custom">Benutzerdefiniert</div>
-                        </div>
-                        <div class="material-colors"></div>
-                        <div class="pastel-colors" style="display: none;"></div>
-                        <div class="custom-colors" style="display: none;">
-                            <input type="color" id="customColorPicker" value="#3498db">
-                            <div id="customColorPreview" class="color-preview"></div>
-                            <button class="btn" id="applyCustomColorBtn">Anwenden</button>
-                        </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Größe</label>
-                        <div class="width-container">
-                            <span>Breite:</span>
-                            <button class="width-btn active" data-width="1">Klein</button>
-                            <button class="width-btn" data-width="2">Mittel</button>
-                            <button class="width-btn" data-width="3">Groß</button>
-                        </div>
-                        <div class="height-container">
-                            <span>Höhe:</span>
-                            <button class="height-btn active" data-height="1">Klein</button>
-                            <button class="height-btn" data-height="2">Mittel</button>
-                            <button class="height-btn" data-height="3">Groß</button>
-                        </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="cardCategory">Kategorie</label>
-                        <select class="form-control" id="cardCategory">
-                            <option value="">Keine Kategorie</option>
-                            <!-- Kategorien werden dynamisch hinzugefügt -->
-                        </select>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button class="btn" id="cancelCardBtn">Abbrechen</button>
-                    <button class="btn btn-primary" id="saveCardBtn">Speichern</button>
-                </div>
-            </div>
+        
+        <div class="sidebar-item" id="menuFavorites">
+          <i class="fas fa-star"></i>
+          <span>Favoriten</span>
         </div>
-
-        <!-- Category Modal -->
-        <div class="modal-overlay" id="categoryModal">
-            <div class="modal">
-                <div class="modal-header">
-                    <div class="modal-title">Kategorien</div>
-                    <button class="modal-close" id="closeCategoryModal">&times;</button>
-                </div>
-                <div class="modal-body">
-                    <div id="categoryList"></div>
-                    <div class="form-group mt-3">
-                        <label for="newCategoryInput">Neue Kategorie hinzufügen</label>
-                        <div class="input-group">
-                            <input type="text" class="form-control" id="newCategoryInput" placeholder="Kategoriename">
-                            <button class="btn btn-primary" id="addCategoryFormBtn">Hinzufügen</button>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button class="btn" id="closeCategoryBtn">Schließen</button>
-                </div>
-            </div>
+        
+        <div class="sidebar-item" id="menuTrash">
+          <i class="fas fa-trash"></i>
+          <span>In den Papierkorb verschoben</span>
         </div>
-
-        <!-- Background Modal -->
-        <div class="modal-overlay" id="backgroundModal">
-            <div class="modal">
-                <div class="modal-header">
-                    <div class="modal-title">Hintergrund festlegen</div>
-                    <button class="modal-close" id="closeBackgroundModal">&times;</button>
-                </div>
-                <div class="modal-body">
-                    <div class="form-group">
-                        <label for="backgroundUrl">Bild-URL</label>
-                        <input type="text" class="form-control" id="backgroundUrl" placeholder="https://example.com/background.jpg">
-                    </div>
-                    <div class="form-group">
-                        <label for="backgroundUpload">Oder Bild hochladen:</label>
-                        <input type="file" id="backgroundUpload" accept="image/*">
-                        <div id="backgroundFileName" class="mt-1 text-secondary">Keine Datei ausgewählt</div>
-                    </div>
-                    <div class="form-group">
-                        <label>Vorschau</label>
-                        <div class="bg-preview"></div>
-                    </div>
-                    <div class="form-group">
-                        <label>Stil</label>
-                        <div class="background-style-selector">
-                            <div class="background-style-option active" data-style="cover">Füllen</div>
-                            <div class="background-style-option" data-style="contain">Anpassen</div>
-                            <div class="background-style-option" data-style="repeat">Kacheln</div>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label>Deckkraft <span id="opacityValue">100%</span></label>
-                        <input type="range" class="form-control-range" id="backgroundOpacity" min="0" max="100" value="100">
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button class="btn btn-danger" id="removeBackgroundBtn">Entfernen</button>
-                    <button class="btn" id="cancelBackgroundBtn">Abbrechen</button>
-                    <button class="btn btn-primary" id="saveBackgroundBtn">Anwenden</button>
-                </div>
-            </div>
+      </div>
+      
+      <div class="sidebar-divider">
+        <span>Lesezeichen</span>
+      </div>
+      
+      <div class="sidebar-folders" id="folderList">
+        <!-- Dynamisch gefüllte Ordnerliste -->
+      </div>
+      
+      <div class="sidebar-item new-folder" id="newFolderBtn">
+        <i class="fas fa-folder-plus"></i>
+        <span>Neuer Ordner</span>
+      </div>
+      
+      <div class="sidebar-footer">
+        <div class="user-info">
+          <div class="user-avatar">
+            <i class="fas fa-user"></i>
+          </div>
+          <div class="user-name">Mein Account</div>
         </div>
-
-        <!-- Share Modal -->
-        <div class="modal-overlay" id="shareModal">
-            <div class="modal">
-                <div class="modal-header">
-                    <div class="modal-title">Snap teilen</div>
-                    <button class="modal-close" id="closeShareModal">&times;</button>
-                </div>
-                <div class="modal-body">
-                    <div class="form-group">
-                        <label for="shareLink">Link zum Teilen</label>
-                        <div class="input-group">
-                            <input type="text" class="form-control" id="shareLink" readonly>
-                            <button class="btn btn-primary" id="copyLinkBtn"><i class="fas fa-copy"></i> Kopieren</button>
-                        </div>
-                        <small class="text-muted">Dieser Link öffnet den Snap im Schülermodus.</small>
-                    </div>
-                </div>
-            </div>
+        
+        <div class="sidebar-toggle" id="sidebarToggle">
+          <i class="fas fa-chevron-left"></i>
         </div>
-
-        <!-- Confirm Modal -->
-        <div class="modal-overlay" id="confirmModal">
-            <div class="modal">
-                <div class="modal-header">
-                    <div class="modal-title" id="confirmTitle">Bestätigung</div>
-                    <button class="modal-close" id="closeConfirmModal">&times;</button>
-                </div>
-                <div class="modal-body">
-                    <p id="confirmMessage">Möchtest du diese Aktion wirklich ausführen?</p>
-                </div>
-                <div class="modal-footer">
-                    <button class="btn" id="cancelConfirmBtn">Abbrechen</button>
-                    <button class="btn btn-primary" id="confirmBtn">Bestätigen</button>
-                </div>
-            </div>
-        </div>
+      </div>
     </div>
 
-    <!-- JavaScript in korrekter Reihenfolge -->
-    <script src="js/config.js"></script>
-    <script src="js/utils.js"></script>
-    <script src="js/models.js"></script>
-    <script src="js/views.js"></script>
-    <script src="js/controllers.js"></script>
-    <script src="js/app.js"></script>
+    <!-- Main Content -->
+    <div id="main-content">
+      <!-- Header Area -->
+      <div id="header">
+        <div class="page-title" id="pageTitle">Neueste Aktivitäten</div>
+        <div class="header-controls">
+          <div class="toggle-container">
+            <span class="toggle-label">Schülermodus</span>
+            <label class="toggle">
+              <input type="checkbox" id="studentModeToggle">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <button class="btn" id="shareBtn">
+            <i class="fas fa-share-alt"></i> Teilen
+          </button>
+          <div class="dropdown">
+            <button class="btn dropdown-toggle">
+              <i class="fas fa-cog"></i>
+            </button>
+            <div class="dropdown-menu">
+              <a href="#" id="exportBtn"><i class="fas fa-download"></i> Exportieren</a>
+              <label for="importFile"><i class="fas fa-upload"></i> Importieren</label>
+              <input type="file" id="importFile" style="display: none;" accept=".json">
+              <a href="#" id="settingsBtn"><i class="fas fa-sliders-h"></i> Einstellungen</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Hauptinhalt (Container für verschiedene Views) -->
+      <div id="main-container">
+        <!-- Latest Activities View (Home) -->
+        <div id="latest-activities-view">
+          <div class="view-controls">
+            <div class="view-sorting">
+              <span>Sortieren nach:</span>
+              <a href="#" class="sort-option active" data-sort="name">Name</a>
+              <span class="separator">|</span>
+              <a href="#" class="sort-option" data-sort="date">Datum</a>
+            </div>
+            <button class="btn btn-primary" id="createNewBtn">
+              <i class="fas fa-plus"></i> Einen Snap erstellen
+            </button>
+          </div>
+          
+          <div class="activity-container" id="activityContainer">
+            <!-- Hier werden Snaps dynamisch eingefügt -->
+            <div class="create-padlet-card">
+              <div class="create-padlet-icon">
+                <i class="fas fa-plus-circle"></i>
+              </div>
+              <div class="create-padlet-text">Ein Padlet erstellen</div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Folder View (versteckt) -->
+        <div id="folder-view" class="hidden">
+          <!-- Dynamisch gefüllte Ordnerinhalte -->
+        </div>
+        
+        <!-- Board View (versteckt) -->
+        <div id="board-view" class="hidden">
+          <div class="board-header">
+            <div class="board-title" id="boardTitle">Board-Titel</div>
+            <div class="board-controls">
+              <div class="view-selector">
+                <button class="view-btn active" data-view="grid">Grid</button>
+                <button class="view-btn" data-view="list">Liste</button>
+              </div>
+              <div class="layout-selector">
+                <button class="layout-btn" data-columns="2">2 Spalten</button>
+                <button class="layout-btn" data-columns="3">3 Spalten</button>
+                <button class="layout-btn" data-columns="4">4 Spalten</button>
+              </div>
+            </div>
+          </div>
+          <div class="board-content" id="boardContent">
+            <!-- Dynamischer Inhalt wird hier eingefügt -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modals -->
+  <!-- Folder Modal -->
+  <div id="folderModal" class="modal">
+    <div class="modal-content">
+      <h2 id="folderModalTitle">Neuer Ordner</h2>
+      <input type="text" id="folderTitle" placeholder="Ordnername">
+      <div id="folderColorPicker"></div>
+      <button id="saveFolderBtn">Speichern</button>
+      <button id="cancelFolderBtn">Abbrechen</button>
+      <button id="closeFolderModal" style="display:none;">Schließen</button>
+    </div>
+  </div>
+  <!-- Board Modal -->
+  <div id="boardModal" class="modal">
+    <div class="modal-content">
+      <h2 id="boardModalTitle">Neues Padlet</h2>
+      <input type="text" id="boardTitleInput" placeholder="Padlet-Titel">
+      <div id="boardColorPicker"></div>
+      <select id="boardFolderSelect">
+        <option value="">Kein Ordner</option>
+      </select>
+      <button id="saveBoardBtn">Speichern</button>
+      <button id="cancelBoardBtn">Abbrechen</button>
+      <button id="closeBoardModal" style="display:none;">Schließen</button>
+    </div>
+  </div>
+  <!-- Card Modal -->
+  <div id="cardModal" class="modal">
+    <div class="modal-content">
+      <h2 id="cardModalTitle">Neue Karte</h2>
+      <input type="text" id="cardTitle" placeholder="Kartentitel">
+      <textarea id="cardContent" placeholder="Kartentext"></textarea>
+      <div class="card-type-selector">
+        <div class="card-type-option active" data-type="text">
+          <i class="fas fa-font"></i>
+          <span>Text</span>
+        </div>
+        <div class="card-type-option" data-type="youtube">
+          <i class="fab fa-youtube"></i>
+          <span>YouTube</span>
+        </div>
+        <div class="card-type-option" data-type="image">
+          <i class="fas fa-image"></i>
+          <span>Bild</span>
+        </div>
+        <div class="card-type-option" data-type="link">
+          <i class="fas fa-link"></i>
+          <span>Link</span>
+        </div>
+        <div class="card-type-option" data-type="learningapp">
+          <i class="fas fa-graduation-cap"></i>
+          <span>LearningApp</span>
+        </div>
+        <div class="card-type-option" data-type="audio">
+          <i class="fas fa-music"></i>
+          <span>Audio</span>
+        </div>
+      </div>
+      <div class="youtube-fields" style="display:none;">
+        <input type="text" id="youtubeUrl" placeholder="YouTube URL">
+      </div>
+      <div class="image-fields" style="display:none;">
+        <input type="text" id="imageUrl" placeholder="Bild URL">
+        <input type="file" id="imageUpload" accept="image/*">
+        <div id="imagePreview" style="display:none;"></div>
+      </div>
+      <div class="link-fields" style="display:none;">
+        <input type="text" id="linkUrl" placeholder="Link URL">
+      </div>
+      <div class="learningapp-fields" style="display:none;">
+        <input type="text" id="learningappUrl" placeholder="LearningApp URL">
+      </div>
+      <div class="audio-fields" style="display:none;">
+        <input type="file" id="audioUpload" accept="audio/*">
+        <div id="audioPreview" style="display:none;"></div>
+      </div>
+      <div id="cardColorPicker">
+        <div class="color-palette-selector">
+          <div class="material-colors"></div>
+          <div class="pastel-colors" style="display:none;"></div>
+          <div class="custom-colors" style="display:none;"></div>
+        </div>
+        <input type="color" id="customColorPicker">
+        <div id="customColorPreview" style="width:30px;height:30px;border:1px solid #ccc;"></div>
+      </div>
+      <div class="width-container">
+        <button class="width-btn active" data-width="1">1x</button>
+        <button class="width-btn" data-width="2">2x</button>
+        <button class="width-btn" data-width="3">3x</button>
+      </div>
+      <div class="height-container">
+        <button class="height-btn active" data-height="1">1x</button>
+        <button class="height-btn" data-height="2">2x</button>
+        <button class="height-btn" data-height="3">3x</button>
+      </div>
+      <select id="cardCategory">
+        <option value="">Keine Kategorie</option>
+        <!-- Dynamische Kategorien -->
+      </select>
+      <button id="saveCardBtn">Speichern</button>
+      <button id="cancelCardBtn">Abbrechen</button>
+      <button id="closeCardModal" style="display:none;">Schließen</button>
+    </div>
+  </div>
+  <!-- Share Modal -->
+  <div id="shareModal" class="modal">
+    <div class="modal-content">
+      <h2>Teilen</h2>
+      <input type="text" id="shareLink" readonly>
+      <button id="copyLinkBtn">Link kopieren</button>
+      <button id="closeShareModal">Schließen</button>
+    </div>
+  </div>
+  <!-- Category Modal -->
+  <div id="categoryModal" class="modal">
+    <div class="modal-content">
+      <h2>Kategorie hinzufügen</h2>
+      <input type="text" id="categoryName" placeholder="Kategoriename">
+      <button id="addCategoryFormBtn">Hinzufügen</button>
+      <button id="closeCategoryModal">Schließen</button>
+      <button id="closeCategoryBtn" style="display:none;">Schließen</button>
+    </div>
+  </div>
+  <!-- Background Modal -->
+  <div id="backgroundModal" class="modal">
+    <div class="modal-content">
+      <h2>Hintergrund bearbeiten</h2>
+      <input type="file" id="backgroundUpload" accept="image/*">
+      <input type="range" id="backgroundOpacity" min="0" max="100" value="100">
+      <span id="opacityValue">100%</span>
+      <div class="bg-preview"></div>
+      <button id="saveBackgroundBtn">Speichern</button>
+      <button id="removeBackgroundBtn">Entfernen</button>
+      <button id="cancelBackgroundBtn">Abbrechen</button>
+      <button id="closeBackgroundModal" style="display:none;">Schließen</button>
+    </div>
+  </div>
+  <!-- Confirm Modal -->
+  <div id="confirmModal" class="modal">
+    <div class="modal-content">
+      <h2 id="confirmModalTitle">Bestätigung</h2>
+      <p id="confirmModalText">Soll fortgefahren werden?</p>
+      <button id="confirmBtn">Ja</button>
+      <button id="cancelConfirmBtn">Nein</button>
+      <button id="closeConfirmModal">Schließen</button>
+    </div>
+  </div>
+
+  <!-- App-Skripte -->
+  <script src="js/app.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/controllers.js"></script>
+  <script src="js/init.js"></script>
+  <script src="js/models.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/views.js"></script>
 </body>
 </html>

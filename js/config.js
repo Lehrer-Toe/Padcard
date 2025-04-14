@@ -1,4 +1,4 @@
-javascript/**
+/**
  * Konfiguration und globale Variablen für snapWall
  */
 
@@ -30,8 +30,8 @@ const DefaultColors = {
 const AppData = {
     folders: [],         // Array of folder objects
     boards: [],          // Array of board objects
-    currentBoard: null,  // Current active board
-    currentFolder: null, // Current active folder
-    view: 'home',        // Current view (home, folder, board)
-    studentMode: false   // Student mode flag
+    currentBoard: null,  // Aktuelles, aktives Board
+    currentFolder: null, // Aktueller, aktiver Ordner
+    view: 'home',        // Aktuelle Ansicht (home, folder, board)
+    studentMode: false   // Schülermodus-Flag
 };

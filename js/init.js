@@ -43,28 +43,14 @@ function createFavicon() {
 function checkLogo() {
     window.addEventListener('load', function() {
         const logo = document.querySelector('.logo');
-        if (logo) {
-            // Füge ein onerror-Event hinzu, um ein Fallback-Logo zu laden
-            logo.onerror = function() {
-                this.onerror = null; // Verhindere Endlosschleife
-                this.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB4PSIxMCIgeT0iMTAiIHdpZHRoPSI4MCIgaGVpZ2h0PSI4MCIgZmlsbD0iIzIxOTZGMyIgcng9IjEwIiByeT0iMTAiLz48dGV4dCB4PSI1MCIgeT0iNjUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSI0MCIgZmlsbD0id2hpdGUiIHRleHQtYW5jaG9yPSJtaWRkbGUiPlM8L3RleHQ+PC9zdmc+';
-            };
+        if (!logo.complete || logo.naturalWidth === 0) {
+            logo.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB4PSIxMCIgeT0iMTAiIHdpZHRoPSI4MCIgaGVpZ2h0PSI4MCIgZmlsbD0iIzIxOTZGMyIgcng9IjEwIiByeT0iMTAiLz48dGV4dCB4PSI1MCIgeT0iNjUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSI0MCIgZmlsbD0id2hpdGUiIHRleHQtYW5jaG9yPSJtaWRkbGUiPlM8L3RleHQ+PC9zdmc+';
         }
     });
 }
 
-// Initialisiere die Anwendung
-document.addEventListener('DOMContentLoaded', function() {
-    // Prüfe, ob jQuery und jQuery UI geladen sind
-    if (!checkJQuery() || !checkJQueryUI()) {
-        return;
-    }
-    
-    // Stelle sicher, dass ein Favicon vorhanden ist
+// Initialisierung ausführen
+if (checkJQuery() && checkJQueryUI()) {
     createFavicon();
-    
-    // Prüfe und erstelle ggf. Fallback für das Logo
     checkLogo();
-    
-    console.log('snapWall Initialisierung abgeschlossen.');
-});
+}
