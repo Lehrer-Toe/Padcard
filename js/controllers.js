@@ -302,7 +302,10 @@ const Controllers = {
             } else {
                 Views.renderFolderList();
             }
-        } else {
+
+
+
+ } else {
             // Neuen Ordner erstellen
             const folder = FolderDAO.create(title, color);
             Views.renderFolderList();
@@ -1244,3 +1247,711 @@ const Controllers = {
         }
     }
 };
+6. app.js
+javascript/**
+ * Hauptinitialisierung für snapWall
+ */
+
+// Anwendung initialisieren, wenn das Dokument bereit ist
+$(document).ready(function() {
+    console.log("snapWall wird initialisiert...");
+    
+    // Daten aus localStorage laden oder Standarddaten initialisieren
+    if (!StorageService.loadAppData()) {
+        StorageService.initDefaultData();
+    }
+    
+    // Fallback für fehlendes Logo erstellen
+    $('.logo').on('error', function() {
+        this.onerror = null;
+        this.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB4PSIxMCIgeT0iMTAiIHdpZHRoPSI4MCIgaGVpZ2h0PSI4MCIgZmlsbD0iIzIxOTZGMyIgcng9IjEwIiByeT0iMTAiLz48dGV4dCB4PSI1MCIgeT0iNjUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSI0MCIgZmlsbD0id2hpdGUiIHRleHQtYW5jaG9yPSJtaWRkbGUiPlM8L3RleHQ+PC9zdmc+';
+    });
+    
+    // Views initialisieren
+    Views.init();
+    
+    // Controller initialisieren
+    Controllers.init();
+    
+    // Startansicht rendern
+    Views.renderLatestActivitiesView();
+    
+    // URL-Parameter prüfen (für Freigabe-Links)
+    Controllers.checkUrlParams();
+    
+    // Dropdown-Menüs einrichten
+    $('.dropdown-toggle').on('click', function() {
+        $(this).siblings('.dropdown-menu').toggleClass('show');
+    });
+    
+    // Dropdown-Menüs schließen, wenn außerhalb geklickt wird
+    $(document).on('click', function(e) {
+        if (!$(e.target).closest('.dropdown').length) {
+            $('.dropdown-menu').removeClass('show');
+        }
+    });
+    
+    // Event-Handler für Navigation
+    $('#menuLatestActivity').on('click', function() {
+        $('.sidebar-item').removeClass('active');
+        $(this).addClass('active');
+        Views.renderLatestActivitiesView();
+    });
+    
+    $('#menuMySnaps').on('click', function() {
+        $('.sidebar-item').removeClass('active');
+        $(this).addClass('active');
+        Views.renderMyPadcardsView();
+    });
+    
+    $('#menuFavorites').on('click', function() {
+        $('.sidebar-item').removeClass('active');
+        $(this).addClass('active');
+        $('#pageTitle').text('Favoriten');
+    });
+    
+    $('#menuTrash').on('click', function() {
+        $('.sidebar-item').removeClass('active');
+        $(this).addClass('active');
+        $('#pageTitle').text('Papierkorb');
+    });
+    
+    // Toggle für Schülermodus
+    $('#studentModeToggle').on('change', function() {
+        Controllers.toggleStudentMode();
+    });
+    
+    // "Snap erstellen"-Karten
+    $('.create-padlet-card, #createNewBtn').on('click', function() {
+        Controllers.createBoard();
+    });
+    
+    console.log("snapWall wurde erfolgreich initialisiert!");
+});
+7. CSS-Ergänzungen für styles.css
+css/* Card Type Selector */
+.card-type-selector {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.card-type-option {
+    padding: 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    width: 80px;
+    transition: all 0.2s;
+}
+
+.card-type-option:hover {
+    background-color: var(--hover-bg);
+}
+
+.card-type-option.active {
+    background-color: var(--active-bg);
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+}
+
+.card-type-option i {
+    font-size: 20px;
+}
+
+/* Color Palette Selector */
+.color-palette-selector {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.color-palette {
+    padding: 5px 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.color-palette:hover {
+    background-color: var(--hover-bg);
+}
+
+.color-palette.active {
+    background-color: var(--active-bg);
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+}
+
+/* Size Selectors */
+.width-container, .height-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.width-btn, .height-btn {
+    padding: 5px 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.width-btn:hover, .height-btn:hover {
+    background-color: var(--hover-bg);
+}
+
+.width-btn.active, .height-btn.active {
+    background-color: var(--active-bg);
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+}
+
+/* Background Style Selector */
+.background-style-selector {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.background-style-option {
+    padding: 5px 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.background-style-option:hover {
+    background-color: var(--hover-bg);
+}
+
+.background-style-option.active {
+    background-color: var(--active-bg);
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+}
+
+/* Background Preview */
+.bg-preview {
+    height: 150px;
+    background-color: #f0f0f0;
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    margin-bottom: 15px;
+    background-size: cover;
+    background-position: center;
+}
+
+/* Board Header */
+.board-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.board-title {
+    font-size: 1.8rem;
+    font-weight: 600;
+    margin-right: 15px;
+}
+
+.board-controls {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.view-selector, .layout-selector {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+/* Board Views */
+#boardGrid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+}
+
+#boardFree {
+    position: relative;
+    min-height: 600px;
+}
+
+#boardCategories {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+/* Card Styles */
+.card {
+    background-color: white;
+    border-radius: var(--card-border-radius);
+    box-shadow: var(--card-shadow);
+    overflow: hidden;
+    border-top: 4px solid var(--primary-color);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+}
+
+.card-content {
+    padding: 15px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 10px;
+}
+
+.card-title {
+    font-weight: 600;
+    font-size: 1.1rem;
+    margin-right: 10px;
+}
+
+.card-menu {
+    position: relative;
+    cursor: pointer;
+    color: var(--text-secondary);
+}
+
+.card-menu:hover {
+    color: var(--text-color);
+}
+
+.card-menu-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    z-index: 10;
+    display: none;
+    min-width: 160px;
+    padding: 5px 0;
+    margin: 2px 0 0;
+    background-color: #fff;
+    border-radius: 5px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.card-menu-dropdown.show {
+    display: block;
+}
+
+.card-menu-item {
+    padding: 8px 15px;
+    cursor: pointer;
+}
+
+.card-menu-item:hover {
+    background-color: var(--hover-bg);
+}
+
+.card-text {
+    margin-top: 5px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    overflow-wrap: break-word;
+    flex-grow: 1;
+}
+
+/* Card Types */
+.card-youtube, .card-image, .card-link, .card-learningapp, .card-audio {
+    margin-top: 10px;
+}
+
+.card-youtube {
+    position: relative;
+    padding-bottom: 56.25%; /* 16:9 Aspect Ratio */
+    height: 0;
+    overflow: hidden;
+}
+
+.card-youtube img, .card-youtube iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.play-button {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 60px;
+    height: 60px;
+    background-color: rgba(0, 0, 0, 0.7);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+    z-index: 2;
+}
+
+.card-image img {
+    width: 100%;
+    max-height: 300px;
+    object-fit: contain;
+}
+
+.card-link {
+    padding: 10px 0;
+}
+
+.card-learningapp {
+    position: relative;
+    padding-bottom: 100%; /* 1:1 Aspect Ratio */
+    height: 0;
+    overflow: hidden;
+}
+
+.card-learningapp iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.card-audio {
+    padding: 10px 0;
+}
+
+.card-audio audio {
+    width: 100%;
+}
+
+/* Add Card Button */
+.add-card {
+    border: 2px dashed var(--border-color);
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    min-height: 150px;
+    padding: 20px;
+    transition: all 0.2s;
+}
+
+.add-card:hover {
+    border-color: var(--primary-color);
+    background-color: var(--hover-bg);
+}
+
+.add-card-icon {
+    font-size: 24px;
+    color: var(--primary-color);
+    margin-bottom: 10px;
+}
+
+/* Categories */
+.category {
+    background-color: white;
+    border-radius: var(--card-border-radius);
+    box-shadow: var(--card-shadow);
+    padding: 20px;
+}
+
+.category-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.category-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+.category-actions {
+    display: flex;
+    gap: 5px;
+}
+
+.category-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 15px;
+    min-height: 50px;
+}
+
+.category-placeholder {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 15px;
+    color: var(--text-secondary);
+    font-style: italic;
+}
+
+.add-category {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: white;
+    border: 2px dashed var(--border-color);
+    border-radius: var(--card-border-radius);
+    padding: 20px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.add-category:hover {
+    border-color: var(--primary-color);
+    background-color: var(--hover-bg);
+}
+
+.add-category-icon {
+    font-size: 24px;
+    color: var(--primary-color);
+    margin-bottom: 10px;
+}
+
+/* Category List in Modal */
+.category-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.category-item:last-child {
+    border-bottom: none;
+}
+
+.category-item-actions {
+    display: flex;
+    gap: 5px;
+}
+
+.category-item-actions button {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 5px;
+}
+
+.category-item-actions button:hover {
+    color: var(--text-color);
+}
+
+/* Color preview */
+.color-preview {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: inline-block;
+    margin: 0 10px;
+    border: 2px solid #ddd;
+}
+
+/* Resize handle for free positioning */
+.resize-handle {
+    position: absolute;
+    bottom: 5px;
+    right: 5px;
+    cursor: se-resize;
+    color: var(--text-secondary);
+    font-size: 12px;
+}
+
+/* Padlet Card (Board Preview) */
+.padlet-card {
+    background-color: white;
+    border-radius: var(--card-border-radius);
+    box-shadow: var(--card-shadow);
+    overflow: hidden;
+    transition: transform 0.2s, box-shadow 0.2s;
+    cursor: pointer;
+}
+
+.padlet-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+}
+
+.padlet-preview {
+    height: 120px;
+    position: relative;
+    overflow: hidden;
+}
+
+.padlet-preview-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-size: cover;
+    background-position: center;
+    opacity: 0.7;
+}
+
+.padlet-content {
+    padding: 15px;
+}
+
+.padlet-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 10px;
+}
+
+.padlet-title {
+    font-weight: 600;
+    font-size: 1.1rem;
+    margin-right: 10px;
+}
+
+.padlet-menu {
+    position: relative;
+}
+
+.padlet-menu-trigger {
+    cursor: pointer;
+    color: var(--text-secondary);
+    padding: 5px;
+}
+
+.padlet-menu-trigger:hover {
+    color: var(--text-color);
+}
+
+.padlet-menu-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    z-index: 10;
+    display: none;
+    min-width: 180px;
+    padding: 5px 0;
+    margin: 2px 0 0;
+    background-color: #fff;
+    border-radius: 5px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.padlet-menu-dropdown.show {
+    display: block;
+}
+
+.padlet-menu-item {
+    padding: 8px 15px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.padlet-menu-item:hover {
+    background-color: var(--hover-bg);
+}
+
+.padlet-meta {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    margin-bottom: 15px;
+}
+
+.padlet-meta-item {
+    margin-bottom: 5px;
+}
+
+.padlet-author {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.9rem;
+}
+
+.padlet-author-avatar {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background-color: var(--primary-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 12px;
+}
+
+/* Input groups and utility classes */
+.input-group {
+    display: flex;
+}
+
+.input-group .form-control {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+    flex: 1;
+}
+
+.input-group .btn {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+}
+
+.mt-1 {
+    margin-top: 0.25rem;
+}
+
+.mt-2 {
+    margin-top: 0.5rem;
+}
+
+.mt-3 {
+    margin-top: 1rem;
+}
+
+.text-secondary {
+    color: var(--text-secondary);
+}
+
+.text-muted {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+}
+
+.text-center {
+    text-align: center;
+}
+
+.p-3 {
+    padding: 1rem;
+}WiederholenClaude kann Fehler machen. Bitte überprüfen Sie die Antworten. 3.7 Sonnet

@@ -1,5 +1,5 @@
 /**
- * Views für PadCard-Manager
+ * Views für snapWall
  * 
  * Diese Datei enthält die gesamte Rendering-Logik für die Anwendung.
  */

@@ -1,4 +1,4 @@
-/**
+javascript/**
  * Konfiguration und globale Variablen für snapWall
  */
 
