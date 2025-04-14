@@ -341,10 +341,254 @@ const FolderDAO = {
     }
 };
 
-// BoardDAO Implementierung (gekürzt - füge später hinzu)
-const BoardDAO = { 
-    // Implementierung hier einfügen
+const BoardDAO = {
+    /**
+     * Alle Boards abrufen
+     * @returns {Array} Array von Board-Objekten
+     */
+    getAll: function() {
+        return AppData.boards;
+    },
+    
+    /**
+     * Board anhand seiner ID abrufen
+     * @param {string} id - Board-ID
+     * @returns {Object|null} Board-Objekt oder null, wenn nicht gefunden
+     */
     getById: function(id) {
         return AppData.boards.find(board => board.id === id) || null;
+    },
+    
+    /**
+     * Boards nach Ordner-ID abrufen
+     * @param {string|null} folderId - Ordner-ID oder null für Boards ohne Ordner
+     * @returns {Array} Array von Board-Objekten
+     */
+    getByFolderId: function(folderId) {
+        return AppData.boards.filter(board => board.folderId === folderId);
+    },
+    
+    /**
+     * Neues Board erstellen
+     * @param {string} name - Board-Name
+     * @param {string} color - Board-Farbe
+     * @param {string|null} folderId - Ordner-ID oder null
+     * @returns {Object} Erstelltes Board-Objekt
+     */
+    create: function(name, color, folderId) {
+        const board = new Board(null, name, color, folderId);
+        AppData.boards.push(board);
+        StorageService.saveAppData();
+        return board;
+    },
+    
+    /**
+     * Board aktualisieren
+     * @param {string} id - Board-ID
+     * @param {Object} updates - Objekt mit zu aktualisierenden Eigenschaften
+     * @returns {Object|null} Aktualisiertes Board oder null, wenn nicht gefunden
+     */
+    update: function(id, updates) {
+        const board = this.getById(id);
+        if (!board) return null;
+        
+        Object.assign(board, updates);
+        board.updated = new Date().toISOString();
+        
+        StorageService.saveAppData();
+        return board;
+    },
+    
+    /**
+     * Board löschen
+     * @param {string} id - Board-ID
+     * @returns {boolean} Erfolgsstatus
+     */
+    delete: function(id) {
+        const index = AppData.boards.findIndex(board => board.id === id);
+        if (index === -1) return false;
+        
+        AppData.boards.splice(index, 1);
+        StorageService.saveAppData();
+        return true;
+    },
+    
+    /**
+     * Karte zu Board hinzufügen
+     * @param {string} boardId - Board-ID
+     * @param {Object} cardData - Kartendaten
+     * @returns {Object|null} Erstellte Karte oder null, wenn Board nicht gefunden
+     */
+    addCard: function(boardId, cardData) {
+        const board = this.getById(boardId);
+        if (!board) return null;
+        
+        const card = new Card(cardData);
+        if (!board.cards) board.cards = [];
+        board.cards.push(card);
+        
+        // Board-Zeitstempel aktualisieren
+        board.updated = new Date().toISOString();
+        
+        StorageService.saveAppData();
+        return card;
+    },
+    
+    /**
+     * Karte im Board aktualisieren
+     * @param {string} boardId - Board-ID
+     * @param {string} cardId - Karten-ID
+     * @param {Object} updates - Objekt mit zu aktualisierenden Eigenschaften
+     * @returns {Object|null} Aktualisierte Karte oder null, wenn nicht gefunden
+     */
+    updateCard: function(boardId, cardId, updates) {
+        const board = this.getById(boardId);
+        if (!board || !board.cards) return null;
+        
+        const cardIndex = board.cards.findIndex(card => card.id === cardId);
+        if (cardIndex === -1) return null;
+        
+        Object.assign(board.cards[cardIndex], updates);
+        board.cards[cardIndex].updated = new Date().toISOString();
+        
+        // Board-Zeitstempel aktualisieren
+        board.updated = new Date().toISOString();
+        
+        StorageService.saveAppData();
+        return board.cards[cardIndex];
+    },
+    
+    /**
+     * Karte aus Board löschen
+     * @param {string} boardId - Board-ID
+     * @param {string} cardId - Karten-ID
+     * @returns {boolean} Erfolgsstatus
+     */
+    deleteCard: function(boardId, cardId) {
+        const board = this.getById(boardId);
+        if (!board || !board.cards) return false;
+        
+        const cardIndex = board.cards.findIndex(card => card.id === cardId);
+        if (cardIndex === -1) return false;
+        
+        board.cards.splice(cardIndex, 1);
+        
+        // Board-Zeitstempel aktualisieren
+        board.updated = new Date().toISOString();
+        
+        StorageService.saveAppData();
+        return true;
+    },
+    
+    /**
+     * Kategorie zu Board hinzufügen
+     * @param {string} boardId - Board-ID
+     * @param {string} categoryName - Kategoriename
+     * @returns {Object|null} Erstellte Kategorie oder null, wenn Board nicht gefunden
+     */
+    addCategory: function(boardId, categoryName) {
+        const board = this.getById(boardId);
+        if (!board) return null;
+        
+        const category = new Category(null, categoryName);
+        if (!board.categories) board.categories = [];
+        board.categories.push(category);
+        
+        // Board-Zeitstempel aktualisieren
+        board.updated = new Date().toISOString();
+        
+        StorageService.saveAppData();
+        return category;
+    },
+    
+    /**
+     * Kategorie im Board aktualisieren
+     * @param {string} boardId - Board-ID
+     * @param {string} categoryId - Kategorie-ID
+     * @param {string} newName - Neuer Kategoriename
+     * @returns {Object|null} Aktualisierte Kategorie oder null, wenn nicht gefunden
+     */
+    updateCategory: function(boardId, categoryId, newName) {
+        const board = this.getById(boardId);
+        if (!board || !board.categories) return null;
+        
+        const categoryIndex = board.categories.findIndex(cat => cat.id === categoryId);
+        if (categoryIndex === -1) return null;
+        
+        board.categories[categoryIndex].name = newName;
+        
+        // Board-Zeitstempel aktualisieren
+        board.updated = new Date().toISOString();
+        
+        StorageService.saveAppData();
+        return board.categories[categoryIndex];
+    },
+    
+    /**
+     * Kategorie aus Board löschen
+     * @param {string} boardId - Board-ID
+     * @param {string} categoryId - Kategorie-ID
+     * @returns {boolean} Erfolgsstatus
+     */
+    deleteCategory: function(boardId, categoryId) {
+        const board = this.getById(boardId);
+        if (!board || !board.categories) return false;
+        
+        const categoryIndex = board.categories.findIndex(cat => cat.id === categoryId);
+        if (categoryIndex === -1) return false;
+        
+        board.categories.splice(categoryIndex, 1);
+        
+        // Kategorie von allen Karten entfernen
+        if (board.cards) {
+            board.cards.forEach(card => {
+                if (card.category === categoryId) {
+                    card.category = '';
+                }
+            });
+        }
+        
+        // Board-Zeitstempel aktualisieren
+        board.updated = new Date().toISOString();
+        
+        StorageService.saveAppData();
+        return true;
+    },
+    
+    /**
+     * Board-Hintergrund festlegen
+     * @param {string} boardId - Board-ID
+     * @param {Object} backgroundData - Hintergrunddaten
+     * @returns {Object|null} Aktualisiertes Board oder null, wenn nicht gefunden
+     */
+    setBackground: function(boardId, backgroundData) {
+        const board = this.getById(boardId);
+        if (!board) return null;
+        
+        board.background = new Background(backgroundData);
+        
+        // Board-Zeitstempel aktualisieren
+        board.updated = new Date().toISOString();
+        
+        StorageService.saveAppData();
+        return board;
+    },
+    
+    /**
+     * Board-Hintergrund entfernen
+     * @param {string} boardId - Board-ID
+     * @returns {Object|null} Aktualisiertes Board oder null, wenn nicht gefunden
+     */
+    removeBackground: function(boardId) {
+        const board = this.getById(boardId);
+        if (!board) return null;
+        
+        board.background = null;
+        
+        // Board-Zeitstempel aktualisieren
+        board.updated = new Date().toISOString();
+        
+        StorageService.saveAppData();
+        return board;
     }
 };
